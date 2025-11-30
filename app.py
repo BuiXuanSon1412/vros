@@ -1,4 +1,4 @@
-# app.py - Main Streamlit Application with Improved Config Panel
+# app.py - Main Streamlit Application with Compact Configuration
 
 import streamlit as st
 from config.default_config import (
@@ -17,40 +17,301 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Custom CSS - Removed dark backgrounds, improved readability
+# Professional Neutral Theme CSS
 st.markdown(
     """
 <style>
+    /* Remove Streamlit header completely */
+    header[data-testid="stHeader"] {
+        display: none;
+    }
+    
+    /* Remove top padding caused by header */
+    .main .block-container {
+        padding-top: 2rem;
+    }
+    
+    /* Hide footer */
+    footer {visibility: hidden;}
+    
+    /* Global styling */
+    .main {
+        background-color: #ffffff;
+    }
+    
+    /* Header styling - Compact */
     .main-header {
-        font-size: 1.5rem;  /* Changed from 2.5rem */
+        font-size: 1.75rem;
         font-weight: 700;
-        color: #1e3a8a;
+        color: #0f172a;
         text-align: center;
-        margin-bottom: 0.3rem;  /* Changed from 0.5rem */
+        margin-bottom: 0.2rem;
+        letter-spacing: -0.025em;
     }
+    
     .sub-header {
-        font-size: 0.95rem;  /* Changed from 1.2rem */
-        color: #64748b;
+        font-size: 0.95rem;
+        color: #475569;
         text-align: center;
-        margin-bottom: 1rem;  /* Changed from 2rem */
+        margin-bottom: 1rem;
+        font-weight: 400;
     }
-
-    /* Force light text for all labels and content */
-    .stNumberInput label, 
-    .stSlider label, 
-    .stSelectbox label,
-    div[data-testid="stExpander"] p,
-    div[data-testid="stExpander"] strong {
-        color: #f3f4f6 !important;  /* Light gray text */
-        font-weight: 600 !important;
+    
+    /* Enhanced section titles with icon-like effect */
+    .config-section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1e40af;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+        border-bottom: 2px solid #3b82f6;
+        padding-bottom: 0.35rem;
+        position: relative;
+        padding-left: 0.75rem;
     }
-
-    /* Make expander content area have dark background explicitly */
-    div[data-testid="stExpander"] div[role="region"] {
-        background-color: #1f2937 !important;
-        color: #f3f4f6 !important;
+    
+    .config-section-title::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 60%;
+        background: linear-gradient(to bottom, #3b82f6, #2563eb);
+        border-radius: 2px;
     }
-
+    
+    /* Remove field descriptions to save space */
+    .field-description {
+        display: none;
+    }
+    
+    /* Enhanced button styling with gradient and effects */
+    .stButton>button {
+        width: 100%;
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        color: white;
+        border-radius: 8px;
+        padding: 0.65rem 1.25rem;
+        font-weight: 600;
+        border: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+        font-size: 0.9rem;
+        letter-spacing: 0.01em;
+    }
+    
+    .stButton>button:hover {
+        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    .stButton>button:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    }
+    
+    /* Secondary button (Generate Data) */
+    .stButton>button:not([kind="primary"]) {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        color: #1e293b;
+        border: 1.5px solid #cbd5e1;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    
+    .stButton>button:not([kind="primary"]):hover {
+        background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+        border-color: #94a3b8;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Enhanced expander styling with gradient */
+    div[data-testid="stExpander"] {
+        background: linear-gradient(to bottom, #ffffff, #f8fafc);
+        border-radius: 8px;
+        border: 1.5px solid #e2e8f0;
+        margin-bottom: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease;
+    }
+    
+    div[data-testid="stExpander"]:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+    
+    div[data-testid="stExpander"] summary {
+        padding: 0.65rem 0.75rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #1e293b;
+        background-color: rgba(248, 250, 252, 0.5);
+        border-radius: 7px 7px 0 0;
+        transition: background-color 0.2s ease;
+    }
+    
+    div[data-testid="stExpander"] summary:hover {
+        background-color: rgba(241, 245, 249, 0.8);
+    }
+    
+    div[data-testid="stExpander"][aria-expanded="true"] {
+        border-color: #3b82f6;
+    }
+    
+    div[data-testid="stExpander"] > div:last-child {
+        padding: 1rem;
+        background-color: #ffffff;
+    }
+    
+    /* Enhanced input fields with better styling */
+    .stNumberInput label, .stSelectbox label {
+        font-size: 0.85rem;
+        margin-bottom: 0.3rem;
+        font-weight: 500;
+        color: #334155;
+    }
+    
+    .stNumberInput, .stSelectbox {
+        margin-bottom: 0.75rem;
+    }
+    
+    /* Style input fields */
+    .stNumberInput > div > div > input {
+        border: 1.5px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+        background-color: #ffffff;
+        transition: all 0.2s ease;
+    }
+    
+    .stNumberInput > div > div > input:hover {
+        border-color: #cbd5e1;
+        background-color: #f8fafc;
+    }
+    
+    .stNumberInput > div > div > input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        background-color: #ffffff;
+    }
+    
+    /* Style selectbox */
+    .stSelectbox > div > div > div {
+        border: 1.5px solid #e2e8f0;
+        border-radius: 6px;
+        background-color: #ffffff;
+        transition: all 0.2s ease;
+    }
+    
+    .stSelectbox > div > div > div:hover {
+        border-color: #cbd5e1;
+        background-color: #f8fafc;
+    }
+    
+    /* Input increment/decrement buttons */
+    .stNumberInput button {
+        border-radius: 4px;
+        background-color: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        color: #475569;
+        transition: all 0.2s ease;
+    }
+    
+    .stNumberInput button:hover {
+        background-color: #e2e8f0;
+        border-color: #cbd5e1;
+        color: #1e293b;
+    }
+    
+    /* Metric cards styling */
+    div[data-testid="stMetricValue"] {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #0f172a;
+    }
+    
+    div[data-testid="stMetricLabel"] {
+        font-size: 0.8rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+    
+    /* Info/Success/Error boxes - more compact */
+    .stAlert {
+        border-radius: 6px;
+        border-left-width: 3px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    /* Tabs styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 6px;
+        background-color: #f8fafc;
+        padding: 0.4rem;
+        border-radius: 6px;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 4px;
+        padding: 0.4rem 0.8rem;
+        font-weight: 500;
+        color: #475569;
+        font-size: 0.9rem;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background-color: #ffffff;
+        color: #2563eb;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Dataframe styling */
+    .stDataFrame {
+        border-radius: 6px;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+    }
+    
+    /* Sidebar styling */
+    section[data-testid="stSidebar"] {
+        background-color: #f8fafc;
+        border-right: 1px solid #e2e8f0;
+    }
+    
+    /* Footer styling */
+    .footer {
+        text-align: center;
+        color: #64748b;
+        padding: 1.5rem 0;
+        margin-top: 2rem;
+        border-top: 1px solid #e2e8f0;
+        font-size: 0.85rem;
+    }
+    
+    /* Spinner styling */
+    .stSpinner > div {
+        border-top-color: #2563eb;
+    }
+    
+    /* Charts container */
+    .js-plotly-plot {
+        border-radius: 6px;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Reduce column gaps */
+    .row-widget.stHorizontal {
+        gap: 0.5rem;
+    }
+    
+    /* Compact column spacing */
+    div[data-testid="column"] {
+        padding: 0 0.25rem;
+    }
 </style>
 """,
     unsafe_allow_html=True,
@@ -87,7 +348,7 @@ data_gen = get_data_generator()
 
 # Header
 st.markdown(
-    '<div class="main-header">Vehicle Routing Optimization</div>',
+    '<div class="main-header">Vehicle Routing Optimization System</div>',
     unsafe_allow_html=True,
 )
 st.markdown(
@@ -104,163 +365,119 @@ for tab_idx, tab in enumerate(problem_tabs):
     problem_type = tab_idx + 1
 
     with tab:
-        # Layout: Left (70%) - Visualization | Right (30%) - Config
-        col_left, col_right = st.columns([7, 3])
+        # Layout: Left (65%) - Visualization | Right (35%) - Config
+        col_left, col_right = st.columns([65, 35])
 
         # ==================== RIGHT SIDE: CONFIGURATION ====================
         with col_right:
-            # ========== STICKY ACTION BUTTONS AT TOP ==========
-            st.markdown('<div class="action-container">', unsafe_allow_html=True)
-            st.markdown("### Quick Actions")
-
-            col_btn1, col_btn2 = st.columns(2)
-            with col_btn1:
-                generate_button = st.button(
-                    "Generate Data",
-                    key=f"generate_{problem_type}",
-                    use_container_width=True,
-                    help="Generate random customer data",
-                    type="secondary",
-                )
-            with col_btn2:
-                run_button = st.button(
-                    "Run Algorithm",
-                    type="primary",
-                    key=f"run_{problem_type}",
-                    use_container_width=True,
-                    help="Run the selected algorithm",
-                )
-
-            # Show data status
-            if st.session_state.customers is not None:
-                col_s1, col_s2, col_s3 = st.columns(3)
-                with col_s1:
-                    st.metric(
-                        "Customers",
-                        len(st.session_state.customers),
-                        label_visibility="visible",
-                    )
-                with col_s2:
-                    total_vehicles = st.session_state.get(
-                        f"truck_count_{problem_type}", 2
-                    ) + st.session_state.get(f"drone_count_{problem_type}", 3)
-                    st.metric("Vehicles", total_vehicles)
-                with col_s3:
-                    if st.session_state.solution:
-                        st.metric("Status", "Ready")
-                    else:
-                        st.metric("Status", "Waiting")
-
-            st.markdown("</div>", unsafe_allow_html=True)
-
-            # ========== PRESET SELECTOR ==========
             st.markdown("### Configuration")
 
-            preset = st.selectbox(
-                "Quick Start Preset",
-                [
-                    "Custom",
-                    "Urban (Small Fleet)",
-                    "Regional (Large Fleet)",
-                    "Drone-Heavy Mix",
-                ],
-                key=f"preset_{problem_type}",
-                help="Choose a preset configuration or customize your own",
-            )
+            # ACTION BUTTONS AT TOP
+            available_algorithms = ALGORITHMS[problem_type]
 
-            # Load preset values based on selection
-            if preset == "Urban (Small Fleet)":
-                default_truck_count, default_drone_count = 1, 2
-                default_customers, default_area = 15, 30
-            elif preset == "Regional (Large Fleet)":
-                default_truck_count, default_drone_count = 4, 2
-                default_customers, default_area = 40, 70
-            elif preset == "Drone-Heavy Mix":
-                default_truck_count, default_drone_count = 1, 5
-                default_customers, default_area = 25, 50
-            else:  # Custom
-                default_truck_count = DEFAULT_VEHICLE_CONFIG["truck"]["count"]
-                default_drone_count = DEFAULT_VEHICLE_CONFIG["drone"]["count"]
-                default_customers, default_area = 20, 50
+            if len(available_algorithms) > 1:
+                # Three buttons layout
+                col_btn1, col_btn2, col_btn3 = st.columns(3)
+                with col_btn1:
+                    generate_button = st.button(
+                        "Generate Data", key=f"generate_{problem_type}"
+                    )
+                with col_btn2:
+                    run_button = st.button(
+                        "Run Algorithm", type="primary", key=f"run_{problem_type}"
+                    )
+                with col_btn3:
+                    compare_button = st.button(
+                        "Compare All Algorithms", key=f"compare_{problem_type}"
+                    )
+            else:
+                # Two buttons layout
+                col_btn1, col_btn2 = st.columns(2)
+                with col_btn1:
+                    generate_button = st.button(
+                        "Generate Data", key=f"generate_{problem_type}"
+                    )
+                with col_btn2:
+                    run_button = st.button(
+                        "Run Algorithm", type="primary", key=f"run_{problem_type}"
+                    )
+                compare_button = False
 
-            # ========== COLLAPSIBLE SECTIONS ==========
+            st.markdown("---")
 
-            # 1. FLEET CONFIGURATION
-            with st.expander("Fleet Configuration", expanded=True):
-                st.markdown("**Trucks**")
-                col1, col2 = st.columns(2)
-                with col1:
+            # VEHICLE CONFIGURATION - Using Expanders for compactness
+            with st.expander("Vehicle System", expanded=True):
+                # Two columns for trucks and drones with visual separation
+                col_truck, col_drone = st.columns(2, gap="medium")
+
+                with col_truck:
+                    st.markdown("**🚛 Trucks**")
                     truck_count = st.number_input(
                         "Count",
-                        1,
-                        10,
-                        default_truck_count,
+                        min_value=1,
+                        max_value=10,
+                        value=DEFAULT_VEHICLE_CONFIG["truck"]["count"],
                         key=f"truck_count_{problem_type}",
+                    )
+                    truck_capacity = st.number_input(
+                        "Capacity (kg)",
+                        min_value=10,
+                        max_value=500,
+                        value=DEFAULT_VEHICLE_CONFIG["truck"]["capacity"],
+                        key=f"truck_capacity_{problem_type}",
                     )
                     truck_speed = st.number_input(
                         "Speed (km/h)",
-                        10,
-                        100,
-                        DEFAULT_VEHICLE_CONFIG["truck"]["speed"],
+                        min_value=10,
+                        max_value=100,
+                        value=DEFAULT_VEHICLE_CONFIG["truck"]["speed"],
                         key=f"truck_speed_{problem_type}",
                     )
-                with col2:
-                    truck_capacity = st.number_input(
-                        "Capacity (kg)",
-                        10,
-                        500,
-                        DEFAULT_VEHICLE_CONFIG["truck"]["capacity"],
-                        key=f"truck_capacity_{problem_type}",
-                    )
                     truck_cost = st.number_input(
-                        "Cost/km",
-                        1000,
-                        20000,
-                        DEFAULT_VEHICLE_CONFIG["truck"]["cost_per_km"],
+                        "Cost/km (VND)",
+                        min_value=1000,
+                        max_value=20000,
+                        value=DEFAULT_VEHICLE_CONFIG["truck"]["cost_per_km"],
                         key=f"truck_cost_{problem_type}",
                     )
 
-                st.markdown("---")
-                st.markdown("**Drones**")
-                col1, col2 = st.columns(2)
-                with col1:
+                with col_drone:
+                    st.markdown("**✈️ Drones**")
                     drone_count = st.number_input(
                         "Count",
-                        0,
-                        10,
-                        default_drone_count,
+                        min_value=0,
+                        max_value=10,
+                        value=DEFAULT_VEHICLE_CONFIG["drone"]["count"],
                         key=f"drone_count_{problem_type}",
+                    )
+                    drone_capacity = st.number_input(
+                        "Capacity (kg)",
+                        min_value=1,
+                        max_value=50,
+                        value=DEFAULT_VEHICLE_CONFIG["drone"]["capacity"],
+                        key=f"drone_capacity_{problem_type}",
                     )
                     drone_speed = st.number_input(
                         "Speed (km/h)",
-                        10,
-                        120,
-                        DEFAULT_VEHICLE_CONFIG["drone"]["speed"],
+                        min_value=10,
+                        max_value=120,
+                        value=DEFAULT_VEHICLE_CONFIG["drone"]["speed"],
                         key=f"drone_speed_{problem_type}",
                     )
-                with col2:
-                    drone_capacity = st.number_input(
-                        "Capacity (kg)",
-                        1,
-                        50,
-                        DEFAULT_VEHICLE_CONFIG["drone"]["capacity"],
-                        key=f"drone_capacity_{problem_type}",
-                    )
                     drone_energy = st.number_input(
-                        "Battery (min)",
-                        10,
-                        120,
-                        DEFAULT_VEHICLE_CONFIG["drone"]["energy_limit"],
+                        "Energy (min)",
+                        min_value=10,
+                        max_value=120,
+                        value=DEFAULT_VEHICLE_CONFIG["drone"]["energy_limit"],
                         key=f"drone_energy_{problem_type}",
                     )
-
-                drone_cost = st.number_input(
-                    "Cost per km (VND)",
-                    500,
-                    10000,
-                    DEFAULT_VEHICLE_CONFIG["drone"]["cost_per_km"],
-                    key=f"drone_cost_{problem_type}",
-                )
+                    drone_cost = st.number_input(
+                        "Cost/km (VND)",
+                        min_value=500,
+                        max_value=10000,
+                        value=DEFAULT_VEHICLE_CONFIG["drone"]["cost_per_km"],
+                        key=f"drone_cost_{problem_type}",
+                    )
 
             vehicle_config = {
                 "truck": {
@@ -278,80 +495,96 @@ for tab_idx, tab in enumerate(problem_tabs):
                 },
             }
 
-            # 2. CUSTOMER CONFIGURATION
-            with st.expander("Customer & Area", expanded=False):
-                num_customers = st.slider(
+            # CUSTOMER CONFIGURATION
+            with st.expander("Customer", expanded=True):
+                num_customers = st.number_input(
                     "Number of customers",
-                    5,
-                    100,
-                    default_customers,
+                    min_value=5,
+                    max_value=100,
+                    value=20,
                     key=f"num_customers_{problem_type}",
                 )
 
-                area_size = st.slider(
-                    "Service area (km x km)",
-                    10,
-                    100,
-                    default_area,
+                area_size = st.number_input(
+                    "Service area size (km × km)",
+                    min_value=10,
+                    max_value=100,
+                    value=50,
                     key=f"area_size_{problem_type}",
                 )
 
-                st.markdown("**Package Details**")
                 col1, col2 = st.columns(2)
                 with col1:
                     demand_min = st.number_input(
-                        "Min (kg)", 1, 50, 1, key=f"demand_min_{problem_type}"
+                        "Min demand (kg)",
+                        min_value=1,
+                        max_value=50,
+                        value=1,
+                        key=f"demand_min_{problem_type}",
                     )
                     service_min = st.number_input(
-                        "Min time (min)", 1, 60, 5, key=f"service_min_{problem_type}"
+                        "Min service (min)",
+                        min_value=1,
+                        max_value=60,
+                        value=5,
+                        key=f"service_min_{problem_type}",
                     )
                 with col2:
                     demand_max = st.number_input(
-                        "Max (kg)", 1, 50, 10, key=f"demand_max_{problem_type}"
+                        "Max demand (kg)",
+                        min_value=1,
+                        max_value=50,
+                        value=10,
+                        key=f"demand_max_{problem_type}",
                     )
                     service_max = st.number_input(
-                        "Max time (min)", 1, 60, 15, key=f"service_max_{problem_type}"
+                        "Max service (min)",
+                        min_value=1,
+                        max_value=60,
+                        value=15,
+                        key=f"service_max_{problem_type}",
                     )
 
-                priority_levels = st.slider(
+                priority_levels = st.number_input(
                     "Priority levels",
-                    1,
-                    5,
-                    3,
+                    min_value=1,
+                    max_value=5,
+                    value=3,
                     key=f"priority_{problem_type}",
-                    help="1 = all same, 5 = five tiers",
                 )
 
-            # 3. ALGORITHM CONFIGURATION
-            available_algorithms = ALGORITHMS[problem_type]
-
-            with st.expander("Algorithm Settings", expanded=False):
+            # ALGORITHM CONFIGURATION
+            with st.expander("Algorithm", expanded=True):
                 selected_algorithm = st.selectbox(
-                    "Algorithm", available_algorithms, key=f"algorithm_{problem_type}"
+                    "Algorithm",
+                    available_algorithms,
+                    key=f"algorithm_{problem_type}",
                 )
 
-                max_iterations = st.slider(
+                max_iterations = st.number_input(
                     "Max iterations",
-                    10,
-                    10000,
-                    1000,
+                    min_value=10,
+                    max_value=10000,
+                    value=1000,
                     key=f"iterations_{problem_type}",
-                    help="More = better solution but slower",
                 )
 
-                # Algorithm-specific parameters
                 if "Tabu" in selected_algorithm:
                     col1, col2 = st.columns(2)
                     with col1:
                         tabu_tenure = st.number_input(
-                            "Tabu tenure", 5, 50, 10, key=f"tabu_tenure_{problem_type}"
+                            "Tabu tenure",
+                            min_value=5,
+                            max_value=50,
+                            value=10,
+                            key=f"tabu_tenure_{problem_type}",
                         )
                     with col2:
                         neighborhood_size = st.number_input(
                             "Neighborhood",
-                            10,
-                            100,
-                            20,
+                            min_value=10,
+                            max_value=100,
+                            value=20,
                             key=f"neighborhood_{problem_type}",
                         )
 
@@ -363,19 +596,30 @@ for tab_idx, tab in enumerate(problem_tabs):
                 elif "NSGA" in selected_algorithm or "MOEA" in selected_algorithm:
                     population_size = st.number_input(
                         "Population size",
-                        20,
-                        500,
-                        100,
+                        min_value=20,
+                        max_value=500,
+                        value=100,
                         key=f"population_{problem_type}",
                     )
+
                     col1, col2 = st.columns(2)
                     with col1:
-                        crossover_prob = st.slider(
-                            "Crossover", 0.0, 1.0, 0.9, key=f"crossover_{problem_type}"
+                        crossover_prob = st.number_input(
+                            "Crossover prob",
+                            min_value=0.0,
+                            max_value=1.0,
+                            value=0.9,
+                            step=0.1,
+                            key=f"crossover_{problem_type}",
                         )
                     with col2:
-                        mutation_prob = st.slider(
-                            "Mutation", 0.0, 1.0, 0.1, key=f"mutation_{problem_type}"
+                        mutation_prob = st.number_input(
+                            "Mutation prob",
+                            min_value=0.0,
+                            max_value=1.0,
+                            value=0.1,
+                            step=0.1,
+                            key=f"mutation_{problem_type}",
                         )
 
                     algorithm_params = {
@@ -387,22 +631,9 @@ for tab_idx, tab in enumerate(problem_tabs):
                 else:
                     algorithm_params = {"max_iterations": max_iterations}
 
-            # COMPARE BUTTON (if multiple algorithms available)
-            if len(available_algorithms) > 1:
-                st.markdown("---")
-                compare_button = st.button(
-                    "Compare All Algorithms",
-                    key=f"compare_{problem_type}",
-                    use_container_width=True,
-                )
-            else:
-                compare_button = False
-
-            # ========== BUTTON LOGIC ==========
-
-            # Generate button logic
+            # Handle button actions
             if generate_button:
-                with st.spinner("Generating data..."):
+                with st.spinner("Generating..."):
                     st.session_state.customers = data_gen.generate_customers(
                         num_customers,
                         area_size,
@@ -416,10 +647,8 @@ for tab_idx, tab in enumerate(problem_tabs):
                             st.session_state.customers, st.session_state.depot
                         )
                     )
-                    st.success("Data generated successfully!")
-                    st.rerun()
+                    st.success("Data generated!")
 
-            # Run button logic
             if run_button:
                 if (
                     st.session_state.customers is None
@@ -440,10 +669,9 @@ for tab_idx, tab in enumerate(problem_tabs):
                         st.session_state.solution = solution
                         st.session_state.results[selected_algorithm] = solution
                         st.session_state.chart_counter += 1
-                        st.success("Algorithm completed successfully!")
-                        st.rerun()
+                        st.success("Completed!")
 
-            # Compare button logic
+            # Handle compare button
             if compare_button:
                 if (
                     st.session_state.customers is None
@@ -464,7 +692,6 @@ for tab_idx, tab in enumerate(problem_tabs):
                         )
                         st.session_state.results = all_results
                         st.success("Comparison completed!")
-                        st.rerun()
 
         # ==================== LEFT SIDE: VISUALIZATION ====================
         with col_left:
@@ -490,7 +717,7 @@ for tab_idx, tab in enumerate(problem_tabs):
                         )
                         st.plotly_chart(
                             fig_map,
-                            width="stretch",
+                            use_container_width=True,
                             key=f"map_routes_{problem_type}_{st.session_state.chart_counter}",
                         )
                     elif st.session_state.depot is not None:
@@ -502,7 +729,7 @@ for tab_idx, tab in enumerate(problem_tabs):
                         )
                         st.plotly_chart(
                             fig_map,
-                            width="stretch",
+                            use_container_width=True,
                             key=f"map_no_routes_{problem_type}_{st.session_state.chart_counter}",
                         )
                         st.info("Run algorithm to see routes")
@@ -512,6 +739,7 @@ for tab_idx, tab in enumerate(problem_tabs):
                     if st.session_state.solution is not None:
                         sol = st.session_state.solution
 
+                        # Display metrics
                         metric_cols = st.columns(4)
                         with metric_cols[0]:
                             st.metric("Makespan", f"{sol['makespan']:.1f} min")
@@ -523,6 +751,8 @@ for tab_idx, tab in enumerate(problem_tabs):
                             st.metric("Time", f"{sol['computation_time']:.2f}s")
 
                         st.markdown("---")
+
+                        # Routes detail
                         st.markdown("**Route Details:**")
                         for vehicle_id, route in sol["routes"].items():
                             if route:
@@ -548,10 +778,11 @@ for tab_idx, tab in enumerate(problem_tabs):
                         )
                         st.plotly_chart(
                             fig_conv,
-                            width="stretch",
+                            use_container_width=True,
                             key=f"convergence_{problem_type}_{st.session_state.chart_counter}",
                         )
 
+                        # Pareto front for multi-objective
                         if (
                             problem_type == 2
                             and st.session_state.solution["pareto_front"]
@@ -563,7 +794,7 @@ for tab_idx, tab in enumerate(problem_tabs):
                             )
                             st.plotly_chart(
                                 fig_pareto,
-                                width="stretch",
+                                use_container_width=True,
                                 key=f"pareto_{problem_type}_{st.session_state.chart_counter}",
                             )
                     else:
@@ -581,7 +812,7 @@ for tab_idx, tab in enumerate(problem_tabs):
                         )
                         st.plotly_chart(
                             fig_gantt,
-                            width="stretch",
+                            use_container_width=True,
                             key=f"timeline_{problem_type}_{st.session_state.chart_counter}",
                         )
                     else:
@@ -595,20 +826,31 @@ for tab_idx, tab in enumerate(problem_tabs):
                         comparison_df = runner.get_comparison_summary()
 
                         st.markdown("**Comparison Table:**")
-                        st.dataframe(comparison_df, width="stretch")
+                        st.dataframe(
+                            comparison_df,
+                            use_container_width=True,
+                        )
 
                         st.markdown("---")
+
                         col1, col2 = st.columns(2)
                         with col1:
                             fig_makespan = viz.plot_metrics_comparison(
                                 comparison_df, "Makespan"
                             )
-                            st.plotly_chart(fig_makespan, width="stretch")
+                            st.plotly_chart(
+                                fig_makespan,
+                                use_container_width=True,
+                                key=f"result_{problem_type}_{st.session_state.chart_counter}",
+                            )
                         with col2:
                             fig_cost = viz.plot_metrics_comparison(
                                 comparison_df, "Cost"
                             )
-                            st.plotly_chart(fig_cost, width="stretch")
+                            st.plotly_chart(
+                                fig_cost,
+                                use_container_width=True,
+                            )
                     else:
                         st.info("Run 'Compare All Algorithms' to see comparison")
 
@@ -618,8 +860,8 @@ for tab_idx, tab in enumerate(problem_tabs):
 # Footer
 st.markdown("---")
 st.markdown(
-    "<div style='text-align: center; color: #64748b;'>"
-    "Vehicle Routing Optimization System | Built with Streamlit"
+    '<div class="footer">'
+    "Vehicle Routing Optimization System | Built with Streamlit & Python"
     "</div>",
     unsafe_allow_html=True,
 )

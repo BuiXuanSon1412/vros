@@ -1,0 +1,41 @@
+# Streamlit Configuration - Professional Neutral Theme
+# Optimized for Vehicle Routing Optimization System
+
+[theme]
+# Base theme (light or dark) - using light for neutral professional look
+base = "light"
+
+# Primary color - Professional blue for interactive elements
+# Used for buttons, links, focus states, and highlights
+primaryColor = "#2563eb"
+
+# Background colors
+backgroundColor = "#ffffff"              # Main background - pure white
+secondaryBackgroundColor = "#f8fafc"     # Sidebar and card backgrounds - subtle gray
+
+# Text colors
+textColor = "#0f172a"                    # Main text - near black for readability
+
+# Font
+font = "sans serif"
+
+# Sidebar-specific styling (inherits from main theme if not specified)
+[theme.sidebar]
+backgroundColor = "#f1f5f9"              # Slightly darker than secondary for contrast
+secondaryBackgroundColor = "#e2e8f0"     # Nested elements in sidebar
+
+[server]
+# Server configuration
+headless = true
+port = 8501
+enableCORS = false
+enableXsrfProtection = true
+
+[browser]
+# Browser configuration
+gatherUsageStats = false
+
+[runner]
+# Magic commands enabled
+magicEnabled = true
+fastReruns = true
