@@ -1,4 +1,4 @@
-# app.py - Main Streamlit Application
+# app.py - Main Streamlit Application with Improved Config Panel
 
 import streamlit as st
 from config.default_config import (
@@ -12,60 +12,45 @@ from utils.solver import DummySolver, AlgorithmRunner
 # Page config
 st.set_page_config(
     page_title="Vehicle Routing Optimization System",
-    page_icon="",
+    page_icon="🚚",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# Custom CSS
+# Custom CSS - Removed dark backgrounds, improved readability
 st.markdown(
     """
 <style>
     .main-header {
-        font-size: 2.5rem;
+        font-size: 1.5rem;  /* Changed from 2.5rem */
         font-weight: 700;
         color: #1e3a8a;
         text-align: center;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.3rem;  /* Changed from 0.5rem */
     }
     .sub-header {
-        font-size: 1.2rem;
+        font-size: 0.95rem;  /* Changed from 1.2rem */
         color: #64748b;
         text-align: center;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;  /* Changed from 2rem */
     }
-    .config-section-title {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #1e40af;
-        margin-top: 1.5rem;
-        margin-bottom: 0.5rem;
-        border-bottom: 2px solid #3b82f6;
-        padding-bottom: 0.3rem;
+
+    /* Force light text for all labels and content */
+    .stNumberInput label, 
+    .stSlider label, 
+    .stSelectbox label,
+    div[data-testid="stExpander"] p,
+    div[data-testid="stExpander"] strong {
+        color: #f3f4f6 !important;  /* Light gray text */
+        font-weight: 600 !important;
     }
-    .field-description {
-        font-size: 0.85rem;
-        color: #64748b;
-        font-style: italic;
-        margin-top: -0.5rem;
-        margin-bottom: 0.5rem;
+
+    /* Make expander content area have dark background explicitly */
+    div[data-testid="stExpander"] div[role="region"] {
+        background-color: #1f2937 !important;
+        color: #f3f4f6 !important;
     }
-    .stButton>button {
-        width: 100%;
-        background-color: #3b82f6;
-        color: white;
-        border-radius: 8px;
-        padding: 0.5rem 1rem;
-        font-weight: 600;
-    }
-    .stButton>button:hover {
-        background-color: #2563eb;
-    }
-    div[data-testid="stExpander"] {
-        background-color: #f8fafc;
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
-    }
+
 </style>
 """,
     unsafe_allow_html=True,
@@ -102,7 +87,7 @@ data_gen = get_data_generator()
 
 # Header
 st.markdown(
-    '<div class="main-header">Vehicle Routing Optimization System</div>',
+    '<div class="main-header">Vehicle Routing Optimization</div>',
     unsafe_allow_html=True,
 )
 st.markdown(
@@ -124,138 +109,158 @@ for tab_idx, tab in enumerate(problem_tabs):
 
         # ==================== RIGHT SIDE: CONFIGURATION ====================
         with col_right:
-            st.markdown("### Configuration Panel")
+            # ========== STICKY ACTION BUTTONS AT TOP ==========
+            st.markdown('<div class="action-container">', unsafe_allow_html=True)
+            st.markdown("### Quick Actions")
 
-            # 1. VEHICLE CONFIGURATION
-            st.markdown(
-                '<div class="config-section-title">Vehicle Configuration</div>',
-                unsafe_allow_html=True,
-            )
+            col_btn1, col_btn2 = st.columns(2)
+            with col_btn1:
+                generate_button = st.button(
+                    "Generate Data",
+                    key=f"generate_{problem_type}",
+                    use_container_width=True,
+                    help="Generate random customer data",
+                    type="secondary",
+                )
+            with col_btn2:
+                run_button = st.button(
+                    "Run Algorithm",
+                    type="primary",
+                    key=f"run_{problem_type}",
+                    use_container_width=True,
+                    help="Run the selected algorithm",
+                )
 
-            # TRUCKS
-            st.markdown("**Trucks**")
+            # Show data status
+            if st.session_state.customers is not None:
+                col_s1, col_s2, col_s3 = st.columns(3)
+                with col_s1:
+                    st.metric(
+                        "Customers",
+                        len(st.session_state.customers),
+                        label_visibility="visible",
+                    )
+                with col_s2:
+                    total_vehicles = st.session_state.get(
+                        f"truck_count_{problem_type}", 2
+                    ) + st.session_state.get(f"drone_count_{problem_type}", 3)
+                    st.metric("Vehicles", total_vehicles)
+                with col_s3:
+                    if st.session_state.solution:
+                        st.metric("Status", "Ready")
+                    else:
+                        st.metric("Status", "Waiting")
 
-            truck_count = st.number_input(
-                "Number of trucks",
-                min_value=1,
-                max_value=10,
-                value=DEFAULT_VEHICLE_CONFIG["truck"]["count"],
-                key=f"truck_count_{problem_type}",
-                help="Total number of trucks available for delivery",
-            )
-            st.markdown(
-                '<div class="field-description">How many trucks are available in the fleet</div>',
-                unsafe_allow_html=True,
-            )
+            st.markdown("</div>", unsafe_allow_html=True)
 
-            truck_capacity = st.number_input(
-                "Truck capacity (kg)",
-                min_value=10,
-                max_value=500,
-                value=DEFAULT_VEHICLE_CONFIG["truck"]["capacity"],
-                key=f"truck_capacity_{problem_type}",
-                help="Maximum weight each truck can carry",
-            )
-            st.markdown(
-                '<div class="field-description">Maximum load capacity for each truck in kilograms</div>',
-                unsafe_allow_html=True,
-            )
+            # ========== PRESET SELECTOR ==========
+            st.markdown("### Configuration")
 
-            truck_speed = st.number_input(
-                "Truck speed (km/h)",
-                min_value=10,
-                max_value=100,
-                value=DEFAULT_VEHICLE_CONFIG["truck"]["speed"],
-                key=f"truck_speed_{problem_type}",
-                help="Average speed of trucks during delivery",
-            )
-            st.markdown(
-                '<div class="field-description">Average traveling speed of trucks in kilometers per hour</div>',
-                unsafe_allow_html=True,
-            )
-
-            truck_cost = st.number_input(
-                "Truck cost per km (VND)",
-                min_value=1000,
-                max_value=20000,
-                value=DEFAULT_VEHICLE_CONFIG["truck"]["cost_per_km"],
-                key=f"truck_cost_{problem_type}",
-                help="Operating cost per kilometer for trucks",
-            )
-            st.markdown(
-                '<div class="field-description">Operational cost for trucks per kilometer traveled</div>',
-                unsafe_allow_html=True,
+            preset = st.selectbox(
+                "Quick Start Preset",
+                [
+                    "Custom",
+                    "Urban (Small Fleet)",
+                    "Regional (Large Fleet)",
+                    "Drone-Heavy Mix",
+                ],
+                key=f"preset_{problem_type}",
+                help="Choose a preset configuration or customize your own",
             )
 
-            st.markdown("---")
+            # Load preset values based on selection
+            if preset == "Urban (Small Fleet)":
+                default_truck_count, default_drone_count = 1, 2
+                default_customers, default_area = 15, 30
+            elif preset == "Regional (Large Fleet)":
+                default_truck_count, default_drone_count = 4, 2
+                default_customers, default_area = 40, 70
+            elif preset == "Drone-Heavy Mix":
+                default_truck_count, default_drone_count = 1, 5
+                default_customers, default_area = 25, 50
+            else:  # Custom
+                default_truck_count = DEFAULT_VEHICLE_CONFIG["truck"]["count"]
+                default_drone_count = DEFAULT_VEHICLE_CONFIG["drone"]["count"]
+                default_customers, default_area = 20, 50
 
-            # DRONES
-            st.markdown("**Drones (UAVs)**")
+            # ========== COLLAPSIBLE SECTIONS ==========
 
-            drone_count = st.number_input(
-                "Number of drones",
-                min_value=0,
-                max_value=10,
-                value=DEFAULT_VEHICLE_CONFIG["drone"]["count"],
-                key=f"drone_count_{problem_type}",
-                help="Total number of drones available for delivery",
-            )
-            st.markdown(
-                '<div class="field-description">How many drones are available in the fleet</div>',
-                unsafe_allow_html=True,
-            )
+            # 1. FLEET CONFIGURATION
+            with st.expander("Fleet Configuration", expanded=True):
+                st.markdown("**Trucks**")
+                col1, col2 = st.columns(2)
+                with col1:
+                    truck_count = st.number_input(
+                        "Count",
+                        1,
+                        10,
+                        default_truck_count,
+                        key=f"truck_count_{problem_type}",
+                    )
+                    truck_speed = st.number_input(
+                        "Speed (km/h)",
+                        10,
+                        100,
+                        DEFAULT_VEHICLE_CONFIG["truck"]["speed"],
+                        key=f"truck_speed_{problem_type}",
+                    )
+                with col2:
+                    truck_capacity = st.number_input(
+                        "Capacity (kg)",
+                        10,
+                        500,
+                        DEFAULT_VEHICLE_CONFIG["truck"]["capacity"],
+                        key=f"truck_capacity_{problem_type}",
+                    )
+                    truck_cost = st.number_input(
+                        "Cost/km",
+                        1000,
+                        20000,
+                        DEFAULT_VEHICLE_CONFIG["truck"]["cost_per_km"],
+                        key=f"truck_cost_{problem_type}",
+                    )
 
-            drone_capacity = st.number_input(
-                "Drone capacity (kg)",
-                min_value=1,
-                max_value=50,
-                value=DEFAULT_VEHICLE_CONFIG["drone"]["capacity"],
-                key=f"drone_capacity_{problem_type}",
-                help="Maximum weight each drone can carry",
-            )
-            st.markdown(
-                '<div class="field-description">Maximum payload capacity for each drone in kilograms</div>',
-                unsafe_allow_html=True,
-            )
+                st.markdown("---")
+                st.markdown("**Drones**")
+                col1, col2 = st.columns(2)
+                with col1:
+                    drone_count = st.number_input(
+                        "Count",
+                        0,
+                        10,
+                        default_drone_count,
+                        key=f"drone_count_{problem_type}",
+                    )
+                    drone_speed = st.number_input(
+                        "Speed (km/h)",
+                        10,
+                        120,
+                        DEFAULT_VEHICLE_CONFIG["drone"]["speed"],
+                        key=f"drone_speed_{problem_type}",
+                    )
+                with col2:
+                    drone_capacity = st.number_input(
+                        "Capacity (kg)",
+                        1,
+                        50,
+                        DEFAULT_VEHICLE_CONFIG["drone"]["capacity"],
+                        key=f"drone_capacity_{problem_type}",
+                    )
+                    drone_energy = st.number_input(
+                        "Battery (min)",
+                        10,
+                        120,
+                        DEFAULT_VEHICLE_CONFIG["drone"]["energy_limit"],
+                        key=f"drone_energy_{problem_type}",
+                    )
 
-            drone_speed = st.number_input(
-                "Drone speed (km/h)",
-                min_value=10,
-                max_value=120,
-                value=DEFAULT_VEHICLE_CONFIG["drone"]["speed"],
-                key=f"drone_speed_{problem_type}",
-                help="Average speed of drones during delivery",
-            )
-            st.markdown(
-                '<div class="field-description">Average flying speed of drones in kilometers per hour</div>',
-                unsafe_allow_html=True,
-            )
-
-            drone_energy = st.number_input(
-                "Drone energy limit (minutes)",
-                min_value=10,
-                max_value=120,
-                value=DEFAULT_VEHICLE_CONFIG["drone"]["energy_limit"],
-                key=f"drone_energy_{problem_type}",
-                help="Maximum flight time before battery runs out",
-            )
-            st.markdown(
-                '<div class="field-description">Maximum continuous flight time for drones before needing recharge</div>',
-                unsafe_allow_html=True,
-            )
-
-            drone_cost = st.number_input(
-                "Drone cost per km (VND)",
-                min_value=500,
-                max_value=10000,
-                value=DEFAULT_VEHICLE_CONFIG["drone"]["cost_per_km"],
-                key=f"drone_cost_{problem_type}",
-                help="Operating cost per kilometer for drones",
-            )
-            st.markdown(
-                '<div class="field-description">Operational cost for drones per kilometer traveled</div>',
-                unsafe_allow_html=True,
-            )
+                drone_cost = st.number_input(
+                    "Cost per km (VND)",
+                    500,
+                    10000,
+                    DEFAULT_VEHICLE_CONFIG["drone"]["cost_per_km"],
+                    key=f"drone_cost_{problem_type}",
+                )
 
             vehicle_config = {
                 "truck": {
@@ -274,99 +279,129 @@ for tab_idx, tab in enumerate(problem_tabs):
             }
 
             # 2. CUSTOMER CONFIGURATION
-            st.markdown(
-                '<div class="config-section-title">Customer Configuration</div>',
-                unsafe_allow_html=True,
-            )
-
-            num_customers = st.slider(
-                "Number of customers",
-                min_value=5,
-                max_value=100,
-                value=20,
-                key=f"num_customers_{problem_type}",
-                help="Total number of delivery locations",
-            )
-            st.markdown(
-                '<div class="field-description">Total number of customer locations to be serviced</div>',
-                unsafe_allow_html=True,
-            )
-
-            area_size = st.slider(
-                "Service area size (km x km)",
-                min_value=10,
-                max_value=100,
-                value=50,
-                key=f"area_size_{problem_type}",
-                help="Size of the square delivery area",
-            )
-            st.markdown(
-                '<div class="field-description">Dimensions of the square service area in kilometers</div>',
-                unsafe_allow_html=True,
-            )
-
-            col1, col2 = st.columns(2)
-            with col1:
-                demand_min = st.number_input(
-                    "Min demand (kg)",
-                    min_value=1,
-                    max_value=50,
-                    value=1,
-                    key=f"demand_min_{problem_type}",
-                    help="Minimum package weight",
+            with st.expander("Customer & Area", expanded=False):
+                num_customers = st.slider(
+                    "Number of customers",
+                    5,
+                    100,
+                    default_customers,
+                    key=f"num_customers_{problem_type}",
                 )
-            with col2:
-                demand_max = st.number_input(
-                    "Max demand (kg)",
-                    min_value=1,
-                    max_value=50,
-                    value=10,
-                    key=f"demand_max_{problem_type}",
-                    help="Maximum package weight",
-                )
-            st.markdown(
-                '<div class="field-description">Range of package weights that customers may request (in kg)</div>',
-                unsafe_allow_html=True,
-            )
 
-            col3, col4 = st.columns(2)
-            with col3:
-                service_min = st.number_input(
-                    "Min service time (min)",
-                    min_value=1,
-                    max_value=60,
-                    value=5,
-                    key=f"service_min_{problem_type}",
-                    help="Minimum time to serve a customer",
+                area_size = st.slider(
+                    "Service area (km x km)",
+                    10,
+                    100,
+                    default_area,
+                    key=f"area_size_{problem_type}",
                 )
-            with col4:
-                service_max = st.number_input(
-                    "Max service time (min)",
-                    min_value=1,
-                    max_value=60,
-                    value=15,
-                    key=f"service_max_{problem_type}",
-                    help="Maximum time to serve a customer",
+
+                st.markdown("**Package Details**")
+                col1, col2 = st.columns(2)
+                with col1:
+                    demand_min = st.number_input(
+                        "Min (kg)", 1, 50, 1, key=f"demand_min_{problem_type}"
+                    )
+                    service_min = st.number_input(
+                        "Min time (min)", 1, 60, 5, key=f"service_min_{problem_type}"
+                    )
+                with col2:
+                    demand_max = st.number_input(
+                        "Max (kg)", 1, 50, 10, key=f"demand_max_{problem_type}"
+                    )
+                    service_max = st.number_input(
+                        "Max time (min)", 1, 60, 15, key=f"service_max_{problem_type}"
+                    )
+
+                priority_levels = st.slider(
+                    "Priority levels",
+                    1,
+                    5,
+                    3,
+                    key=f"priority_{problem_type}",
+                    help="1 = all same, 5 = five tiers",
                 )
-            st.markdown(
-                '<div class="field-description">Range of time needed to complete delivery at each customer location (in minutes)</div>',
-                unsafe_allow_html=True,
-            )
 
-            priority_levels = st.slider(
-                "Number of priority levels",
-                min_value=1,
-                max_value=5,
-                value=3,
-                key=f"priority_{problem_type}",
-                help="How many priority tiers for customers (1=all same, 5=more tiers)",
-            )
-            st.markdown(
-                '<div class="field-description">Customer priority levels (1 = highest priority, higher numbers = lower priority)</div>',
-                unsafe_allow_html=True,
-            )
+            # 3. ALGORITHM CONFIGURATION
+            available_algorithms = ALGORITHMS[problem_type]
 
-            if st.button("Generate Random Data", key=f"generate_{problem_type}"):
+            with st.expander("Algorithm Settings", expanded=False):
+                selected_algorithm = st.selectbox(
+                    "Algorithm", available_algorithms, key=f"algorithm_{problem_type}"
+                )
+
+                max_iterations = st.slider(
+                    "Max iterations",
+                    10,
+                    10000,
+                    1000,
+                    key=f"iterations_{problem_type}",
+                    help="More = better solution but slower",
+                )
+
+                # Algorithm-specific parameters
+                if "Tabu" in selected_algorithm:
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        tabu_tenure = st.number_input(
+                            "Tabu tenure", 5, 50, 10, key=f"tabu_tenure_{problem_type}"
+                        )
+                    with col2:
+                        neighborhood_size = st.number_input(
+                            "Neighborhood",
+                            10,
+                            100,
+                            20,
+                            key=f"neighborhood_{problem_type}",
+                        )
+
+                    algorithm_params = {
+                        "max_iterations": max_iterations,
+                        "tabu_tenure": tabu_tenure,
+                        "neighborhood_size": neighborhood_size,
+                    }
+                elif "NSGA" in selected_algorithm or "MOEA" in selected_algorithm:
+                    population_size = st.number_input(
+                        "Population size",
+                        20,
+                        500,
+                        100,
+                        key=f"population_{problem_type}",
+                    )
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        crossover_prob = st.slider(
+                            "Crossover", 0.0, 1.0, 0.9, key=f"crossover_{problem_type}"
+                        )
+                    with col2:
+                        mutation_prob = st.slider(
+                            "Mutation", 0.0, 1.0, 0.1, key=f"mutation_{problem_type}"
+                        )
+
+                    algorithm_params = {
+                        "max_iterations": max_iterations,
+                        "population_size": population_size,
+                        "crossover_prob": crossover_prob,
+                        "mutation_prob": mutation_prob,
+                    }
+                else:
+                    algorithm_params = {"max_iterations": max_iterations}
+
+            # COMPARE BUTTON (if multiple algorithms available)
+            if len(available_algorithms) > 1:
+                st.markdown("---")
+                compare_button = st.button(
+                    "Compare All Algorithms",
+                    key=f"compare_{problem_type}",
+                    use_container_width=True,
+                )
+            else:
+                compare_button = False
+
+            # ========== BUTTON LOGIC ==========
+
+            # Generate button logic
+            if generate_button:
                 with st.spinner("Generating data..."):
                     st.session_state.customers = data_gen.generate_customers(
                         num_customers,
@@ -382,125 +417,9 @@ for tab_idx, tab in enumerate(problem_tabs):
                         )
                     )
                     st.success("Data generated successfully!")
+                    st.rerun()
 
-            # 3. ALGORITHM CONFIGURATION
-            st.markdown(
-                '<div class="config-section-title">Algorithm Configuration</div>',
-                unsafe_allow_html=True,
-            )
-
-            available_algorithms = ALGORITHMS[problem_type]
-            selected_algorithm = st.selectbox(
-                "Select algorithm",
-                available_algorithms,
-                key=f"algorithm_{problem_type}",
-                help="Choose which optimization algorithm to use",
-            )
-            st.markdown(
-                '<div class="field-description">Optimization algorithm to solve the routing problem</div>',
-                unsafe_allow_html=True,
-            )
-
-            max_iterations = st.number_input(
-                "Maximum iterations",
-                min_value=10,
-                max_value=10000,
-                value=1000,
-                key=f"iterations_{problem_type}",
-                help="Maximum number of iterations the algorithm will run",
-            )
-            st.markdown(
-                '<div class="field-description">Maximum number of iterations before the algorithm stops</div>',
-                unsafe_allow_html=True,
-            )
-
-            if "Tabu" in selected_algorithm:
-                tabu_tenure = st.number_input(
-                    "Tabu tenure",
-                    min_value=5,
-                    max_value=50,
-                    value=10,
-                    key=f"tabu_tenure_{problem_type}",
-                    help="Number of iterations a move stays in tabu list",
-                )
-                st.markdown(
-                    '<div class="field-description">How long a solution stays forbidden in the tabu list</div>',
-                    unsafe_allow_html=True,
-                )
-
-                neighborhood_size = st.number_input(
-                    "Neighborhood size",
-                    min_value=10,
-                    max_value=100,
-                    value=20,
-                    key=f"neighborhood_{problem_type}",
-                    help="Number of neighbor solutions to explore each iteration",
-                )
-                st.markdown(
-                    '<div class="field-description">Number of neighboring solutions to explore in each iteration</div>',
-                    unsafe_allow_html=True,
-                )
-
-                algorithm_params = {
-                    "max_iterations": max_iterations,
-                    "tabu_tenure": tabu_tenure,
-                    "neighborhood_size": neighborhood_size,
-                }
-            elif "NSGA" in selected_algorithm or "MOEA" in selected_algorithm:
-                population_size = st.number_input(
-                    "Population size",
-                    min_value=20,
-                    max_value=500,
-                    value=100,
-                    key=f"population_{problem_type}",
-                    help="Number of solutions in each generation",
-                )
-                st.markdown(
-                    '<div class="field-description">Number of candidate solutions maintained in each generation</div>',
-                    unsafe_allow_html=True,
-                )
-
-                crossover_prob = st.slider(
-                    "Crossover probability",
-                    min_value=0.0,
-                    max_value=1.0,
-                    value=0.9,
-                    key=f"crossover_{problem_type}",
-                    help="Probability of combining two parent solutions",
-                )
-                st.markdown(
-                    '<div class="field-description">Probability that two parent solutions will be combined to create offspring</div>',
-                    unsafe_allow_html=True,
-                )
-
-                mutation_prob = st.slider(
-                    "Mutation probability",
-                    min_value=0.0,
-                    max_value=1.0,
-                    value=0.1,
-                    key=f"mutation_{problem_type}",
-                    help="Probability of random changes to a solution",
-                )
-                st.markdown(
-                    '<div class="field-description">Probability that random modifications will be applied to a solution</div>',
-                    unsafe_allow_html=True,
-                )
-
-                algorithm_params = {
-                    "max_iterations": max_iterations,
-                    "population_size": population_size,
-                    "crossover_prob": crossover_prob,
-                    "mutation_prob": mutation_prob,
-                }
-            else:
-                algorithm_params = {"max_iterations": max_iterations}
-
-            # 4. RUN BUTTON
-            st.markdown("---")
-            run_button = st.button(
-                "Run Algorithm", type="primary", key=f"run_{problem_type}"
-            )
-
+            # Run button logic
             if run_button:
                 if (
                     st.session_state.customers is None
@@ -522,34 +441,30 @@ for tab_idx, tab in enumerate(problem_tabs):
                         st.session_state.results[selected_algorithm] = solution
                         st.session_state.chart_counter += 1
                         st.success("Algorithm completed successfully!")
+                        st.rerun()
 
-            # 5. COMPARE BUTTON (for multiple algorithms)
-            if len(available_algorithms) > 1:
-                st.markdown("---")
-                compare_button = st.button(
-                    "Compare All Algorithms", key=f"compare_{problem_type}"
-                )
-
-                if compare_button:
-                    if (
-                        st.session_state.customers is None
-                        or st.session_state.depot is None
-                        or st.session_state.distance_matrix is None
-                    ):
-                        st.error("Please generate data first!")
-                    else:
-                        with st.spinner("Running all algorithms..."):
-                            runner = AlgorithmRunner(problem_type)
-                            all_results = runner.run_multiple_algorithms(
-                                available_algorithms,
-                                st.session_state.customers,
-                                st.session_state.depot,
-                                st.session_state.distance_matrix,
-                                vehicle_config,
-                                algorithm_params,
-                            )
-                            st.session_state.results = all_results
-                            st.success("Comparison completed!")
+            # Compare button logic
+            if compare_button:
+                if (
+                    st.session_state.customers is None
+                    or st.session_state.depot is None
+                    or st.session_state.distance_matrix is None
+                ):
+                    st.error("Please generate data first!")
+                else:
+                    with st.spinner("Running all algorithms..."):
+                        runner = AlgorithmRunner(problem_type)
+                        all_results = runner.run_multiple_algorithms(
+                            available_algorithms,
+                            st.session_state.customers,
+                            st.session_state.depot,
+                            st.session_state.distance_matrix,
+                            vehicle_config,
+                            algorithm_params,
+                        )
+                        st.session_state.results = all_results
+                        st.success("Comparison completed!")
+                        st.rerun()
 
         # ==================== LEFT SIDE: VISUALIZATION ====================
         with col_left:
@@ -579,7 +494,6 @@ for tab_idx, tab in enumerate(problem_tabs):
                             key=f"map_routes_{problem_type}_{st.session_state.chart_counter}",
                         )
                     elif st.session_state.depot is not None:
-                        # Show customers and depot without routes
                         fig_map = viz.plot_routes_2d(
                             st.session_state.customers,
                             st.session_state.depot,
@@ -598,24 +512,17 @@ for tab_idx, tab in enumerate(problem_tabs):
                     if st.session_state.solution is not None:
                         sol = st.session_state.solution
 
-                        # Display metrics
                         metric_cols = st.columns(4)
                         with metric_cols[0]:
                             st.metric("Makespan", f"{sol['makespan']:.1f} min")
                         with metric_cols[1]:
                             st.metric("Cost", f"{sol['cost']:,.0f} VND")
                         with metric_cols[2]:
-                            st.metric(
-                                "Total Distance", f"{sol['total_distance']:.1f} km"
-                            )
+                            st.metric("Distance", f"{sol['total_distance']:.1f} km")
                         with metric_cols[3]:
-                            st.metric(
-                                "Computation Time", f"{sol['computation_time']:.2f}s"
-                            )
+                            st.metric("Time", f"{sol['computation_time']:.2f}s")
 
                         st.markdown("---")
-
-                        # Routes detail
                         st.markdown("**Route Details:**")
                         for vehicle_id, route in sol["routes"].items():
                             if route:
@@ -645,7 +552,6 @@ for tab_idx, tab in enumerate(problem_tabs):
                             key=f"convergence_{problem_type}_{st.session_state.chart_counter}",
                         )
 
-                        # Pareto front for multi-objective
                         if (
                             problem_type == 2
                             and st.session_state.solution["pareto_front"]
@@ -689,31 +595,20 @@ for tab_idx, tab in enumerate(problem_tabs):
                         comparison_df = runner.get_comparison_summary()
 
                         st.markdown("**Comparison Table:**")
-                        st.dataframe(
-                            comparison_df,
-                            width="stretch",
-                        )
+                        st.dataframe(comparison_df, width="stretch")
 
                         st.markdown("---")
-
                         col1, col2 = st.columns(2)
                         with col1:
                             fig_makespan = viz.plot_metrics_comparison(
                                 comparison_df, "Makespan"
                             )
-                            st.plotly_chart(
-                                fig_makespan,
-                                width="stretch",
-                                key=f"result_{problem_type}_{st.session_state.chart_counter}",
-                            )
+                            st.plotly_chart(fig_makespan, width="stretch")
                         with col2:
                             fig_cost = viz.plot_metrics_comparison(
                                 comparison_df, "Cost"
                             )
-                            st.plotly_chart(
-                                fig_cost,
-                                width="stretch",
-                            )
+                            st.plotly_chart(fig_cost, width="stretch")
                     else:
                         st.info("Run 'Compare All Algorithms' to see comparison")
 
@@ -724,7 +619,7 @@ for tab_idx, tab in enumerate(problem_tabs):
 st.markdown("---")
 st.markdown(
     "<div style='text-align: center; color: #64748b;'>"
-    "Vehicle Routing Optimization System | Developed with Streamlit"
+    "Vehicle Routing Optimization System | Built with Streamlit"
     "</div>",
     unsafe_allow_html=True,
 )
