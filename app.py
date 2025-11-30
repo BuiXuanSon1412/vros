@@ -1,4 +1,4 @@
-# app.py - Main Streamlit Application with Minimalist Design
+# app.py - Main Streamlit Application with File Upload Support
 
 import streamlit as st
 from config.default_config import (
@@ -8,6 +8,7 @@ from config.default_config import (
 from utils.data_generator import DataGenerator
 from utils.visualizer import Visualizer
 from utils.solver import DummySolver, AlgorithmRunner
+from utils.file_parser import FileParser
 
 # Page config
 st.set_page_config(
@@ -17,11 +18,12 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Minimalist Theme CSS
+# [CSS styling remains the same - omitted for brevity]
 st.markdown(
     """
 <style>
-    /* Remove Streamlit header completely */
+
+/* Remove Streamlit header completely */
     header[data-testid="stHeader"] {
         display: none;
     }
@@ -323,6 +325,7 @@ st.markdown(
     div[data-testid="column"] {
         padding: 0 0.25rem;
     }
+
 </style>
 """,
     unsafe_allow_html=True,
@@ -342,6 +345,16 @@ for problem_id in [1, 2, 3]:
         st.session_state[f"results_{problem_id}"] = {}
     if f"chart_counter_{problem_id}" not in st.session_state:
         st.session_state[f"chart_counter_{problem_id}"] = 0
+    if f"data_source_{problem_id}" not in st.session_state:
+        st.session_state[f"data_source_{problem_id}"] = (
+            "generate"  # "generate" or "upload"
+        )
+    if f"file_vehicle_config_{problem_id}" not in st.session_state:
+        st.session_state[f"file_vehicle_config_{problem_id}"] = None
+    if f"file_processed_{problem_id}" not in st.session_state:
+        st.session_state[f"file_processed_{problem_id}"] = False
+    if f"last_uploaded_file_{problem_id}" not in st.session_state:
+        st.session_state[f"last_uploaded_file_{problem_id}"] = None
 
 
 # Initialize utilities
@@ -355,8 +368,14 @@ def get_data_generator():
     return DataGenerator()
 
 
+@st.cache_resource
+def get_file_parser():
+    return FileParser()
+
+
 viz = get_visualizer()
 data_gen = get_data_generator()
+file_parser = get_file_parser()
 
 # Header
 st.markdown(
@@ -385,79 +404,203 @@ for tab_idx, tab in enumerate(problem_tabs):
             st.markdown("### Configuration")
 
             # Configuration tabs
-            config_tabs = st.tabs(["Vehicle System", "Customer", "Algorithm"])
+            config_tabs = st.tabs(["Vehicle System", "Dataset", "Algorithm"])
 
             # TAB 1: VEHICLE SYSTEM
             with config_tabs[0]:
+                # Check if data was loaded from file
+                is_file_loaded = (
+                    st.session_state[f"data_source_{problem_type}"] == "upload"
+                )
+                file_config = st.session_state[f"file_vehicle_config_{problem_type}"]
+
                 # Two columns for trucks and drones
                 col_truck, col_drone = st.columns(2, gap="medium")
 
                 with col_truck:
                     st.markdown("**🚛 Trucks**")
-                    truck_count = st.number_input(
-                        "Count",
-                        min_value=1,
-                        max_value=10,
-                        value=DEFAULT_VEHICLE_CONFIG["truck"]["count"],
-                        key=f"truck_count_{problem_type}",
-                    )
+
+                    if is_file_loaded and file_config:
+                        # Display values from file (read-only)
+                        if problem_type == 2:
+                            truck_count = st.number_input(
+                                "Count",
+                                value=file_config.get("num_staff", 2),
+                                disabled=True,
+                                key=f"truck_count_{problem_type}",
+                            )
+                        elif problem_type == 3:
+                            truck_count = st.number_input(
+                                "Count",
+                                value=file_config.get("number_truck", 2),
+                                disabled=True,
+                                key=f"truck_count_{problem_type}",
+                            )
+                        else:
+                            truck_count = st.number_input(
+                                "Count",
+                                min_value=1,
+                                max_value=10,
+                                value=DEFAULT_VEHICLE_CONFIG["truck"]["count"],
+                                key=f"truck_count_{problem_type}",
+                            )
+                    else:
+                        truck_count = st.number_input(
+                            "Count",
+                            min_value=1,
+                            max_value=10,
+                            value=DEFAULT_VEHICLE_CONFIG["truck"]["count"],
+                            key=f"truck_count_{problem_type}",
+                        )
+
+                    # Speed - read from file if problem 3
+                    if is_file_loaded and problem_type == 3 and file_config:
+                        truck_speed = st.number_input(
+                            "Speed (km/h)",
+                            value=float(file_config.get("truck_speed", 0.5)),
+                            disabled=True,
+                            key=f"truck_speed_{problem_type}",
+                        )
+                    else:
+                        truck_speed = st.number_input(
+                            "Speed (km/h)",
+                            min_value=10,
+                            max_value=100,
+                            value=DEFAULT_VEHICLE_CONFIG["truck"]["speed"],
+                            key=f"truck_speed_{problem_type}",
+                        )
+
                     truck_capacity = st.number_input(
                         "Capacity (kg)",
                         min_value=10,
                         max_value=500,
                         value=DEFAULT_VEHICLE_CONFIG["truck"]["capacity"],
+                        disabled=is_file_loaded,
                         key=f"truck_capacity_{problem_type}",
                     )
-                    truck_speed = st.number_input(
-                        "Speed (km/h)",
-                        min_value=10,
-                        max_value=100,
-                        value=DEFAULT_VEHICLE_CONFIG["truck"]["speed"],
-                        key=f"truck_speed_{problem_type}",
-                    )
+
                     truck_cost = st.number_input(
                         "Cost/km (VND)",
                         min_value=1000,
                         max_value=20000,
                         value=DEFAULT_VEHICLE_CONFIG["truck"]["cost_per_km"],
+                        disabled=is_file_loaded,
                         key=f"truck_cost_{problem_type}",
                     )
 
                 with col_drone:
                     st.markdown("**✈️ Drones**")
-                    drone_count = st.number_input(
-                        "Count",
-                        min_value=0,
-                        max_value=10,
-                        value=DEFAULT_VEHICLE_CONFIG["drone"]["count"],
-                        key=f"drone_count_{problem_type}",
-                    )
-                    drone_capacity = st.number_input(
-                        "Capacity (kg)",
-                        min_value=1,
-                        max_value=50,
-                        value=DEFAULT_VEHICLE_CONFIG["drone"]["capacity"],
-                        key=f"drone_capacity_{problem_type}",
-                    )
-                    drone_speed = st.number_input(
-                        "Speed (km/h)",
-                        min_value=10,
-                        max_value=120,
-                        value=DEFAULT_VEHICLE_CONFIG["drone"]["speed"],
-                        key=f"drone_speed_{problem_type}",
-                    )
-                    drone_energy = st.number_input(
-                        "Energy (min)",
-                        min_value=10,
-                        max_value=120,
-                        value=DEFAULT_VEHICLE_CONFIG["drone"]["energy_limit"],
-                        key=f"drone_energy_{problem_type}",
-                    )
+
+                    if is_file_loaded and file_config:
+                        if problem_type == 2:
+                            drone_count = st.number_input(
+                                "Count",
+                                value=file_config.get("num_drone", 3),
+                                disabled=True,
+                                key=f"drone_count_{problem_type}",
+                            )
+                        elif problem_type == 3:
+                            drone_count = st.number_input(
+                                "Count",
+                                value=file_config.get("number_drone", 3),
+                                disabled=True,
+                                key=f"drone_count_{problem_type}",
+                            )
+                        else:
+                            drone_count = st.number_input(
+                                "Count",
+                                min_value=0,
+                                max_value=10,
+                                value=DEFAULT_VEHICLE_CONFIG["drone"]["count"],
+                                key=f"drone_count_{problem_type}",
+                            )
+                    else:
+                        drone_count = st.number_input(
+                            "Count",
+                            min_value=0,
+                            max_value=10,
+                            value=DEFAULT_VEHICLE_CONFIG["drone"]["count"],
+                            key=f"drone_count_{problem_type}",
+                        )
+
+                    # Speed - read from file if problem 3
+                    if is_file_loaded and problem_type == 3 and file_config:
+                        drone_speed = st.number_input(
+                            "Speed (km/h)",
+                            value=float(file_config.get("drone_speed", 1.0)),
+                            disabled=True,
+                            key=f"drone_speed_{problem_type}",
+                        )
+                    else:
+                        drone_speed = st.number_input(
+                            "Speed (km/h)",
+                            min_value=10,
+                            max_value=120,
+                            value=DEFAULT_VEHICLE_CONFIG["drone"]["speed"],
+                            key=f"drone_speed_{problem_type}",
+                        )
+
+                    # Capacity - read from file if problem 3
+                    if is_file_loaded and problem_type == 3 and file_config:
+                        drone_capacity = st.number_input(
+                            "Capacity (kg)",
+                            value=float(file_config.get("M_d", 5)),
+                            disabled=True,
+                            key=f"drone_capacity_{problem_type}",
+                        )
+                    else:
+                        drone_capacity = st.number_input(
+                            "Capacity (kg)",
+                            min_value=1,
+                            max_value=50,
+                            value=DEFAULT_VEHICLE_CONFIG["drone"]["capacity"],
+                            disabled=is_file_loaded,
+                            key=f"drone_capacity_{problem_type}",
+                        )
+
+                    # Energy limit
+                    if is_file_loaded and file_config:
+                        if problem_type == 2:
+                            energy_val = (
+                                file_config.get("drone_flight_time", 3600) / 60
+                            )  # Convert to minutes
+                            drone_energy = st.number_input(
+                                "Energy (min)",
+                                value=float(energy_val),
+                                disabled=True,
+                                key=f"drone_energy_{problem_type}",
+                            )
+                        elif problem_type == 3:
+                            energy_val = file_config.get("L_d", 90)
+                            drone_energy = st.number_input(
+                                "Energy (min)",
+                                value=float(energy_val),
+                                disabled=True,
+                                key=f"drone_energy_{problem_type}",
+                            )
+                        else:
+                            drone_energy = st.number_input(
+                                "Energy (min)",
+                                min_value=10,
+                                max_value=120,
+                                value=DEFAULT_VEHICLE_CONFIG["drone"]["energy_limit"],
+                                key=f"drone_energy_{problem_type}",
+                            )
+                    else:
+                        drone_energy = st.number_input(
+                            "Energy (min)",
+                            min_value=10,
+                            max_value=120,
+                            value=DEFAULT_VEHICLE_CONFIG["drone"]["energy_limit"],
+                            key=f"drone_energy_{problem_type}",
+                        )
+
                     drone_cost = st.number_input(
                         "Cost/km (VND)",
                         min_value=500,
                         max_value=10000,
                         value=DEFAULT_VEHICLE_CONFIG["drone"]["cost_per_km"],
+                        disabled=is_file_loaded,
                         key=f"drone_cost_{problem_type}",
                     )
 
@@ -477,80 +620,555 @@ for tab_idx, tab in enumerate(problem_tabs):
                 },
             }
 
-            # TAB 2: CUSTOMER
+            # TAB 2: DATASET (Previously CUSTOMER)
             with config_tabs[1]:
-                num_customers = st.number_input(
-                    "Number of customers",
-                    min_value=5,
-                    max_value=100,
-                    value=20,
-                    key=f"num_customers_{problem_type}",
+                # Data source selection
+                data_source = st.radio(
+                    "Data Source",
+                    ["Generate Data", "Upload File"],
+                    key=f"data_source_radio_{problem_type}",
+                    horizontal=True,
                 )
 
-                area_size = st.number_input(
-                    "Service area size (km × km)",
-                    min_value=10,
-                    max_value=100,
-                    value=50,
-                    key=f"area_size_{problem_type}",
-                )
+                st.markdown("---")
 
-                col1, col2 = st.columns(2)
-                with col1:
-                    demand_min = st.number_input(
-                        "Min demand (kg)",
-                        min_value=1,
-                        max_value=50,
-                        value=1,
-                        key=f"demand_min_{problem_type}",
-                    )
-                    service_min = st.number_input(
-                        "Min service (min)",
-                        min_value=1,
-                        max_value=60,
-                        value=5,
-                        key=f"service_min_{problem_type}",
-                    )
-                with col2:
-                    demand_max = st.number_input(
-                        "Max demand (kg)",
-                        min_value=1,
-                        max_value=50,
-                        value=10,
-                        key=f"demand_max_{problem_type}",
-                    )
-                    service_max = st.number_input(
-                        "Max service (min)",
-                        min_value=1,
-                        max_value=60,
-                        value=15,
-                        key=f"service_max_{problem_type}",
+                if data_source == "Generate Data":
+                    st.session_state[f"data_source_{problem_type}"] = "generate"
+
+                    # === SYSTEM METRICS SECTION ===
+                    st.markdown("#### 🔧 System Metrics")
+
+                    if problem_type in [1, 2]:
+                        # Problem 1 & 2: Staff/Drone system
+                        col1, col2 = st.columns([1, 3])
+
+                        with col1:
+                            enable_staff_vel = st.checkbox(
+                                "✓", value=True, key=f"en_staff_vel_{problem_type}"
+                            )
+                            enable_drone_vel = st.checkbox(
+                                "✓", value=True, key=f"en_drone_vel_{problem_type}"
+                            )
+                            enable_num_staff = st.checkbox(
+                                "✓", value=True, key=f"en_num_staff_{problem_type}"
+                            )
+                            enable_num_drone = st.checkbox(
+                                "✓", value=True, key=f"en_num_drone_{problem_type}"
+                            )
+                            enable_drone_flight = st.checkbox(
+                                "✓", value=True, key=f"en_drone_flight_{problem_type}"
+                            )
+                            enable_sample_wait = st.checkbox(
+                                "✓", value=False, key=f"en_sample_wait_{problem_type}"
+                            )
+
+                        with col2:
+                            staff_velocity = st.number_input(
+                                "Staff velocity (km/h)",
+                                min_value=10,
+                                max_value=100,
+                                value=40,
+                                disabled=not enable_staff_vel,
+                                key=f"staff_vel_{problem_type}",
+                            )
+                            drone_velocity = st.number_input(
+                                "Drone velocity (km/h)",
+                                min_value=10,
+                                max_value=120,
+                                value=60,
+                                disabled=not enable_drone_vel,
+                                key=f"drone_vel_{problem_type}",
+                            )
+                            num_staffs = st.number_input(
+                                "Number of staffs",
+                                min_value=1,
+                                max_value=10,
+                                value=2,
+                                disabled=not enable_num_staff,
+                                key=f"num_staffs_{problem_type}",
+                            )
+                            num_drones = st.number_input(
+                                "Number of drones",
+                                min_value=0,
+                                max_value=10,
+                                value=3,
+                                disabled=not enable_num_drone,
+                                key=f"num_drones_{problem_type}",
+                            )
+                            drone_flight_time = st.number_input(
+                                "Drone flight time limit (min)",
+                                min_value=10,
+                                max_value=120,
+                                value=60,
+                                disabled=not enable_drone_flight,
+                                key=f"drone_flight_{problem_type}",
+                            )
+                            sample_wait_time = st.number_input(
+                                "Sample waiting time limit (min)",
+                                min_value=5,
+                                max_value=120,
+                                value=30,
+                                disabled=not enable_sample_wait,
+                                key=f"sample_wait_{problem_type}",
+                            )
+
+                    else:  # problem_type == 3
+                        # Problem 3: Truck/Drone system with release dates
+                        col1, col2 = st.columns([1, 3])
+
+                        with col1:
+                            enable_truck_vel = st.checkbox(
+                                "✓", value=True, key=f"en_truck_vel_{problem_type}"
+                            )
+                            enable_drone_vel = st.checkbox(
+                                "✓", value=True, key=f"en_drone_vel_{problem_type}"
+                            )
+                            enable_num_truck = st.checkbox(
+                                "✓", value=True, key=f"en_num_truck_{problem_type}"
+                            )
+                            enable_num_drone = st.checkbox(
+                                "✓", value=True, key=f"en_num_drone_{problem_type}"
+                            )
+                            enable_drone_capacity = st.checkbox(
+                                "✓", value=True, key=f"en_drone_cap_{problem_type}"
+                            )
+                            enable_drone_flight = st.checkbox(
+                                "✓", value=True, key=f"en_drone_flight_{problem_type}"
+                            )
+
+                        with col2:
+                            truck_velocity = st.number_input(
+                                "Truck velocity (km/h)",
+                                min_value=10,
+                                max_value=100,
+                                value=40,
+                                disabled=not enable_truck_vel,
+                                key=f"truck_vel_{problem_type}",
+                            )
+                            drone_velocity = st.number_input(
+                                "Drone velocity (km/h)",
+                                min_value=10,
+                                max_value=120,
+                                value=60,
+                                disabled=not enable_drone_vel,
+                                key=f"drone_vel_{problem_type}",
+                            )
+                            num_trucks = st.number_input(
+                                "Number of trucks",
+                                min_value=1,
+                                max_value=10,
+                                value=3,
+                                disabled=not enable_num_truck,
+                                key=f"num_trucks_{problem_type}",
+                            )
+                            num_drones = st.number_input(
+                                "Number of drones",
+                                min_value=0,
+                                max_value=10,
+                                value=3,
+                                disabled=not enable_num_drone,
+                                key=f"num_drones_{problem_type}",
+                            )
+                            drone_capacity = st.number_input(
+                                "Drone capacity (kg)",
+                                min_value=1,
+                                max_value=50,
+                                value=4,
+                                disabled=not enable_drone_capacity,
+                                key=f"drone_cap_{problem_type}",
+                            )
+                            drone_flight_time = st.number_input(
+                                "Drone flight time limit (min)",
+                                min_value=10,
+                                max_value=180,
+                                value=90,
+                                disabled=not enable_drone_flight,
+                                key=f"drone_flight_{problem_type}",
+                            )
+
+                    st.markdown("---")
+
+                    # === CUSTOMER METRICS SECTION ===
+                    st.markdown("#### 👥 Customer Metrics")
+
+                    col1, col2 = st.columns([1, 3])
+
+                    with col1:
+                        enable_num_customers = st.checkbox(
+                            "✓", value=True, key=f"en_num_cust_{problem_type}"
+                        )
+                        enable_coord_range = st.checkbox(
+                            "✓", value=True, key=f"en_coord_{problem_type}"
+                        )
+                        enable_demand = st.checkbox(
+                            "✓", value=True, key=f"en_demand_{problem_type}"
+                        )
+                        if problem_type in [1, 2]:
+                            enable_staff_only = st.checkbox(
+                                "✓", value=False, key=f"en_staff_only_{problem_type}"
+                            )
+                            enable_service_truck = st.checkbox(
+                                "✓", value=True, key=f"en_service_truck_{problem_type}"
+                            )
+                            enable_service_drone = st.checkbox(
+                                "✓", value=True, key=f"en_service_drone_{problem_type}"
+                            )
+                        else:
+                            enable_release_date = st.checkbox(
+                                "✓", value=True, key=f"en_release_{problem_type}"
+                            )
+
+                    with col2:
+                        num_customers = st.number_input(
+                            "Number of customers",
+                            min_value=5,
+                            max_value=100,
+                            value=20,
+                            disabled=not enable_num_customers,
+                            key=f"num_customers_{problem_type}",
+                        )
+
+                        # Coordinate range
+                        st.markdown("**Coordinate range (km)**")
+                        coord_col1, coord_col2 = st.columns(2)
+                        with coord_col1:
+                            coord_min = st.number_input(
+                                "Min",
+                                min_value=-500,
+                                max_value=0,
+                                value=-100,
+                                disabled=not enable_coord_range,
+                                key=f"coord_min_{problem_type}",
+                            )
+                        with coord_col2:
+                            coord_max = st.number_input(
+                                "Max",
+                                min_value=0,
+                                max_value=500,
+                                value=100,
+                                disabled=not enable_coord_range,
+                                key=f"coord_max_{problem_type}",
+                            )
+
+                        # Demand range
+                        st.markdown("**Demand range (kg)**")
+                        demand_col1, demand_col2 = st.columns(2)
+                        with demand_col1:
+                            demand_min = st.number_input(
+                                "Min",
+                                min_value=0.01,
+                                max_value=10.0,
+                                value=0.02,
+                                step=0.01,
+                                format="%.2f",
+                                disabled=not enable_demand,
+                                key=f"demand_min_{problem_type}",
+                            )
+                        with demand_col2:
+                            demand_max = st.number_input(
+                                "Max",
+                                min_value=0.01,
+                                max_value=10.0,
+                                value=0.1,
+                                step=0.01,
+                                format="%.2f",
+                                disabled=not enable_demand,
+                                key=f"demand_max_{problem_type}",
+                            )
+
+                        if problem_type in [1, 2]:
+                            # Problem 1 & 2 specific
+                            ratio_staff_only = st.slider(
+                                "Ratio of served-only-by-staff (%)",
+                                min_value=0,
+                                max_value=100,
+                                value=50,
+                                disabled=not enable_staff_only,
+                                key=f"ratio_staff_{problem_type}",
+                            )
+
+                            service_time_truck = st.number_input(
+                                "Service time by truck (seconds)",
+                                min_value=10,
+                                max_value=300,
+                                value=60,
+                                disabled=not enable_service_truck,
+                                key=f"service_truck_{problem_type}",
+                            )
+
+                            service_time_drone = st.number_input(
+                                "Service time by drone (seconds)",
+                                min_value=10,
+                                max_value=300,
+                                value=30,
+                                disabled=not enable_service_drone,
+                                key=f"service_drone_{problem_type}",
+                            )
+                        else:
+                            # Problem 3 specific
+                            st.markdown("**Release date range (time units)**")
+                            release_col1, release_col2 = st.columns(2)
+                            with release_col1:
+                                release_min = st.number_input(
+                                    "Min",
+                                    min_value=0,
+                                    max_value=100,
+                                    value=0,
+                                    disabled=not enable_release_date,
+                                    key=f"release_min_{problem_type}",
+                                )
+                            with release_col2:
+                                release_max = st.number_input(
+                                    "Max",
+                                    min_value=0,
+                                    max_value=100,
+                                    value=20,
+                                    disabled=not enable_release_date,
+                                    key=f"release_max_{problem_type}",
+                                )
+
+                    st.markdown("")
+                    generate_button = st.button(
+                        "Generate Data",
+                        key=f"generate_{problem_type}",
+                        use_container_width=True,
                     )
 
-                priority_levels = st.number_input(
-                    "Priority levels",
-                    min_value=1,
-                    max_value=5,
-                    value=3,
-                    key=f"priority_{problem_type}",
-                )
+                    if generate_button:
+                        with st.spinner("Generating..."):
+                            # Collect generation parameters
+                            gen_params = {
+                                "num_customers": num_customers
+                                if enable_num_customers
+                                else 20,
+                                "coord_range": (coord_min, coord_max)
+                                if enable_coord_range
+                                else (-100, 100),
+                                "demand_range": (demand_min, demand_max)
+                                if enable_demand
+                                else (0.02, 0.1),
+                            }
 
-                # GENERATE DATA BUTTON
-                st.markdown("")  # Add spacing
-                generate_button = st.button(
-                    "Generate Data",
-                    key=f"generate_{problem_type}",
-                    use_container_width=True,
-                )
+                            if problem_type in [1, 2]:
+                                gen_params.update(
+                                    {
+                                        "staff_velocity": staff_velocity
+                                        if enable_staff_vel
+                                        else 40,
+                                        "drone_velocity": drone_velocity
+                                        if enable_drone_vel
+                                        else 60,
+                                        "num_staffs": num_staffs
+                                        if enable_num_staff
+                                        else 2,
+                                        "num_drones": num_drones
+                                        if enable_num_drone
+                                        else 3,
+                                        "drone_flight_time": drone_flight_time
+                                        if enable_drone_flight
+                                        else 60,
+                                        "ratio_staff_only": ratio_staff_only / 100
+                                        if enable_staff_only
+                                        else 0.5,
+                                        "service_time_truck": service_time_truck
+                                        if enable_service_truck
+                                        else 60,
+                                        "service_time_drone": service_time_drone
+                                        if enable_service_drone
+                                        else 30,
+                                    }
+                                )
+                            else:
+                                gen_params.update(
+                                    {
+                                        "truck_velocity": truck_velocity
+                                        if enable_truck_vel
+                                        else 40,
+                                        "drone_velocity": drone_velocity
+                                        if enable_drone_vel
+                                        else 60,
+                                        "num_trucks": num_trucks
+                                        if enable_num_truck
+                                        else 3,
+                                        "num_drones": num_drones
+                                        if enable_num_drone
+                                        else 3,
+                                        "drone_capacity": drone_capacity
+                                        if enable_drone_capacity
+                                        else 4,
+                                        "drone_flight_time": drone_flight_time
+                                        if enable_drone_flight
+                                        else 90,
+                                        "release_range": (release_min, release_max)
+                                        if enable_release_date
+                                        else (0, 20),
+                                    }
+                                )
+
+                            # Generate data with custom parameters
+                            st.session_state[f"customers_{problem_type}"] = (
+                                data_gen.generate_customers_custom(
+                                    problem_type, gen_params
+                                )
+                            )
+                            st.session_state[f"depot_{problem_type}"] = (
+                                data_gen.generate_depot(
+                                    coord_max - coord_min if enable_coord_range else 200
+                                )
+                            )
+                            st.session_state[f"distance_matrix_{problem_type}"] = (
+                                data_gen.calculate_distance_matrix(
+                                    st.session_state[f"customers_{problem_type}"],
+                                    st.session_state[f"depot_{problem_type}"],
+                                )
+                            )
+                            st.session_state[f"file_vehicle_config_{problem_type}"] = (
+                                None
+                            )
+                            st.session_state[f"file_processed_{problem_type}"] = False
+                            st.session_state[f"last_uploaded_file_{problem_type}"] = (
+                                None
+                            )
+                            st.session_state[f"generation_params_{problem_type}"] = (
+                                gen_params
+                            )
+                            st.success("Data generated!")
+
+                else:  # Upload File
+                    st.session_state[f"data_source_{problem_type}"] = "upload"
+
+                    # Display expected format
+                    if problem_type == 1:
+                        st.info(
+                            "📄 Expected format: **6.5.1.txt**\n\nCustomers N\nCoordinate X  Coordinate Y  Demand"
+                        )
+                        expected_ext = ".txt"
+                    elif problem_type == 2:
+                        st.info(
+                            "📄 Expected format: **10.10.1.txt**\n\nnumber_staff N\nnumber_drone M\n..."
+                        )
+                        expected_ext = ".txt"
+                    else:  # problem_type == 3
+                        st.info(
+                            "📄 Expected format: **10.1.txt**\n\nXCOORD  YCOORD  DEMAND  RELEASE_DATE"
+                        )
+                        expected_ext = ".txt"
+
+                    uploaded_file = st.file_uploader(
+                        "Choose a file",
+                        type=["txt", "dat"],
+                        key=f"file_upload_{problem_type}",
+                    )
+
+                    if uploaded_file is not None:
+                        # Check if this is a new file (avoid reprocessing)
+                        file_id = f"{uploaded_file.name}_{uploaded_file.size}"
+
+                        if (
+                            st.session_state[f"last_uploaded_file_{problem_type}"]
+                            != file_id
+                        ):
+                            try:
+                                # Read file content
+                                file_content = uploaded_file.read().decode("utf-8")
+
+                                # Parse based on problem type
+                                if problem_type == 1:
+                                    customers_df, depot, distance_matrix = (
+                                        file_parser.parse_problem1_file(file_content)
+                                    )
+                                    vehicle_config_from_file = None
+                                elif problem_type == 2:
+                                    (
+                                        customers_df,
+                                        depot,
+                                        distance_matrix,
+                                        vehicle_config_from_file,
+                                    ) = file_parser.parse_problem2_file(file_content)
+                                else:  # problem_type == 3
+                                    (
+                                        customers_df,
+                                        depot,
+                                        distance_matrix,
+                                        vehicle_config_from_file,
+                                    ) = file_parser.parse_problem3_file(file_content)
+
+                                # Store in session state
+                                st.session_state[f"customers_{problem_type}"] = (
+                                    customers_df
+                                )
+                                st.session_state[f"depot_{problem_type}"] = depot
+                                st.session_state[f"distance_matrix_{problem_type}"] = (
+                                    distance_matrix
+                                )
+                                st.session_state[
+                                    f"file_vehicle_config_{problem_type}"
+                                ] = vehicle_config_from_file
+                                st.session_state[
+                                    f"last_uploaded_file_{problem_type}"
+                                ] = file_id
+                                st.session_state[f"file_processed_{problem_type}"] = (
+                                    True
+                                )
+
+                                st.success(
+                                    f"✅ File uploaded successfully! {len(customers_df)} customers loaded."
+                                )
+
+                            except Exception as e:
+                                st.error(f"❌ Error parsing file: {str(e)}")
+                                st.info(
+                                    "Please check that your file matches the expected format."
+                                )
+                        else:
+                            # File already processed, just show success message
+                            if st.session_state[f"file_processed_{problem_type}"]:
+                                customers_df = st.session_state[
+                                    f"customers_{problem_type}"
+                                ]
+                                st.success(
+                                    f"✅ File loaded: {len(customers_df)} customers"
+                                )
+
+                    # Display data metrics if data exists
+                    if (
+                        st.session_state[f"customers_{problem_type}"] is not None
+                        and st.session_state[f"file_processed_{problem_type}"]
+                    ):
+                        st.markdown("**Data Metrics:**")
+                        customers_df = st.session_state[f"customers_{problem_type}"]
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("Customers", len(customers_df))
+                        with col2:
+                            st.metric(
+                                "Avg Demand", f"{customers_df['demand'].mean():.2f} kg"
+                            )
+                        with col3:
+                            if "service_time" in customers_df.columns:
+                                st.metric(
+                                    "Avg Service",
+                                    f"{customers_df['service_time'].mean():.1f} min",
+                                )
+
+                    # Show current loaded data info if exists
+                    if (
+                        st.session_state[f"customers_{problem_type}"] is not None
+                        and st.session_state[f"data_source_{problem_type}"] == "upload"
+                    ):
+                        st.markdown("---")
+                        st.markdown("**Currently Loaded:**")
+                        customers = st.session_state[f"customers_{problem_type}"]
+                        depot = st.session_state[f"depot_{problem_type}"]
+                        st.write(f"✓ {len(customers)} customers")
+                        st.write(f"✓ Depot at ({depot['x']:.2f}, {depot['y']:.2f})")
 
             # TAB 3: ALGORITHM
             with config_tabs[2]:
                 available_algorithms = ALGORITHMS[problem_type]
 
                 selected_algorithm = st.selectbox(
-                    "Algorithm",
-                    available_algorithms,
-                    key=f"algorithm_{problem_type}",
+                    "Algorithm", available_algorithms, key=f"algorithm_{problem_type}"
                 )
 
                 max_iterations = st.number_input(
@@ -623,8 +1241,7 @@ for tab_idx, tab in enumerate(problem_tabs):
                 else:
                     algorithm_params = {"max_iterations": max_iterations}
 
-                # RUN ALGORITHM BUTTON
-                st.markdown("")  # Add spacing
+                st.markdown("")
                 run_button = st.button(
                     "Run Algorithm",
                     type="primary",
@@ -632,36 +1249,14 @@ for tab_idx, tab in enumerate(problem_tabs):
                     use_container_width=True,
                 )
 
-            # Handle button actions
-            if generate_button:
-                with st.spinner("Generating..."):
-                    st.session_state[f"customers_{problem_type}"] = (
-                        data_gen.generate_customers(
-                            num_customers,
-                            area_size,
-                            (demand_min, demand_max),
-                            (service_min, service_max),
-                            priority_levels,
-                        )
-                    )
-                    st.session_state[f"depot_{problem_type}"] = data_gen.generate_depot(
-                        area_size
-                    )
-                    st.session_state[f"distance_matrix_{problem_type}"] = (
-                        data_gen.calculate_distance_matrix(
-                            st.session_state[f"customers_{problem_type}"],
-                            st.session_state[f"depot_{problem_type}"],
-                        )
-                    )
-                    st.success("Data generated!")
-
+            # Handle run button
             if run_button:
                 if (
                     st.session_state[f"customers_{problem_type}"] is None
                     or st.session_state[f"depot_{problem_type}"] is None
                     or st.session_state[f"distance_matrix_{problem_type}"] is None
                 ):
-                    st.error("Please generate data first!")
+                    st.error("Please generate or upload data first!")
                 else:
                     with st.spinner(f"Running {selected_algorithm}..."):
                         solver = DummySolver(problem_type, selected_algorithm)
@@ -725,7 +1320,6 @@ for tab_idx, tab in enumerate(problem_tabs):
                     if st.session_state[f"solution_{problem_type}"] is not None:
                         sol = st.session_state[f"solution_{problem_type}"]
 
-                        # Display metrics
                         metric_cols = st.columns(4)
                         with metric_cols[0]:
                             st.metric("Makespan", f"{sol['makespan']:.1f} min")
@@ -738,7 +1332,6 @@ for tab_idx, tab in enumerate(problem_tabs):
 
                         st.markdown("---")
 
-                        # Routes detail
                         st.markdown("**Route Details:**")
                         for vehicle_id, route in sol["routes"].items():
                             if route:
@@ -772,7 +1365,6 @@ for tab_idx, tab in enumerate(problem_tabs):
                             key=f"convergence_{problem_type}_{st.session_state[f'chart_counter_{problem_type}']}",
                         )
 
-                        # Pareto front for multi-objective
                         if (
                             problem_type == 2
                             and st.session_state[f"solution_{problem_type}"][
@@ -820,10 +1412,7 @@ for tab_idx, tab in enumerate(problem_tabs):
                         comparison_df = runner.get_comparison_summary()
 
                         st.markdown("**Comparison Table:**")
-                        st.dataframe(
-                            comparison_df,
-                            use_container_width=True,
-                        )
+                        st.dataframe(comparison_df, use_container_width=True)
 
                         st.markdown("---")
 
@@ -841,15 +1430,12 @@ for tab_idx, tab in enumerate(problem_tabs):
                             fig_cost = viz.plot_metrics_comparison(
                                 comparison_df, "Cost"
                             )
-                            st.plotly_chart(
-                                fig_cost,
-                                use_container_width=True,
-                            )
+                            st.plotly_chart(fig_cost, use_container_width=True)
                     else:
-                        st.info("Run 'Compare All' to see comparison")
+                        st.info("Run multiple algorithms to see comparison")
 
             else:
-                st.info("Generate data in the configuration panel to begin")
+                st.info("Generate or upload data in the configuration panel to begin")
 
 # Footer
 st.markdown(
