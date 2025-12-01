@@ -1,4 +1,4 @@
-# ui/config/data_generation.py - Data Generation Form (Fixed - No Duplication)
+# ui/config/data_generation.py - Data Generation Form (Fixed)
 
 import streamlit as st
 from ui.handlers.generate_handler import handle_generate_button
@@ -56,12 +56,12 @@ def _get_vehicle_config_from_session(problem_type):
 def _render_customer_metrics(problem_type):
     """Render customer metrics section"""
 
-    # -------------------------
     # Number of customers
-    # -------------------------
     c1, c2 = st.columns([1, 6])
     with c1:
-        en_num_cust = st.checkbox("", value=True, key=f"en_num_cust_{problem_type}")
+        en_num_cust = st.checkbox(
+            "✓", value=True, key=f"en_num_cust_{problem_type}", help="Enable"
+        )
     with c2:
         num_customers = st.number_input(
             "Number of customers",
@@ -72,14 +72,12 @@ def _render_customer_metrics(problem_type):
             key=f"num_customers_{problem_type}",
         )
 
-    # -------------------------
-    # Coordinate range (paired)
-    # -------------------------
+    # Coordinate range
     coord_col1, coord_col2, coord_col3 = st.columns([1, 3, 3])
-
     with coord_col1:
-        en_coord = st.checkbox("", value=True, key=f"en_coord_{problem_type}")
-
+        en_coord = st.checkbox(
+            "✓", value=True, key=f"en_coord_{problem_type}", help="Enable"
+        )
     with coord_col2:
         coord_min = st.number_input(
             "Min coordinate",
@@ -89,7 +87,6 @@ def _render_customer_metrics(problem_type):
             disabled=not en_coord,
             key=f"coord_min_{problem_type}",
         )
-
     with coord_col3:
         coord_max = st.number_input(
             "Max coordinate",
@@ -100,14 +97,12 @@ def _render_customer_metrics(problem_type):
             key=f"coord_max_{problem_type}",
         )
 
-    # -------------------------
-    # Demand range (paired)
-    # -------------------------
+    # Demand range
     dem_col1, dem_col2, dem_col3 = st.columns([1, 3, 3])
-
     with dem_col1:
-        en_demand = st.checkbox("", value=True, key=f"en_demand_{problem_type}")
-
+        en_demand = st.checkbox(
+            "✓", value=True, key=f"en_demand_{problem_type}", help="Enable"
+        )
     with dem_col2:
         demand_min = st.number_input(
             "Min demand",
@@ -119,7 +114,6 @@ def _render_customer_metrics(problem_type):
             disabled=not en_demand,
             key=f"demand_min_{problem_type}",
         )
-
     with dem_col3:
         demand_max = st.number_input(
             "Max demand",
@@ -132,9 +126,7 @@ def _render_customer_metrics(problem_type):
             key=f"demand_max_{problem_type}",
         )
 
-    # -------------------------
-    # Problem-type specific
-    # -------------------------
+    # Problem-specific parameters
     extra_params = {}
 
     if problem_type in [1, 2]:
@@ -142,7 +134,7 @@ def _render_customer_metrics(problem_type):
         s1, s2 = st.columns([1, 6])
         with s1:
             en_staff_only = st.checkbox(
-                "", value=False, key=f"en_staff_only_{problem_type}"
+                "✓", value=False, key=f"en_staff_only_{problem_type}", help="Enable"
             )
         with s2:
             ratio_staff_only = st.number_input(
@@ -154,13 +146,13 @@ def _render_customer_metrics(problem_type):
                 key=f"ratio_staff_{problem_type}",
             )
 
-        # ---- Service time TRUCK + DRONE paired ----
+        # Service time
         st.markdown("**Service time (seconds)**")
         st_col1, st_col2, st_col3 = st.columns([1, 3, 3])
-
         with st_col1:
-            en_service = st.checkbox("", value=True, key=f"en_service_{problem_type}")
-
+            en_service = st.checkbox(
+                "✓", value=True, key=f"en_service_{problem_type}", help="Enable"
+            )
         with st_col2:
             service_time_truck = st.number_input(
                 "Truck",
@@ -170,7 +162,6 @@ def _render_customer_metrics(problem_type):
                 disabled=not en_service,
                 key=f"service_truck_{problem_type}",
             )
-
         with st_col3:
             service_time_drone = st.number_input(
                 "Drone",
@@ -187,12 +178,12 @@ def _render_customer_metrics(problem_type):
             "service_time_drone": service_time_drone if en_service else 30,
         }
 
-    else:
-        # Release range (keep separate)
+    else:  # Problem 3
+        # Release range
         r1, r2 = st.columns([1, 6])
         with r1:
             en_release_min = st.checkbox(
-                "", value=True, key=f"en_release_min_{problem_type}"
+                "✓", value=True, key=f"en_release_min_{problem_type}", help="Enable"
             )
         with r2:
             release_min = st.number_input(
@@ -207,7 +198,7 @@ def _render_customer_metrics(problem_type):
         r3, r4 = st.columns([1, 6])
         with r3:
             en_release_max = st.checkbox(
-                "", value=True, key=f"en_release_max_{problem_type}"
+                "✓", value=True, key=f"en_release_max_{problem_type}", help="Enable"
             )
         with r4:
             release_max = st.number_input(
@@ -220,14 +211,10 @@ def _render_customer_metrics(problem_type):
             )
 
         en_release = en_release_min and en_release_max
-
         extra_params = {
             "release_range": (release_min, release_max) if en_release else (0, 20),
         }
 
-    # -------------------------
-    # Final return structure
-    # -------------------------
     return {
         "num_customers": num_customers if en_num_cust else 20,
         "coord_range": (coord_min, coord_max) if en_coord else (-100, 100),

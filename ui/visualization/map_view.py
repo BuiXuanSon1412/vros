@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 from utils.visualizer import Visualizer
 
 
@@ -21,7 +20,6 @@ def render_map_view(problem_type):
 
     viz = get_visualizer()
 
-    # ============= WITH SOLUTION ==============
     if solution is not None and solution.get("routes"):
         fig = viz.plot_routes_2d(
             customers,
@@ -36,34 +34,6 @@ def render_map_view(problem_type):
             key=f"map_{problem_type}_{chart_counter}",
         )
 
-        # Inject hover highlight JavaScript
-        components.html(
-            """
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    const plots = document.getElementsByClassName("js-plotly-plot");
-    if (plots.length === 0) return;
-
-    const plot = plots[plots.length - 1]; // most recent plot
-
-    plot.on('plotly_hover', function(e) {
-        if (plot._js_on_hover) {
-            plot._js_on_hover(e);
-        }
-    });
-
-    plot.on('plotly_unhover', function(e) {
-        if (plot._js_on_unhover) {
-            plot._js_on_unhover(e);
-        }
-    });
-});
-</script>
-            """,
-            height=0,
-        )
-
-    # ============= WITHOUT SOLUTION ==============
     else:
         fig = viz.plot_routes_2d(
             customers,
@@ -76,31 +46,4 @@ document.addEventListener("DOMContentLoaded", function() {
             fig,
             use_container_width=True,
             key=f"map_empty_{problem_type}",
-        )
-
-        # Still attach events so future features won't break
-        components.html(
-            """
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    const plots = document.getElementsByClassName("js-plotly-plot");
-    if (plots.length === 0) return;
-
-    const plot = plots[plots.length - 1];
-
-    plot.on('plotly_hover', function(e) {
-        if (plot._js_on_hover) {
-            plot._js_on_hover(e);
-        }
-    });
-
-    plot.on('plotly_unhover', function(e) {
-        if (plot._js_on_unhover) {
-            plot._js_on_unhover(e);
-        }
-    });
-});
-</script>
-            """,
-            height=0,
         )
