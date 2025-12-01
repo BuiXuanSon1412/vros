@@ -1,1 +1,11 @@
-replace all plus, minus button pair in input field by the tick box to enable and disable the inputs. in dataset configuration, it must be named by "request" configuration. in the source code, the dataset configuration includes both system (which should be managed by "Vehicle System" tab) and customer. The customer will be managed here at "Request" configuration. The concept "Truck" is replaced "Staff" in problem 1 and 2.
+# Guideline
+**1. Activate your Python virtual environment**
+**2. Run this script**
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
+**3. Open this link on your browser:**
+```
+http://localhost:8501
+```

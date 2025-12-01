@@ -7,9 +7,11 @@ from ui.config.file_upload import render_file_upload
 
 def render_dataset_config(problem_type):
     """Render dataset configuration UI"""
+
     # Data source selection
+
     data_source = st.radio(
-        "Data Source",
+        "",
         ["Generate Data", "Upload File"],
         key=f"data_source_radio_{problem_type}",
         horizontal=True,

@@ -11,11 +11,19 @@ def get_data_generator():
 
 def handle_generate_button(problem_type, gen_params):
     """Handle generate data button click"""
+
+    # Validate that vehicle configuration exists
+    if not _validate_vehicle_config(problem_type, gen_params):
+        st.error(
+            "⚠️ Please configure vehicle parameters in the 'Vehicle System' tab first!"
+        )
+        return
+
     with st.spinner("Generating..."):
         data_gen = get_data_generator()
 
-        # Generate customers
-        customers = data_gen.generate_customers(problem_type, gen_params)
+        # Generate customers using the custom method
+        customers = data_gen.generate_customers_custom(problem_type, gen_params)
 
         # Generate depot
         coord_range = gen_params.get("coord_range", (-100, 100))
@@ -30,7 +38,17 @@ def handle_generate_button(problem_type, gen_params):
             problem_type, customers, depot, distance_matrix, gen_params
         )
 
-        st.success("Data generated!")
+        st.success("✅ Data generated successfully!")
+
+
+def _validate_vehicle_config(problem_type, gen_params):
+    """Validate that vehicle configuration parameters exist"""
+    if problem_type in [1, 2]:
+        required = ["staff_velocity", "drone_velocity", "num_staffs", "num_drones"]
+    else:
+        required = ["truck_velocity", "drone_velocity", "num_trucks", "num_drones"]
+
+    return all(key in gen_params for key in required)
 
 
 def _store_generated_data(problem_type, customers, depot, distance_matrix, gen_params):

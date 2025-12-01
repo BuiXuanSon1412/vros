@@ -17,6 +17,7 @@ def render_algorithm_config(problem_type):
         min_value=10,
         max_value=10000,
         value=1000,
+        step=10,
         key=f"iterations_{problem_type}",
     )
 
@@ -74,6 +75,7 @@ def _render_genetic_params(max_iterations, problem_type):
         min_value=20,
         max_value=500,
         value=100,
+        step=10,
         key=f"population_{problem_type}",
     )
 
@@ -85,7 +87,7 @@ def _render_genetic_params(max_iterations, problem_type):
             min_value=0.0,
             max_value=1.0,
             value=0.9,
-            step=0.1,
+            step=0.05,
             key=f"crossover_{problem_type}",
         )
 
@@ -95,7 +97,7 @@ def _render_genetic_params(max_iterations, problem_type):
             min_value=0.0,
             max_value=1.0,
             value=0.1,
-            step=0.1,
+            step=0.05,
             key=f"mutation_{problem_type}",
         )
 

@@ -26,20 +26,13 @@ class Visualizer:
         title: str = "Vehicle Routes",
     ) -> go.Figure:
         """
-        Plot 2D route map
-
-        Args:
-            customers: Customer DataFrame
-            depot: Depot information dict
-            routes: Dict {vehicle_id: [list of customer ids]}
-            title: Chart title
-
-        Returns:
-            Plotly Figure
+        Plot 2D route map with:
+        - Different colors for truck vs drone
+        - Hover highlight: fade other routes, highlight active route
         """
         fig = go.Figure()
 
-        # Plot depot
+        # --- Depot ---
         fig.add_trace(
             go.Scatter(
                 x=[depot["x"]],
@@ -48,11 +41,12 @@ class Visualizer:
                 marker=dict(size=20, color=self.color_depot, symbol="square"),
                 name="Depot",
                 text=["Depot"],
-                hovertemplate="<b>Depot</b><br>Location: (%{x:.1f}, %{y:.1f})<extra></extra>",
+                hovertemplate="<b>Depot</b><br>(%{x:.1f}, %{y:.1f})<extra></extra>",
+                customdata=[{"type": "depot"}],
             )
         )
 
-        # Plot customers
+        # --- Customers ---
         fig.add_trace(
             go.Scatter(
                 x=customers["x"],
@@ -62,58 +56,106 @@ class Visualizer:
                 text=customers["id"],
                 textposition="top center",
                 name="Customers",
-                hovertemplate="<b>Customer %{text}</b><br>Location: (%{x:.1f}, %{y:.1f})<br>"
-                + "Demand: "
-                + customers["demand"].astype(str)
-                + " kg<extra></extra>",
+                hovertemplate="<b>Customer %{text}</b><br>(%{x:.1f}, %{y:.1f})<extra></extra>",
+                customdata=[{"type": "customer"} for _ in customers["id"]],
             )
         )
 
-        # Plot routes
+        # -------- ROUTES --------
         for idx, (vehicle_id, route) in enumerate(routes.items()):
             if not route:
                 continue
 
-            # Determine vehicle type and color
-            is_truck = "truck" in vehicle_id.lower()
-            colors = self.colors_truck if is_truck else self.colors_drone
+            # Choose color
+            if "truck" in vehicle_id.lower():
+                colors = self.colors_truck
+            else:
+                colors = self.colors_drone
             color = colors[idx % len(colors)]
 
-            # Create route: depot -> customers -> depot
-            route_x = [depot["x"]]
-            route_y = [depot["y"]]
+            # Create route path (depot → customers → depot)
+            xs = [depot["x"]]
+            ys = [depot["y"]]
 
-            for customer_id in route:
-                customer = customers[customers["id"] == customer_id].iloc[0]
-                route_x.append(customer["x"])
-                route_y.append(customer["y"])
+            for cust_id in route:
+                c = customers.loc[customers["id"] == cust_id].iloc[0]
+                xs.append(c["x"])
+                ys.append(c["y"])
 
-            route_x.append(depot["x"])
-            route_y.append(depot["y"])
+            xs.append(depot["x"])
+            ys.append(depot["y"])
 
-            # Draw route
+            # Add trace
             fig.add_trace(
                 go.Scatter(
-                    x=route_x,
-                    y=route_y,
+                    x=xs,
+                    y=ys,
                     mode="lines+markers",
                     line=dict(color=color, width=2),
                     marker=dict(size=6, color=color),
                     name=f"{vehicle_id}",
-                    hovertemplate=f"<b>{vehicle_id}</b><extra></extra>",
+                    customdata=[{"route_id": vehicle_id}] * len(xs),
+                    hovertemplate="<b>Route: %s</b><extra></extra>" % vehicle_id,
+                    opacity=1.0,  # default
                 )
             )
 
+        # Layout
         fig.update_layout(
             title=title,
-            xaxis_title="X (km)",
-            yaxis_title="Y (km)",
+            xaxis_title="X",
+            yaxis_title="Y",
             hovermode="closest",
-            showlegend=True,
-            height=600,
             template="plotly_white",
+            height=600,
+            showlegend=True,
         )
 
+        # ---------- HOVER BEHAVIOR ----------
+        # Fade other routes on hover, restore on unhover
+        fig.update_layout(
+            clickmode="none",
+            hovermode="closest",
+        )
+
+        fig.add_layout_image(
+            dict(
+                source="",
+                xref="paper",
+                yref="paper",
+                x=0,
+                y=0,
+                sizex=0.0001,
+                sizey=0.0001,
+            )
+        )
+
+        fig._js_on_hover = """
+        function(e) {
+            let hoverRoute = e.points[0].data.customdata[0].route_id;
+            let update_opacity = [];
+
+            for (let i = 0; i < this.data.length; i++) {
+                const trace = this.data[i];
+                if (!trace.customdata || !trace.customdata[0].route_id) {
+                    update_opacity.push(1.0); // depot/customers
+                    continue;
+                }
+                update_opacity.push(
+                    trace.customdata[0].route_id === hoverRoute ? 1.0 : 0.15
+                );
+            }
+
+            Plotly.restyle(this, {opacity: update_opacity});
+        }
+        """
+
+        fig._js_on_unhover = """
+        function(e) {
+            let update_opacity = this.data.map(_ => 1.0);
+            Plotly.restyle(this, {opacity: update_opacity});
+        }
+        """
         return fig
 
     def plot_gantt_chart(
