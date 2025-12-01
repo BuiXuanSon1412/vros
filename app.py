@@ -393,7 +393,7 @@ for tab_idx, tab in enumerate(problem_tabs):
                 col_truck, col_drone = st.columns(2, gap="medium")
 
                 with col_truck:
-                    st.markdown("**🚛 Trucks**")
+                    st.markdown("**Trucks**")
                     truck_count = st.number_input(
                         "Count",
                         min_value=1,
@@ -424,7 +424,7 @@ for tab_idx, tab in enumerate(problem_tabs):
                     )
 
                 with col_drone:
-                    st.markdown("**✈️ Drones**")
+                    st.markdown("**Drones**")
                     drone_count = st.number_input(
                         "Count",
                         min_value=0,
