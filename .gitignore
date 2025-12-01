@@ -1,3 +1,4 @@
 venv/
 manual.md
-
+__pycache__/
+*.pyc
