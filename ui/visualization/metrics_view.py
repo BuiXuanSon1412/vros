@@ -27,13 +27,13 @@ def _render_metric_cards(solution):
         st.metric("Makespan", f"{solution['makespan']:.1f} min")
 
     with metric_cols[1]:
-        st.metric("Cost", f"{solution['cost']:,.0f} VND")
+        st.metric("Cost", f"{solution['cost']:,.0f}")
 
     with metric_cols[2]:
-        st.metric("Distance", f"{solution['total_distance']:.1f} km")
+        st.metric("Distance", f"{solution['total_distance']:.1f}")
 
     with metric_cols[3]:
-        st.metric("Time", f"{solution['computation_time']:.2f}s")
+        st.metric("Time", f"{solution['computation_time']:.2f}")
 
 
 def _render_route_details(solution):

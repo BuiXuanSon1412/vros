@@ -1,4 +1,4 @@
-# utils/solver.py
+# utils/solver.py - Fixed to handle different algorithm parameters
 
 import numpy as np
 import pandas as pd
@@ -55,9 +55,12 @@ class DummySolver:
         total_distance = self._calculate_total_distance(routes, distance_matrix)
         cost = self._calculate_cost(routes, distance_matrix, vehicle_config)
 
+        # Get max iterations from algorithm params (different names for different algorithms)
+        max_iterations = self._get_max_iterations(algorithm_params)
+
         # Generate convergence history
         self.convergence_history = self._generate_convergence_history(
-            algorithm_params.get("max_iterations", 100), makespan
+            max_iterations, makespan
         )
 
         # For multi-objective problems (problem 2)
@@ -80,6 +83,21 @@ class DummySolver:
         self.best_solution = result
         return result
 
+    def _get_max_iterations(self, algorithm_params: Dict) -> int:
+        """Extract max iterations from algorithm params based on problem type"""
+        # Problem 1: max_iteration
+        if "max_iteration" in algorithm_params:
+            return algorithm_params["max_iteration"]
+        # Problem 2: num_generations
+        elif "num_generations" in algorithm_params:
+            return algorithm_params["num_generations"]
+        # Problem 3: loop
+        elif "loop" in algorithm_params:
+            return algorithm_params["loop"]
+        # Fallback
+        else:
+            return 100
+
     def _generate_dummy_routes(self, num_customers: int, vehicle_config: Dict) -> Dict:
         """Generate dummy routes"""
         routes = {}
@@ -90,7 +108,11 @@ class DummySolver:
         num_drones = vehicle_config["drone"]["count"]
 
         # Distribute customers to vehicles
-        customers_per_vehicle = num_customers // (num_trucks + num_drones)
+        total_vehicles = num_trucks + num_drones
+        if total_vehicles == 0:
+            return routes
+
+        customers_per_vehicle = max(1, num_customers // total_vehicles)
 
         idx = 0
         for i in range(num_trucks):
@@ -104,7 +126,7 @@ class DummySolver:
             idx = end_idx
 
         # Distribute remaining customers
-        if idx < len(customer_ids):
+        if idx < len(customer_ids) and num_trucks > 0:
             routes["Truck_1"].extend(customer_ids[idx:])
 
         return routes
@@ -144,7 +166,7 @@ class DummySolver:
                 arrival_time = current_time + travel_time
 
                 # Service time
-                service_time = customer["service_time"]
+                service_time = customer.get("service_time", 10)
                 departure_time = arrival_time + service_time
 
                 schedule.append(
@@ -287,27 +309,3 @@ class AlgorithmRunner:
             )
 
         return pd.DataFrame(summary)
-
-
-# Test
-if __name__ == "__main__":
-    from utils.data_generator import DataGenerator
-
-    generator = DataGenerator()
-    customers = generator.generate_customers(20)
-    depot = generator.generate_depot()
-    distance_matrix = generator.calculate_distance_matrix(customers, depot)
-
-    vehicle_config = {
-        "truck": {"count": 2, "speed": 40, "cost_per_km": 5000},
-        "drone": {"count": 2, "speed": 60, "cost_per_km": 2000},
-    }
-
-    solver = DummySolver(1, "Tabu Search")
-    result = solver.solve(
-        customers, depot, distance_matrix, vehicle_config, {"max_iterations": 100}
-    )
-
-    print(f"Makespan: {result['makespan']:.2f} minutes")
-    print(f"Cost: {result['cost']:.2f} VND")
-    print(f"Routes: {result['routes']}")
