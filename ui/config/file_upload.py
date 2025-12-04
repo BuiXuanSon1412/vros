@@ -1,11 +1,12 @@
-# ui/config/file_upload.py - File Upload Form
+# ui/config/file_upload.py - File Upload Form with Dataset Display
 
 import streamlit as st
 from ui.handlers.upload_handler import handle_file_upload
+from ui.config.dataset_display import render_dataset_info
 
 
 def render_file_upload(problem_type):
-    """Render file upload UI"""
+    """Render file upload UI with problem-specific information"""
     # Display expected format
     _show_format_info(problem_type)
 
@@ -20,63 +21,52 @@ def render_file_upload(problem_type):
     if uploaded_file is not None:
         handle_file_upload(problem_type, uploaded_file)
 
-    # Display loaded data metrics
-    _show_data_metrics(problem_type)
-
-    # Show current loaded data info
-    _show_loaded_data_info(problem_type)
+    # Display dataset information after upload
+    customers_df = st.session_state.get(f"customers_{problem_type}")
+    if customers_df is not None and st.session_state.get(
+        f"file_processed_{problem_type}", False
+    ):
+        render_dataset_info(problem_type, customers_df)
 
 
 def _show_format_info(problem_type):
     """Display expected file format information"""
     if problem_type == 1:
         st.info(
-            "📄 Expected format: **6.5.1.txt**\n\n"
+            "📄 **Expected format for PTDS-DDSS:**\n\n"
+            "```\n"
             "Customers N\n"
-            "Coordinate X  Coordinate Y  Demand"
+            "Coordinate X  Coordinate Y  Demand\n"
+            "x1  y1  demand1\n"
+            "...\n"
+            "```"
         )
     elif problem_type == 2:
         st.info(
-            "📄 Expected format: **10.10.1.txt**\n\nnumber_staff N\nnumber_drone M\n..."
+            "📄 **Expected format for MSSVTDE:**\n\n"
+            "```\n"
+            "number_staff N\n"
+            "number_drone M\n"
+            "droneLimitationFightTime(s) T\n"
+            "Customers K\n"
+            "Coordinate X  Coordinate Y  Demand  OnlyServicedByStaff  ServiceTimeByTruck(s)  ServiceTimeByDrone(s)\n"
+            "...\n"
+            "```"
         )
     else:  # problem_type == 3
         st.info(
-            "📄 Expected format: **10.1.txt**\n\nXCOORD  YCOORD  DEMAND  RELEASE_DATE"
+            "📄 **Expected format for VRP-MRDR:**\n\n"
+            "```\n"
+            "XCOORD  YCOORD  DEMAND  RELEASE_DATE\n"
+            "0  0  0  0  (depot)\n"
+            "x1  y1  demand1  release1\n"
+            "...\n"
+            "number_truck  N\n"
+            "number_drone  M\n"
+            "drone_speed  S1\n"
+            "truck_speed  S2\n"
+            "M_d  capacity\n"
+            "L_d  flight_time\n"
+            "Sigma  service_time\n"
+            "```"
         )
-
-
-def _show_data_metrics(problem_type):
-    """Display data metrics if data is loaded"""
-    if st.session_state.get(
-        f"customers_{problem_type}"
-    ) is not None and st.session_state.get(f"file_processed_{problem_type}", False):
-        st.markdown("**Data Metrics:**")
-        customers_df = st.session_state[f"customers_{problem_type}"]
-
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Customers", len(customers_df))
-        with col2:
-            st.metric("Avg Demand", f"{customers_df['demand'].mean():.2f} kg")
-        with col3:
-            if "service_time" in customers_df.columns:
-                st.metric(
-                    "Avg Service", f"{customers_df['service_time'].mean():.1f} min"
-                )
-
-
-def _show_loaded_data_info(problem_type):
-    """Show information about currently loaded data"""
-    if (
-        st.session_state.get(f"customers_{problem_type}") is not None
-        and st.session_state.get(f"data_source_{problem_type}") == "upload"
-    ):
-        st.markdown("---")
-        st.markdown("**Currently Loaded:**")
-
-        customers = st.session_state[f"customers_{problem_type}"]
-        depot = st.session_state.get(f"depot_{problem_type}")
-
-        st.write(f"✓ {len(customers)} customers")
-        if depot:
-            st.write(f"✓ Depot at ({depot['x']:.2f}, {depot['y']:.2f})")
