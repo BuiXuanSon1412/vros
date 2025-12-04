@@ -117,73 +117,98 @@ class FileParser:
         """
         Parse Problem 3 file format (10.1.txt)
         Format:
-        XCOORD  YCOORD  DEMAND  RELEASE_DATE
-        0   0   0   0  (depot)
-        ...
         number_truck    N
         number_drone    M
-        drone_speed     S1
         truck_speed     S2
+        drone_speed     S1
         M_d     capacity
         L_d     flight_time
         Sigma   service_time
+        XCOORD  YCOORD  DEMAND  RELEASE_DATE
+        40  50  0   0  (depot)
+        x1  y1  demand1  release1
+        ...
         """
         lines = file_content.strip().split("\n")
 
-        # Find where customer data ends (when we hit vehicle config)
-        data_end = 0
+        # Find where customer data starts (after seeing XCOORD header)
+        data_start = 0
         for i, line in enumerate(lines):
-            if "number_truck" in line:
-                data_end = i
+            if "XCOORD" in line.upper() and "YCOORD" in line.upper():
+                data_start = i + 1  # Data starts on next line
                 break
 
-        # Parse customer data (first line is depot, skip header)
+        # Parse vehicle configuration (lines before data_start)
+        vehicle_config = {}
+        for i in range(data_start):
+            line = lines[i].strip()
+            if not line:
+                continue
+
+            parts = line.split()
+            if len(parts) >= 2:
+                key = parts[0]
+                try:
+                    value = float(parts[1]) if "." in parts[1] else int(parts[1])
+                    vehicle_config[key] = value
+                except ValueError:
+                    continue
+
+        # Parse customer data (lines after data_start)
         customers = []
         depot = None
+        customer_id = 1
 
-        for i in range(1, data_end):
-            parts = lines[i].split()
-            if len(parts) >= 4:
-                if i == 1:  # First line is depot
+        for i in range(data_start, len(lines)):
+            line = lines[i].strip()
+            if not line:
+                continue
+
+            parts = line.split()
+
+            # Need at least 4 numeric values
+            if len(parts) < 4:
+                continue
+
+            try:
+                x = float(parts[0])
+                y = float(parts[1])
+                demand = float(parts[2])
+                release = float(parts[3])
+
+                if depot is None:  # First data line is depot
                     depot = {
                         "id": 0,
-                        "x": float(parts[0]),
-                        "y": float(parts[1]),
+                        "x": x,
+                        "y": y,
                         "name": "Depot",
                     }
-                else:
+                else:  # Customer data
                     customers.append(
                         {
-                            "id": i - 1,
-                            "x": float(parts[0]),
-                            "y": float(parts[1]),
-                            "demand": float(parts[2]),
-                            "release_date": float(parts[3]),
-                            "service_time": 5,  # Will be updated from Sigma
+                            "id": customer_id,
+                            "x": x,
+                            "y": y,
+                            "demand": int(demand),  # Keep as integer
+                            "release_date": int(release),  # Keep as integer
+                            "service_time": vehicle_config.get("Sigma", 5),
                             "priority": 1,
                             "time_window_start": 0,
                             "time_window_end": 480,
                         }
                     )
+                    customer_id += 1
+            except (ValueError, IndexError):
+                continue
 
-        # Parse vehicle configuration
-        vehicle_config = {}
-        for i in range(data_end, len(lines)):
-            parts = lines[i].split()
-            if len(parts) >= 2:
-                key = parts[0]
-                value = float(parts[1]) if "." in parts[1] else int(parts[1])
-                vehicle_config[key] = value
-
-        # Update service time if Sigma is present
-        if "Sigma" in vehicle_config:
-            for customer in customers:
-                customer["service_time"] = vehicle_config["Sigma"]
-
-        customers_df = pd.DataFrame(customers)
+        # Ensure we have customers
+        if len(customers) == 0:
+            raise ValueError("No customer data found in file")
 
         if depot is None:
             depot = {"id": 0, "x": 0.0, "y": 0.0, "name": "Depot"}
+
+        customers_df = pd.DataFrame(customers)
 
         # Calculate distance matrix
         distance_matrix = FileParser._calculate_distance_matrix(customers_df, depot)
@@ -211,17 +236,3 @@ class FileParser:
                     distance_matrix[i][j] = np.sqrt(dx**2 + dy**2)
 
         return distance_matrix
-
-
-# Test
-if __name__ == "__main__":
-    parser = FileParser()
-
-    # Test Problem 1
-    with open("6.5.1.txt", "r") as f:
-        content = f.read()
-        customers, depot, dist_matrix = parser.parse_problem1_file(content)
-        print("Problem 1:")
-        print(customers.head())
-        print(f"Depot: {depot}")
-        print(f"Distance matrix shape: {dist_matrix.shape}")
