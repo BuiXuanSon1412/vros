@@ -1,9 +1,8 @@
-# utils/visualizer.py - Improved with proper layering
+# utils/visualizer.py - Patched version
 
 import plotly.graph_objects as go
 import plotly.express as px
 import pandas as pd
-import numpy as np
 from typing import List, Dict, Tuple
 from config.default_config import COLORS
 
@@ -24,57 +23,54 @@ class Visualizer:
         routes: Dict,
         title: str = "Vehicle Routes",
     ) -> go.Figure:
-        """
-        Plot 2D route map with proper layering - routes behind, icons on top
-        """
         fig = go.Figure()
 
-        # ============== LAYER 1: ROUTE LINES (BACKGROUND) ==============
-        for idx, (vehicle_id, route) in enumerate(routes.items()):
+        # ============== LAYER 1: ROUTE LINES (TRUCKS & DRONES SAME COLOR EACH) ==============
+        # Find first truck route and first drone route for legend
+        first_truck = next((vid for vid in routes if "truck" in vid.lower()), None)
+        first_drone = next((vid for vid in routes if "drone" in vid.lower()), None)
+
+        for vehicle_id, route in routes.items():
             if not route:
                 continue
 
-            # Choose color based on vehicle type
             if "truck" in vehicle_id.lower():
-                colors = self.colors_truck
+                color = self.colors_truck[0]
                 vehicle_icon = "🚚"
+                legend_name = "🚚 Truck Routes"
+                legend_group = "truck"
+                dash = "solid"
+                show_in_legend = vehicle_id == first_truck
             else:
-                colors = self.colors_drone
+                color = self.colors_drone[0]
                 vehicle_icon = "🚁"
+                legend_name = "🚁 Drone Routes"
+                legend_group = "drone"
+                dash = "dash"
+                show_in_legend = vehicle_id == first_drone
 
-            color = colors[idx % len(colors)]
-
-            # Create route path
+            # Build route path
             xs = [depot["x"]]
             ys = [depot["y"]]
-            segments = ["Depot"]
 
             for cust_id in route:
-                c = customers.loc[customers["id"] == cust_id].iloc[0]
-                xs.append(c["x"])
-                ys.append(c["y"])
-                segments.append(f"C{cust_id}")
+                row = customers.loc[customers["id"] == cust_id].iloc[0]
+                xs.append(row["x"])
+                ys.append(row["y"])
 
             xs.append(depot["x"])
             ys.append(depot["y"])
-            segments.append("Depot")
 
-            # Create hover text for route
-            route_info = f"<b>{vehicle_icon} {vehicle_id}</b><br>"
-            route_info += f"Customers: {len(route)}<br>"
-            route_info += f"Path: {' → '.join(segments)}"
-
-            # Add route line (will be drawn first = behind)
             fig.add_trace(
                 go.Scatter(
                     x=xs,
                     y=ys,
                     mode="lines",
-                    line=dict(color=color, width=3),
-                    name=f"{vehicle_icon} {vehicle_id}",
-                    hovertemplate=route_info + "<extra></extra>",
-                    showlegend=True,
-                    legendgroup=vehicle_id,
+                    line=dict(color=color, width=3, dash=dash),
+                    name=legend_name,
+                    showlegend=show_in_legend,
+                    legendgroup=legend_group,
+                    hovertemplate=f"<b>{vehicle_icon} {vehicle_id}</b><extra></extra>",
                 )
             )
 
@@ -97,11 +93,12 @@ class Visualizer:
             go.Scatter(
                 x=[depot["x"]],
                 y=[depot["y"]],
-                mode="text",
+                mode="markers+text",
                 text=["🏢"],
                 textfont=dict(size=20),
                 textposition="middle center",
-                name="Depot",
+                marker=dict(size=1, color="rgba(0,0,0,0)"),
+                name="🏢 Depot",
                 hovertemplate="<b>🏢 Depot</b><br>Coordinates: (%{x:.1f}, %{y:.1f})<extra></extra>",
                 showlegend=True,
             )
@@ -126,31 +123,23 @@ class Visualizer:
         # ============== LAYER 5: CUSTOMER ICONS ==============
         hover_text = []
         customer_icons = []
-
         for _, row in customers.iterrows():
-            text = f"<b>Customer {row['id']}</b><br>"
-            text += f"Coordinates: ({row['x']:.1f}, {row['y']:.1f})<br>"
-            text += f"Demand: {row['demand']:.2f} kg"
+            text = f"<b>Customer {row['id']}</b><br>Coordinates: ({row['x']:.1f}, {row['y']:.1f})<br>Demand: {row['demand']:.2f} kg"
             if "service_time" in row:
                 text += f"<br>Service: {row['service_time']} min"
             hover_text.append(text)
-
-            # Customize icon based on customer type
-            # if row.get("only_staff", 0) == 1:
-            #    customer_icons.append("🚚")  # Truck-only
-            # else:
-            #    customer_icons.append("📦")  # Regular package
-            customer_icons.append("📦")  # Regular package
+            customer_icons.append("📦")
 
         fig.add_trace(
             go.Scatter(
                 x=customers["x"],
                 y=customers["y"],
-                mode="text",
+                mode="markers+text",
                 text=customer_icons,
                 textfont=dict(size=16),
                 textposition="middle center",
-                name="Customers",
+                marker=dict(size=1, color="rgba(0,0,0,0)"),
+                name="📦 Customers",
                 hovertemplate="%{hovertext}<extra></extra>",
                 hovertext=hover_text,
                 showlegend=True,
@@ -171,11 +160,9 @@ class Visualizer:
             )
         )
 
-        # Layout with better styling
+        # Layout
         fig.update_layout(
-            title=dict(
-                text=title, font=dict(size=16, color="#0f172a"), x=0.5, xanchor="center"
-            ),
+            title=dict(text=title, font=dict(size=16, color="#0f172a"), x=0.5),
             xaxis=dict(
                 title="X Coordinate",
                 gridcolor="#e2e8f0",
@@ -211,15 +198,14 @@ class Visualizer:
             paper_bgcolor="white",
         )
 
-        # Equal aspect ratio for accurate visualization
         fig.update_yaxes(scaleanchor="x", scaleratio=1)
-
         return fig
+
+    # ======================= Other plots remain unchanged =======================
 
     def plot_gantt_chart(
         self, schedule: List[Dict], title: str = "Schedule Timeline"
     ) -> go.Figure:
-        """Plot Gantt chart for schedule"""
         if not schedule:
             fig = go.Figure()
             fig.update_layout(title="No schedule data available")
@@ -227,14 +213,14 @@ class Visualizer:
 
         df = pd.DataFrame(schedule)
 
-        # Create custom color mapping
+        # Color mapping
         unique_vehicles = df["vehicle_id"].unique()
         color_map = {}
         for i, vehicle in enumerate(unique_vehicles):
             if "truck" in vehicle.lower():
-                color_map[vehicle] = self.colors_truck[i % len(self.colors_truck)]
+                color_map[vehicle] = self.colors_truck[0]
             else:
-                color_map[vehicle] = self.colors_drone[i % len(self.colors_drone)]
+                color_map[vehicle] = self.colors_drone[0]
 
         fig = px.timeline(
             df,
@@ -264,9 +250,7 @@ class Visualizer:
         fitness_values: List[float],
         title: str = "Algorithm Convergence",
     ) -> go.Figure:
-        """Plot algorithm convergence chart"""
         fig = go.Figure()
-
         fig.add_trace(
             go.Scatter(
                 x=iterations,
@@ -279,7 +263,6 @@ class Visualizer:
                 fillcolor="rgba(37, 99, 235, 0.1)",
             )
         )
-
         fig.update_layout(
             title=title,
             xaxis_title="Iteration",
@@ -288,22 +271,16 @@ class Visualizer:
             template="plotly_white",
             hovermode="x unified",
         )
-
         return fig
 
     def plot_pareto_front(
         self, solutions: List[Tuple[float, float]], title: str = "Pareto Front"
     ) -> go.Figure:
-        """Plot Pareto front for multi-objective problem"""
+        fig = go.Figure()
         if not solutions:
-            fig = go.Figure()
             fig.update_layout(title="No Pareto front data available")
             return fig
-
         obj1, obj2 = zip(*solutions)
-
-        fig = go.Figure()
-
         fig.add_trace(
             go.Scatter(
                 x=obj1,
@@ -319,7 +296,6 @@ class Visualizer:
                 hovertemplate="<b>Solution</b><br>Makespan: %{x:.2f}<br>Cost: %{y:.2f}<extra></extra>",
             )
         )
-
         fig.update_layout(
             title=title,
             xaxis_title="Objective 1 (Makespan)",
@@ -327,11 +303,9 @@ class Visualizer:
             height=400,
             template="plotly_white",
         )
-
         return fig
 
     def create_comparison_table(self, results: Dict[str, Dict]) -> pd.DataFrame:
-        """Create comparison table for algorithm results"""
         df = pd.DataFrame(results).T
         df.index.name = "Algorithm"
         return df.reset_index()
@@ -339,9 +313,7 @@ class Visualizer:
     def plot_metrics_comparison(
         self, comparison_df: pd.DataFrame, metric: str = "Makespan"
     ) -> go.Figure:
-        """Plot metrics comparison between algorithms"""
         fig = go.Figure()
-
         fig.add_trace(
             go.Bar(
                 x=comparison_df["Algorithm"],
@@ -352,7 +324,6 @@ class Visualizer:
                 textposition="outside",
             )
         )
-
         fig.update_layout(
             title=f"Comparison: {metric}",
             xaxis_title="Algorithm",
@@ -360,5 +331,4 @@ class Visualizer:
             height=400,
             template="plotly_white",
         )
-
         return fig

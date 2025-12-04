@@ -55,7 +55,7 @@ DEFAULT_ALGORITHM_CONFIG = {
 
 # Colors for visualization
 COLORS = {
-    "truck": ["#FF6B6B", "#4ECDC4", "#45B7D1"],
+    "truck": ["#45B7D1", "#FF6B6B", "#4ECDC4"],
     "drone": ["#FFA07A", "#98D8C8", "#6C5CE7"],
     "depot": "#2D3436",
     "customer": "#0984E3",
