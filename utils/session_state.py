@@ -1,4 +1,4 @@
-# utils/session_state.py - Session State Management (Upload Only)
+# utils/session_state.py - Session State Management
 
 import streamlit as st
 
@@ -18,7 +18,6 @@ def _initialize_problem_state(problem_id):
         f"solution_{problem_id}": None,
         f"results_{problem_id}": {},
         f"chart_counter_{problem_id}": 0,
-        f"data_source_{problem_id}": "upload",  # Always upload now
         f"file_vehicle_config_{problem_id}": None,
         f"file_processed_{problem_id}": False,
         f"last_uploaded_file_{problem_id}": None,
@@ -37,7 +36,6 @@ def get_problem_state(problem_id):
         "distance_matrix": st.session_state.get(f"distance_matrix_{problem_id}"),
         "solution": st.session_state.get(f"solution_{problem_id}"),
         "results": st.session_state.get(f"results_{problem_id}", {}),
-        "data_source": st.session_state.get(f"data_source_{problem_id}", "upload"),
         "file_vehicle_config": st.session_state.get(
             f"file_vehicle_config_{problem_id}"
         ),
