@@ -5,6 +5,7 @@ import plotly.express as px
 import pandas as pd
 from typing import List, Dict, Tuple
 from config.default_config import COLORS
+import numpy as np
 
 
 class Visualizer:
@@ -273,36 +274,412 @@ class Visualizer:
         )
         return fig
 
-    def plot_pareto_front(
-        self, solutions: List[Tuple[float, float]], title: str = "Pareto Front"
-    ) -> go.Figure:
+    def plot_pareto_front(self, solutions, title="Pareto Front", current_solution=None):
+        """
+        Plot Pareto front with enhanced visualization
+
+        Args:
+            solutions: List of (obj1, obj2) tuples - Pareto optimal solutions
+            title: Chart title
+            current_solution: Optional (obj1, obj2) tuple for highlighting current solution
+        """
         fig = go.Figure()
+
         if not solutions:
-            fig.update_layout(title="No Pareto front data available")
+            fig.update_layout(
+                title="No Pareto front data available",
+                height=500,
+                template="plotly_white",
+            )
             return fig
-        obj1, obj2 = zip(*solutions)
+
+        # Separate objectives
+        obj1_values, obj2_values = zip(*solutions)
+        obj1_values = list(obj1_values)
+        obj2_values = list(obj2_values)
+
+        # Sort by first objective for better visualization
+        sorted_indices = np.argsort(obj1_values)
+        obj1_sorted = [obj1_values[i] for i in sorted_indices]
+        obj2_sorted = [obj2_values[i] for i in sorted_indices]
+
+        # ============== LAYER 1: Pareto Front Line ==============
         fig.add_trace(
             go.Scatter(
-                x=obj1,
-                y=obj2,
-                mode="markers",
-                marker=dict(
-                    size=12,
-                    color="#6C5CE7",
-                    line=dict(width=2, color="white"),
-                    opacity=0.8,
-                ),
-                name="Solutions",
-                hovertemplate="<b>Solution</b><br>Makespan: %{x:.2f}<br>Cost: %{y:.2f}<extra></extra>",
+                x=obj1_sorted,
+                y=obj2_sorted,
+                mode="lines",
+                line=dict(color="rgba(99, 110, 250, 0.3)", width=2, dash="dash"),
+                name="Pareto Front",
+                showlegend=True,
+                hoverinfo="skip",
             )
         )
+
+        # ============== LAYER 2: Solution Points ==============
+        # Create hover text with solution details
+        hover_texts = []
+        for i, (obj1, obj2) in enumerate(zip(obj1_values, obj2_values)):
+            hover_text = (
+                f"<b>Solution {i + 1}</b><br>"
+                f"Makespan: {obj1:.2f} min<br>"
+                f"Cost: ${obj2:,.2f}<br>"
+                f"<extra></extra>"
+            )
+            hover_texts.append(hover_text)
+
+        fig.add_trace(
+            go.Scatter(
+                x=obj1_values,
+                y=obj2_values,
+                mode="markers",
+                marker=dict(
+                    size=14,
+                    color="#6366f1",
+                    line=dict(width=2, color="white"),
+                    opacity=0.8,
+                    symbol="circle",
+                ),
+                name="Pareto Solutions",
+                hovertemplate="%{hovertext}",
+                hovertext=hover_texts,
+                showlegend=True,
+            )
+        )
+
+        # ============== LAYER 3: Extreme Points Annotations ==============
+        # Find and annotate extreme solutions
+        min_obj1_idx = obj1_values.index(min(obj1_values))
+        min_obj2_idx = obj2_values.index(min(obj2_values))
+
+        # Fastest solution (minimum makespan)
+        fig.add_trace(
+            go.Scatter(
+                x=[obj1_values[min_obj1_idx]],
+                y=[obj2_values[min_obj1_idx]],
+                mode="markers",
+                marker=dict(
+                    size=20,
+                    color="#10b981",
+                    symbol="star",
+                    line=dict(width=2, color="white"),
+                ),
+                name="⚡ Fastest",
+                hovertemplate=(
+                    f"<b>⚡ Fastest Solution</b><br>"
+                    f"Makespan: {obj1_values[min_obj1_idx]:.2f} min<br>"
+                    f"Cost: ${obj2_values[min_obj1_idx]:,.2f}<br>"
+                    f"<extra></extra>"
+                ),
+                showlegend=True,
+            )
+        )
+
+        # Add annotation for fastest
+        fig.add_annotation(
+            x=obj1_values[min_obj1_idx],
+            y=obj2_values[min_obj1_idx],
+            text="⚡ Fastest",
+            showarrow=True,
+            arrowhead=2,
+            arrowsize=1,
+            arrowwidth=2,
+            arrowcolor="#10b981",
+            ax=0,
+            ay=-50,
+            font=dict(size=12, color="#10b981", family="Arial Black"),
+            bgcolor="white",
+            bordercolor="#10b981",
+            borderwidth=2,
+            borderpad=4,
+        )
+
+        # Cheapest solution (minimum cost)
+        fig.add_trace(
+            go.Scatter(
+                x=[obj1_values[min_obj2_idx]],
+                y=[obj2_values[min_obj2_idx]],
+                mode="markers",
+                marker=dict(
+                    size=20,
+                    color="#f59e0b",
+                    symbol="star",
+                    line=dict(width=2, color="white"),
+                ),
+                name="💰 Cheapest",
+                hovertemplate=(
+                    f"<b>💰 Cheapest Solution</b><br>"
+                    f"Makespan: {obj1_values[min_obj2_idx]:.2f} min<br>"
+                    f"Cost: ${obj2_values[min_obj2_idx]:,.2f}<br>"
+                    f"<extra></extra>"
+                ),
+                showlegend=True,
+            )
+        )
+
+        # Add annotation for cheapest
+        fig.add_annotation(
+            x=obj1_values[min_obj2_idx],
+            y=obj2_values[min_obj2_idx],
+            text="💰 Cheapest",
+            showarrow=True,
+            arrowhead=2,
+            arrowsize=1,
+            arrowwidth=2,
+            arrowcolor="#f59e0b",
+            ax=0,
+            ay=50,
+            font=dict(size=12, color="#f59e0b", family="Arial Black"),
+            bgcolor="white",
+            bordercolor="#f59e0b",
+            borderwidth=2,
+            borderpad=4,
+        )
+
+        # ============== LAYER 4: Balanced Solution (Middle point) ==============
+        if len(obj1_values) >= 3:
+            mid_idx = len(obj1_values) // 2
+
+            fig.add_trace(
+                go.Scatter(
+                    x=[obj1_values[mid_idx]],
+                    y=[obj2_values[mid_idx]],
+                    mode="markers",
+                    marker=dict(
+                        size=18,
+                        color="#8b5cf6",
+                        symbol="diamond",
+                        line=dict(width=2, color="white"),
+                    ),
+                    name="⚖️ Balanced",
+                    hovertemplate=(
+                        f"<b>⚖️ Balanced Solution</b><br>"
+                        f"Makespan: {obj1_values[mid_idx]:.2f} min<br>"
+                        f"Cost: ${obj2_values[mid_idx]:,.2f}<br>"
+                        f"<extra></extra>"
+                    ),
+                    showlegend=True,
+                )
+            )
+
+        # ============== LAYER 5: Current Solution Highlight ==============
+        if current_solution:
+            fig.add_trace(
+                go.Scatter(
+                    x=[current_solution[0]],
+                    y=[current_solution[1]],
+                    mode="markers",
+                    marker=dict(
+                        size=22,
+                        color="#ef4444",
+                        symbol="x",
+                        line=dict(width=3, color="white"),
+                    ),
+                    name="📍 Current",
+                    hovertemplate=(
+                        f"<b>📍 Current Solution</b><br>"
+                        f"Makespan: {current_solution[0]:.2f} min<br>"
+                        f"Cost: ${current_solution[1]:,.2f}<br>"
+                        f"<extra></extra>"
+                    ),
+                    showlegend=True,
+                )
+            )
+
+        # ============== LAYER 6: Trade-off Region Shading ==============
+        # Add shaded region to show trade-off space
+        fig.add_trace(
+            go.Scatter(
+                x=obj1_sorted + obj1_sorted[::-1],
+                y=obj2_sorted + [max(obj2_values)] * len(obj2_sorted),
+                fill="toself",
+                fillcolor="rgba(99, 110, 250, 0.05)",
+                line=dict(color="rgba(0,0,0,0)"),
+                showlegend=False,
+                hoverinfo="skip",
+                name="Feasible Region",
+            )
+        )
+
+        # ============== Layout Configuration ==============
+        fig.update_layout(
+            title=dict(
+                text=title,
+                font=dict(size=18, color="#0f172a", family="Arial Black"),
+                x=0.5,
+                xanchor="center",
+            ),
+            xaxis=dict(
+                title="<b>Objective 1: Makespan (minutes)</b>",
+                title_font=dict(size=14, color="#475569"),
+                gridcolor="#e2e8f0",
+                showgrid=True,
+                zeroline=False,
+                tickfont=dict(size=12),
+            ),
+            yaxis=dict(
+                title="<b>Objective 2: Cost (USD)</b>",
+                title_font=dict(size=14, color="#475569"),
+                gridcolor="#e2e8f0",
+                showgrid=True,
+                zeroline=False,
+                tickfont=dict(size=12),
+            ),
+            height=550,
+            template="plotly_white",
+            hovermode="closest",
+            showlegend=True,
+            legend=dict(
+                orientation="v",
+                yanchor="top",
+                y=1,
+                xanchor="right",
+                x=1.15,
+                bgcolor="rgba(255,255,255,0.95)",
+                bordercolor="#e2e8f0",
+                borderwidth=1,
+                font=dict(size=11),
+            ),
+            plot_bgcolor="white",
+            paper_bgcolor="white",
+            margin=dict(l=80, r=150, t=80, b=80),
+        )
+
+        # Add grid
+        fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#e2e8f0")
+        fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor="#e2e8f0")
+
+        return fig
+
+    def plot_pareto_comparison(
+        self, pareto_fronts_dict, title="Pareto Front Comparison"
+    ):
+        """
+        Compare Pareto fronts from multiple algorithms
+
+        Args:
+            pareto_fronts_dict: Dict of {algorithm_name: [(obj1, obj2), ...]}
+            title: Chart title
+        """
+        fig = go.Figure()
+
+        colors = ["#6366f1", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6"]
+        symbols = ["circle", "square", "diamond", "cross", "star"]
+
+        for idx, (algo_name, solutions) in enumerate(pareto_fronts_dict.items()):
+            if not solutions:
+                continue
+
+            obj1_values, obj2_values = zip(*solutions)
+            color = colors[idx % len(colors)]
+            symbol = symbols[idx % len(symbols)]
+
+            # Sort for line connection
+            sorted_indices = np.argsort(obj1_values)
+            obj1_sorted = [obj1_values[i] for i in sorted_indices]
+            obj2_sorted = [obj2_values[i] for i in sorted_indices]
+
+            # Add line
+            fig.add_trace(
+                go.Scatter(
+                    x=obj1_sorted,
+                    y=obj2_sorted,
+                    mode="lines",
+                    line=dict(color=color, width=1, dash="dash"),
+                    showlegend=False,
+                    hoverinfo="skip",
+                )
+            )
+
+            # Add points
+            fig.add_trace(
+                go.Scatter(
+                    x=list(obj1_values),
+                    y=list(obj2_values),
+                    mode="markers",
+                    marker=dict(
+                        size=12,
+                        color=color,
+                        symbol=symbol,
+                        line=dict(width=2, color="white"),
+                        opacity=0.8,
+                    ),
+                    name=algo_name,
+                    hovertemplate=(
+                        f"<b>{algo_name}</b><br>"
+                        "Makespan: %{x:.2f} min<br>"
+                        "Cost: $%{y:,.2f}<br>"
+                        "<extra></extra>"
+                    ),
+                )
+            )
+
+        fig.update_layout(
+            title=dict(text=title, font=dict(size=18, color="#0f172a"), x=0.5),
+            xaxis_title="<b>Makespan (minutes)</b>",
+            yaxis_title="<b>Cost (USD)</b>",
+            height=550,
+            template="plotly_white",
+            hovermode="closest",
+            legend=dict(
+                orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1
+            ),
+        )
+
+        return fig
+
+    def plot_pareto_3d(self, solutions, obj3_values, title="3D Pareto Front"):
+        """
+        Plot 3D Pareto front for three objectives
+
+        Args:
+            solutions: List of (obj1, obj2) tuples
+            obj3_values: List of third objective values
+            title: Chart title
+        """
+        if not solutions or not obj3_values:
+            fig = go.Figure()
+            fig.update_layout(title="No 3D Pareto data available")
+            return fig
+
+        obj1_values, obj2_values = zip(*solutions)
+
+        fig = go.Figure(
+            data=[
+                go.Scatter3d(
+                    x=list(obj1_values),
+                    y=list(obj2_values),
+                    z=obj3_values,
+                    mode="markers",
+                    marker=dict(
+                        size=8,
+                        color=obj3_values,
+                        colorscale="Viridis",
+                        showscale=True,
+                        colorbar=dict(title="Objective 3"),
+                        line=dict(width=1, color="white"),
+                    ),
+                    hovertemplate=(
+                        "<b>Solution</b><br>"
+                        "Obj 1: %{x:.2f}<br>"
+                        "Obj 2: %{y:.2f}<br>"
+                        "Obj 3: %{z:.2f}<br>"
+                        "<extra></extra>"
+                    ),
+                )
+            ]
+        )
+
         fig.update_layout(
             title=title,
-            xaxis_title="Objective 1 (Makespan)",
-            yaxis_title="Objective 2 (Cost)",
-            height=400,
-            template="plotly_white",
+            scene=dict(
+                xaxis_title="Objective 1",
+                yaxis_title="Objective 2",
+                zaxis_title="Objective 3",
+            ),
+            height=600,
         )
+
         return fig
 
     def create_comparison_table(self, results: Dict[str, Dict]) -> pd.DataFrame:

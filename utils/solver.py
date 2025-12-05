@@ -1,4 +1,4 @@
-# utils/solver.py - Fixed to handle different algorithm parameters
+# utils/solver.py - Updated with Pareto front generation
 
 import numpy as np
 import pandas as pd
@@ -55,7 +55,7 @@ class DummySolver:
         total_distance = self._calculate_total_distance(routes, distance_matrix)
         cost = self._calculate_cost(routes, distance_matrix, vehicle_config)
 
-        # Get max iterations from algorithm params (different names for different algorithms)
+        # Get max iterations from algorithm params
         max_iterations = self._get_max_iterations(algorithm_params)
 
         # Generate convergence history
@@ -63,11 +63,7 @@ class DummySolver:
             max_iterations, makespan
         )
 
-        # For multi-objective problems (problem 2)
-        pareto_front = []
-        if self.problem_type == 2:
-            pareto_front = self._generate_pareto_front(makespan, cost)
-
+        # Initialize result dictionary
         result = {
             "routes": routes,
             "schedule": schedule,
@@ -75,13 +71,80 @@ class DummySolver:
             "cost": cost,
             "total_distance": total_distance,
             "convergence_history": self.convergence_history,
-            "pareto_front": pareto_front,
             "computation_time": np.random.uniform(1, 5),  # seconds
             "algorithm": self.algorithm,
         }
 
+        # ============================================================
+        # ADD PARETO FRONT FOR PROBLEM 2 (BI-OBJECTIVE)
+        # ============================================================
+        if self.problem_type == 2:
+            # Generate Pareto front (20-30 solutions)
+            pareto_front = self._generate_pareto_front(makespan, cost, num_solutions=25)
+            result["pareto_front"] = pareto_front
+
+            # Add Pareto-specific metrics
+            result["pareto_rank"] = 1  # Assume current solution is on front
+            result["is_pareto_optimal"] = True
+
+            # Optional: Calculate hypervolume (quality indicator)
+            # result['hypervolume'] = self._calculate_hypervolume(pareto_front)
+        else:
+            result["pareto_front"] = []  # Empty for single-objective problems
+
         self.best_solution = result
         return result
+
+    def _generate_pareto_front(
+        self, base_makespan: float, base_cost: float, num_solutions: int = 25
+    ) -> List[Tuple[float, float]]:
+        """
+        Generate a realistic Pareto front for bi-objective optimization
+
+        Args:
+            base_makespan: Reference makespan value
+            base_cost: Reference cost value
+            num_solutions: Number of Pareto optimal solutions to generate
+
+        Returns:
+            List of (makespan, cost) tuples representing Pareto front
+        """
+        solutions = []
+
+        for i in range(num_solutions):
+            # Create trade-off: as we optimize one objective, the other gets worse
+            alpha = i / (num_solutions - 1) if num_solutions > 1 else 0.5
+
+            # Makespan: ranges from base*0.8 to base*1.2
+            # Lower alpha = faster (lower makespan) but more expensive
+            makespan = base_makespan * (0.8 + 0.4 * alpha)
+
+            # Cost: inverse relationship - ranges from base*1.2 to base*0.8
+            # Lower alpha = more expensive, higher alpha = cheaper
+            cost = base_cost * (1.2 - 0.4 * alpha)
+
+            # Add slight curvature to make it look more realistic (Pareto fronts are often curved)
+            curvature = 0.1 * np.sin(alpha * np.pi)
+            makespan *= 1 + curvature
+            cost *= 1 + curvature
+
+            # Add small random noise for realism
+            noise_makespan = np.random.uniform(-0.02, 0.02)
+            noise_cost = np.random.uniform(-0.02, 0.02)
+
+            makespan *= 1 + noise_makespan
+            cost *= 1 + noise_cost
+
+            # Ensure positive values
+            makespan = max(makespan, base_makespan * 0.75)
+            cost = max(cost, base_cost * 0.75)
+
+            solutions.append((makespan, cost))
+
+        # Sort by first objective for cleaner visualization
+        solutions.sort(key=lambda x: x[0])
+
+        return solutions
 
     def _get_max_iterations(self, algorithm_params: Dict) -> int:
         """Extract max iterations from algorithm params based on problem type"""
@@ -247,21 +310,6 @@ class DummySolver:
             history.append((i, current_fitness))
 
         return history
-
-    def _generate_pareto_front(
-        self, makespan: float, cost: float, num_solutions: int = 30
-    ) -> List[Tuple[float, float]]:
-        """Generate dummy Pareto front for multi-objective problem"""
-        solutions = []
-
-        for i in range(num_solutions):
-            # Trade-off between makespan and cost
-            alpha = i / num_solutions
-            obj1 = makespan * (0.8 + 0.4 * alpha + np.random.uniform(-0.05, 0.05))
-            obj2 = cost * (1.2 - 0.4 * alpha + np.random.uniform(-0.05, 0.05))
-            solutions.append((obj1, obj2))
-
-        return solutions
 
 
 class AlgorithmRunner:
