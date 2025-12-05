@@ -1,4 +1,4 @@
-# ui/styles.py - CSS Styling
+# ui/styles.py - CSS Styling (UPDATED with larger labels and compact layout)
 
 import streamlit as st
 
@@ -68,13 +68,13 @@ footer {visibility: hidden;}
     font-weight: 400;
 }
 
-/* Enhanced section titles - Minimalist */
+/* Enhanced section titles - Minimalist - LARGER */
 .config-section-title {
-    font-size: 0.9rem;
+    font-size: 1rem;
     font-weight: 600;
     color: #1e293b;
-    margin-top: 0.75rem;
-    margin-bottom: 0.5rem;
+    margin-top: 0.6rem;
+    margin-bottom: 0.4rem;
     border-bottom: 1px solid #e2e8f0;
     padding-bottom: 0.25rem;
     padding-left: 0;
@@ -123,12 +123,12 @@ footer {visibility: hidden;}
     border-color: #cbd5e1;
 }
 
-/* Minimalist expander styling */
+/* Minimalist expander styling - COMPACT */
 div[data-testid="stExpander"] {
     background: #ffffff;
     border-radius: 6px;
     border: 1px solid #e2e8f0;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
     transition: border-color 0.2s ease;
 }
 
@@ -137,8 +137,8 @@ div[data-testid="stExpander"]:hover {
 }
 
 div[data-testid="stExpander"] summary {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
+    padding: 0.4rem 0.65rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: #1e293b;
     background-color: transparent;
@@ -149,19 +149,23 @@ div[data-testid="stExpander"][aria-expanded="true"] {
 }
 
 div[data-testid="stExpander"] > div:last-child {
-    padding: 0.75rem;
+    padding: 0.6rem;
     background-color: #ffffff;
 }
 
-/* Minimalist input fields */
-.stNumberInput label, .stSelectbox label {
-    font-size: 0.8rem;
-    margin-bottom: 0.25rem;
-    font-weight: 500;
-    color: #475569;
+/* Minimalist input fields - LARGER LABELS */
+.stNumberInput label, .stSelectbox label, .stFileUploader label {
+    font-size: 0.95rem;
+    margin-bottom: 0.35rem;
+    font-weight: 600;
+    color: #334155;
 }
 
 .stNumberInput, .stSelectbox {
+    margin-bottom: 0.4rem;
+}
+
+.stFileUploader {
     margin-bottom: 0.5rem;
 }
 
@@ -209,30 +213,62 @@ div[data-testid="stExpander"] > div:last-child {
     color: #475569;
 }
 
-/* Metric cards - minimalist */
+/* Metric cards - minimalist - COMPACT */
 div[data-testid="stMetricValue"] {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     font-weight: 600;
     color: #0f172a;
 }
 
 div[data-testid="stMetricLabel"] {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     color: #64748b;
-    font-weight: 500;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
 
-/* Info/Success/Error boxes - minimalist */
+div[data-testid="stMetric"] {
+    padding: 0.4rem 0.6rem;
+}
+
+/* Info/Success/Error boxes - minimalist - COMPACT */
 .stAlert {
     border-radius: 4px;
     border-left-width: 3px;
-    padding: 0.5rem 0.75rem;
+    padding: 0.4rem 0.6rem;
     font-size: 0.875rem;
+    margin-bottom: 0.5rem;
 }
 
-/* Minimalist tabs styling */
+/* Markdown section headers - LARGER & PROMINENT */
+.stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
+    font-weight: 600;
+    color: #1e293b;
+    margin-top: 0.6rem;
+    margin-bottom: 0.4rem;
+}
+
+.stMarkdown h3 {
+    font-size: 1.1rem;
+}
+
+.stMarkdown h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #475569;
+    margin-top: 0.5rem;
+    margin-bottom: 0.3rem;
+}
+
+/* Markdown bold text in sections */
+.stMarkdown strong {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 1rem;
+}
+
+/* Minimalist tabs styling - LARGER FONT */
 .stTabs [data-baseweb="tab-list"] {
     gap: 4px;
     background-color: transparent;
@@ -243,10 +279,10 @@ div[data-testid="stMetricLabel"] {
 
 .stTabs [data-baseweb="tab"] {
     border-radius: 0;
-    padding: 0.4rem 0.8rem;
-    font-weight: 500;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
     color: #64748b;
-    font-size: 0.875rem;
+    font-size: 0.95rem;
     border-bottom: 2px solid transparent;
 }
 
@@ -293,14 +329,14 @@ section[data-testid="stSidebar"] {
     border-radius: 4px;
 }
 
-/* Reduce column gaps */
+/* Reduce column gaps - MORE COMPACT */
 .row-widget.stHorizontal {
-    gap: 0.5rem;
+    gap: 0.4rem;
 }
 
 /* Compact column spacing */
 div[data-testid="column"] {
-    padding: 0 0.25rem;
+    padding: 0 0.2rem;
 }
 </style>
 """
