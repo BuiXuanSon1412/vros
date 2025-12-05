@@ -8,6 +8,7 @@ from .algorithm_config_p1 import render_algorithm_config_p1
 from .algorithm_config_p2 import render_algorithm_config_p2
 from .algorithm_config_p3 import render_algorithm_config_p3
 from .dataset_display import render_dataset_info
+from .file_upload import render_file_upload  # ADD THIS
 
 __all__ = [
     "render_system_config_p1",
@@ -17,4 +18,5 @@ __all__ = [
     "render_algorithm_config_p2",
     "render_algorithm_config_p3",
     "render_dataset_info",
+    "render_file_upload",  # ADD THIS
 ]

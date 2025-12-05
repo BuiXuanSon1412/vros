@@ -1,7 +1,6 @@
 # ui/config_panel.py - Configuration Panel with Problem-Specific UI
 
 import streamlit as st
-from ui.config.dataset_config import render_dataset_config
 from ui.handlers.run_handler import handle_run_button
 
 # Problem-specific imports
@@ -11,6 +10,7 @@ from ui.config.system_config_p3 import render_system_config_p3
 from ui.config.algorithm_config_p1 import render_algorithm_config_p1
 from ui.config.algorithm_config_p2 import render_algorithm_config_p2
 from ui.config.algorithm_config_p3 import render_algorithm_config_p3
+from ui.config.file_upload import render_file_upload
 
 
 def render_config_panel(problem_type):
@@ -26,7 +26,7 @@ def render_config_panel(problem_type):
 
     # TAB 2: DATASET
     with config_tabs[1]:
-        render_dataset_config(problem_type)
+        render_file_upload(problem_type)
 
     # TAB 3: ALGORITHM (Problem-specific)
     with config_tabs[2]:
