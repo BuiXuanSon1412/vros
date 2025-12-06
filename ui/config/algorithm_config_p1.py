@@ -7,8 +7,8 @@ from config.default_config import PROBLEM1_CONFIG
 def render_algorithm_config_p1():
     """Render Problem 1 algorithm configuration (Tabu Search only)"""
 
-    st.markdown("**Algorithm: Tabu Search**")
-    st.markdown("---")
+    st.markdown("**Algorithm:** Tabu Search Multi-Level")
+    # st.markdown("---")
 
     st.markdown("**Iteration Parameters**")
     col1, col2 = st.columns(2)
@@ -24,7 +24,7 @@ def render_algorithm_config_p1():
 
     with col2:
         max_iter_no_improve = st.number_input(
-            "Max iteration without improvement",
+            "Max iteration w/ improvement",
             min_value=10,
             max_value=1000,
             value=PROBLEM1_CONFIG["algorithm"]["max_iteration_no_improve"],
@@ -32,13 +32,13 @@ def render_algorithm_config_p1():
             key="p1_max_iter_no_improve",
         )
 
-    st.markdown("---")
+    # st.markdown("---")
     st.markdown("**Penalty Parameters**")
 
     col1, col2, col3 = st.columns(3)
     with col1:
         alpha1 = st.number_input(
-            "α₁ (flight endurance penalty)",
+            "Flight endurance penalty (α)",
             min_value=0.1,
             max_value=10.0,
             value=PROBLEM1_CONFIG["algorithm"]["alpha1"],
@@ -48,7 +48,7 @@ def render_algorithm_config_p1():
 
     with col2:
         alpha2 = st.number_input(
-            "α₂ (waiting time penalty)",
+            "Waiting time penalty (α₂)",
             min_value=0.1,
             max_value=10.0,
             value=PROBLEM1_CONFIG["algorithm"]["alpha2"],
@@ -58,7 +58,7 @@ def render_algorithm_config_p1():
 
     with col3:
         beta = st.number_input(
-            "β (penalty factor)",
+            "Penalty factor (β)",
             min_value=1.0,
             max_value=5.0,
             value=PROBLEM1_CONFIG["algorithm"]["beta"],

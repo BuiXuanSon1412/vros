@@ -7,8 +7,8 @@ from config.default_config import PROBLEM2_CONFIG
 def render_algorithm_config_p2():
     """Render Problem 2 algorithm configuration (HNSGAII-TS only)"""
 
-    st.markdown("**Algorithm: HNSGAII-TS**")
-    st.markdown("---")
+    st.markdown("**Algorithm:** HNSGAII-TS")
+    # st.markdown("---")
 
     st.markdown("**Genetic Algorithm Parameters**")
     col1, col2 = st.columns(2)
@@ -48,11 +48,11 @@ def render_algorithm_config_p2():
             key="p2_population_size",
         )
 
-    st.markdown("---")
+    # st.markdown("---")
     st.markdown("**Tabu Search Parameters**")
 
     tabu_iterations = st.number_input(
-        "Number of Tabu Search iterations",
+        "Number of iterations",
         min_value=10,
         max_value=200,
         value=PROBLEM2_CONFIG["algorithm"]["tabu_search_iterations"],

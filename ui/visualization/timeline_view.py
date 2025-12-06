@@ -76,51 +76,43 @@ def _render_schedule_statistics(solution):
 
 def _render_gantt_chart(solution, problem_type, chart_counter):
     """Render Gantt chart for schedule"""
-    viz = get_visualizer()
+    st.markdown("**Schedule Gantt Chart**")
 
-    fig_gantt = viz.plot_gantt_chart(
-        solution["schedule"],
-        title="Schedule Timeline - All Vehicles",
-    )
-    st.plotly_chart(
-        fig_gantt,
-        use_container_width=True,
-        key=f"timeline_{problem_type}_{chart_counter}",
-    )
+    schedule = solution.get("schedule", [])
 
-    # Add view options
-    with st.expander("⚙️ View Options", expanded=False):
-        col1, col2 = st.columns(2)
+    if not schedule:
+        st.warning("No schedule data to display")
+        return
 
-        with col1:
-            show_trucks_only = st.checkbox(
-                "Show Trucks Only", key=f"trucks_only_{problem_type}"
+    # Show schedule info
+    st.caption(f"Rendering Gantt chart with {len(schedule)} tasks...")
+
+    try:
+        viz = get_visualizer()
+        fig_gantt = viz.plot_gantt_chart(
+            schedule,
+            title="Schedule Timeline - All Vehicles",
+        )
+
+        if fig_gantt:
+            st.plotly_chart(
+                fig_gantt,
+                use_container_width=True,
+                key=f"timeline_{problem_type}_{chart_counter}",
             )
+        else:
+            st.error("Gantt chart generation returned None")
 
-        with col2:
-            show_drones_only = st.checkbox(
-                "Show Drones Only", key=f"drones_only_{problem_type}"
-            )
+    except Exception as e:
+        st.error(f"❌ Error rendering Gantt chart: {str(e)}")
 
-        if show_trucks_only:
-            truck_schedule = [
-                s for s in solution["schedule"] if "truck" in s["vehicle_id"].lower()
-            ]
-            if truck_schedule:
-                fig_trucks = viz.plot_gantt_chart(
-                    truck_schedule, title="Truck Schedule"
-                )
-                st.plotly_chart(fig_trucks, use_container_width=True)
-
-        if show_drones_only:
-            drone_schedule = [
-                s for s in solution["schedule"] if "drone" in s["vehicle_id"].lower()
-            ]
-            if drone_schedule:
-                fig_drones = viz.plot_gantt_chart(
-                    drone_schedule, title="Drone Schedule"
-                )
-                st.plotly_chart(fig_drones, use_container_width=True)
+        # Show sample data for debugging
+        with st.expander("🔍 Debug Info - Click to expand"):
+            st.write("**Schedule data sample:**")
+            st.json(schedule[:2])  # Show first 2 tasks
+            st.write("**Data types:**")
+            if schedule:
+                st.write({k: type(v).__name__ for k, v in schedule[0].items()})
 
 
 def _render_schedule_details(solution):

@@ -16,7 +16,7 @@ def render_dataset_info(problem_type, customers_df):
     # Common metrics
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Number of customers", len(customers_df))
+        st.metric("No. Customers", len(customers_df))
 
     with col2:
         coord_range = (

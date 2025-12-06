@@ -15,14 +15,14 @@ def render_system_config_p3():
     col1, col2 = st.columns(2)
     with col1:
         depot_x = st.number_input(
-            "Depot X",
+            "Coordinate X",
             value=depot_data["x"] if file_loaded else 0.0,
             disabled=file_loaded,
             key="p3_depot_x",
         )
     with col2:
         depot_y = st.number_input(
-            "Depot Y",
+            "Coordinate Y",
             value=depot_data["y"] if file_loaded else 0.0,
             disabled=file_loaded,
             key="p3_depot_y",
@@ -33,7 +33,7 @@ def render_system_config_p3():
             f"ℹ️ Depot location loaded from file: ({depot_data['x']}, {depot_data['y']})"
         )
 
-    st.markdown("---")
+    # st.markdown("---")
     st.markdown("**Vehicle Configuration**")
 
     # Get vehicle config from uploaded file
@@ -65,7 +65,7 @@ def render_system_config_p3():
             else PROBLEM3_CONFIG["system"]["truck_speed"]
         )
         truck_speed = st.number_input(
-            "Truck speed (km/h)",
+            "Truck speed",
             min_value=0.1,
             max_value=100.0,
             value=float(default_truck_speed),
@@ -99,7 +99,7 @@ def render_system_config_p3():
             else PROBLEM3_CONFIG["system"]["drone_speed"]
         )
         drone_speed = st.number_input(
-            "Drone speed (km/h)",
+            "Drone speed",
             min_value=0.1,
             max_value=120.0,
             value=float(default_drone_speed),
@@ -108,7 +108,7 @@ def render_system_config_p3():
             key="p3_drone_speed",
         )
 
-    st.markdown("---")
+    # st.markdown("---")
     st.markdown("**Drone Capacity & Constraints**")
 
     col1, col2 = st.columns(2)
@@ -124,7 +124,7 @@ def render_system_config_p3():
         if file_loaded and file_vehicle_config:
             # When file is loaded, just show the value as a number input (disabled)
             drone_capacity = st.number_input(
-                "Drone capacity (kg)",
+                "Drone capacity",
                 min_value=1,
                 max_value=50,
                 value=int(default_capacity),
@@ -134,7 +134,7 @@ def render_system_config_p3():
         else:
             # When no file, show selectbox with options
             drone_capacity = st.selectbox(
-                "Drone capacity (kg)",
+                "Drone capacity",
                 options=PROBLEM3_CONFIG["system"]["drone_capacity_options"],
                 index=PROBLEM3_CONFIG["system"]["drone_capacity_options"].index(
                     PROBLEM3_CONFIG["system"]["drone_capacity_default"]
@@ -150,7 +150,7 @@ def render_system_config_p3():
             else PROBLEM3_CONFIG["system"]["flight_endurance_limit"]
         )
         flight_endurance = st.number_input(
-            "Flight endurance limit (minutes)",
+            "Flight endurance limit",
             min_value=10,
             max_value=180,
             value=int(default_flight_time),
@@ -160,7 +160,7 @@ def render_system_config_p3():
 
     with col2:
         waiting_limit = st.number_input(
-            "Sample waiting limit (minutes)",
+            "Sample waiting limit",
             min_value=10,
             max_value=180,
             value=PROBLEM3_CONFIG["system"]["sample_waiting_limit"],

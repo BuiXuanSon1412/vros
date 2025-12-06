@@ -16,7 +16,7 @@ def setup_page_config():
 def render_header():
     """Render application header"""
     st.markdown(
-        '<div class="main-header">Vehicle Routing Optimization</div>',
+        '<div class="main-header">Vehicle Routing Optimization System</div>',
         unsafe_allow_html=True,
     )
     st.markdown(

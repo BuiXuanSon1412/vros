@@ -9,11 +9,11 @@ def render_system_config_p2():
     st.markdown("**Depot Configuration**")
     col1, col2 = st.columns(2)
     with col1:
-        depot_x = st.number_input("Depot X", value=0.0, key="p2_depot_x")
+        depot_x = st.number_input("Coordinate X", value=0.0, key="p2_depot_x")
     with col2:
-        depot_y = st.number_input("Depot Y", value=0.0, key="p2_depot_y")
+        depot_y = st.number_input("Coordinate Y", value=0.0, key="p2_depot_y")
 
-    st.markdown("---")
+    # st.markdown("---")
     st.markdown("**Vehicle Configuration**")
 
     col1, col2 = st.columns(2)
@@ -26,7 +26,7 @@ def render_system_config_p2():
             key="p2_num_technicians",
         )
         baseline_speed = st.number_input(
-            "Technician baseline speed (km/h)",
+            "Technician baseline speed",
             min_value=10,
             max_value=100,
             value=PROBLEM2_CONFIG["system"]["technician_baseline_speed"],
@@ -67,7 +67,7 @@ def render_system_config_p2():
     col1, col2, col3 = st.columns(3)
     with col1:
         takeoff_speed = st.number_input(
-            "Takeoff speed (km/h)",
+            "Takeoff speed",
             min_value=5,
             max_value=50,
             value=PROBLEM2_CONFIG["system"]["drone_takeoff_speed"],
@@ -75,7 +75,7 @@ def render_system_config_p2():
         )
     with col2:
         cruise_speed = st.number_input(
-            "Cruise speed (km/h)",
+            "Cruise speed",
             min_value=20,
             max_value=120,
             value=PROBLEM2_CONFIG["system"]["drone_cruise_speed"],
@@ -83,27 +83,27 @@ def render_system_config_p2():
         )
     with col3:
         landing_speed = st.number_input(
-            "Landing speed (km/h)",
+            "Landing speed",
             min_value=5,
             max_value=50,
             value=PROBLEM2_CONFIG["system"]["drone_landing_speed"],
             key="p2_landing_speed",
         )
 
-    st.markdown("---")
+    # st.markdown("---")
     st.markdown("**Capacity & Constraints**")
 
     col1, col2 = st.columns(2)
     with col1:
         truck_capacity = st.number_input(
-            "Truck capacity (kg)",
+            "Truck capacity",
             min_value=10,
             max_value=500,
             value=PROBLEM2_CONFIG["system"]["truck_capacity"],
             key="p2_truck_capacity",
         )
         flight_endurance = st.number_input(
-            "Flight endurance limit (seconds)",
+            "Flight endurance limit",
             min_value=600,
             max_value=7200,
             value=PROBLEM2_CONFIG["system"]["flight_endurance_limit"],
@@ -112,14 +112,14 @@ def render_system_config_p2():
 
     with col2:
         drone_capacity = st.number_input(
-            "Drone capacity (kg)",
+            "Drone capacity",
             min_value=1,
             max_value=50,
             value=PROBLEM2_CONFIG["system"]["drone_capacity"],
             key="p2_drone_capacity",
         )
         waiting_limit = st.number_input(
-            "Sample waiting limit (minutes)",
+            "Sample waiting limit",
             min_value=10,
             max_value=180,
             value=PROBLEM2_CONFIG["system"]["sample_waiting_limit"],

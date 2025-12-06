@@ -52,6 +52,7 @@ section.main > div {
     padding-right: 1rem !important;
 }
 
+
 /* Ensure full width usage */
 .stApp {
     margin: 0 !important;
@@ -72,20 +73,31 @@ footer {visibility: hidden;}
     font-weight: 600;
     color: #0f172a;
     text-align: center;
-    margin-bottom: 0.15rem;
-    margin-top: 0.5rem;
-    padding-top: 0.5rem;
+    margin-bottom: 0rem;
+    margin-top: 0.rem;
+    padding-top: 0rem;
+    padding-bottom: 0rem;
     letter-spacing: -0.02em;
+    background-color: #CCE5FF
 }
 
 .sub-header {
     font-size: 0.875rem;
-    color: #64748b;
+    color: #0f172a;
     text-align: center;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.3rem;
     margin-top: 0;
+    padding-top: 0;
     font-weight: 400;
+    background-color: #CCE5FF
+
 }
+/* Remove spacing between markdown blocks */
+div[data-testid="stMarkdown"] {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
 
 /* Enhanced section titles - Minimalist - LARGER */
 .config-section-title {
@@ -175,13 +187,13 @@ div[data-testid="stExpander"] > div:last-child {
 /* Minimalist input fields - LARGER LABELS */
 .stNumberInput label, .stSelectbox label, .stFileUploader label {
     font-size: 0.95rem;
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.2rem;
     font-weight: 600;
     color: #334155;
 }
 
 .stNumberInput, .stSelectbox {
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.2rem;
 }
 
 .stFileUploader {
@@ -191,7 +203,7 @@ div[data-testid="stExpander"] > div:last-child {
 .stNumberInput > div > div > input {
     border: 1px solid #e2e8f0;
     border-radius: 4px;
-    padding: 0.4rem 0.6rem;
+    padding: 0rem 0.6rem;
     font-size: 0.875rem;
     background-color: #ffffff;
     transition: border-color 0.2s ease;
@@ -261,15 +273,19 @@ div[data-testid="stMetric"] {
 }
 
 /* Markdown section headers - LARGER & PROMINENT */
+.stMarkdown {
+    margin-top: 0.5rem;
+}
+
 .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
     font-weight: 600;
     color: #1e293b;
-    margin-top: 0.6rem;
-    margin-bottom: 0.4rem;
+    margin-top: 0.2rem;
+    margin-bottom: 0.2rem;
 }
 
 .stMarkdown h3 {
-    font-size: 1.1rem;
+    font-size: 1.5rem;
 }
 
 .stMarkdown h4 {
@@ -296,12 +312,13 @@ div[data-testid="stMetric"] {
     margin-top: 0;
 }
 
-.stTabs [data-baseweb="tab"] {
+.stTabs [data-baseweb="tab"] div {
     border-radius: 0;
     padding: 0.5rem 1rem;
     font-weight: 600;
     color: #64748b;
-    font-size: 0.95rem;
+    font-size: 0.94rem !important;
+    padding: 1rem 1.5rem;
     border-bottom: 2px solid transparent;
 }
 
@@ -312,7 +329,7 @@ div[data-testid="stMetric"] {
 }
 
 .stTabs [data-baseweb="tab-panel"] {
-    padding-top: 0.75rem;
+    padding-top: 0.1rem;
 }
 
 /* Dataframe - minimalist */

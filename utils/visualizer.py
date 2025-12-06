@@ -284,44 +284,105 @@ class Visualizer:
         return fig
 
     # ======================= Other plots remain unchanged =======================
-
     def plot_gantt_chart(
         self, schedule: List[Dict], title: str = "Schedule Timeline"
     ) -> go.Figure:
+        """Create Gantt chart from schedule data"""
+
         if not schedule:
             fig = go.Figure()
-            fig.update_layout(title="No schedule data available")
+            fig.add_annotation(
+                text="No schedule data available",
+                xref="paper",
+                yref="paper",
+                x=0.5,
+                y=0.5,
+                showarrow=False,
+                font=dict(size=16, color="gray"),
+            )
+            fig.update_layout(height=400, template="plotly_white", title=title)
             return fig
 
-        df = pd.DataFrame(schedule)
+        # Create figure manually for more control
+        fig = go.Figure()
 
-        # Color mapping
-        unique_vehicles = df["vehicle_id"].unique()
+        # Group tasks by vehicle
+        vehicle_tasks = {}
+        for task in schedule:
+            vehicle_id = task.get("vehicle_id", "Unknown")
+            if vehicle_id not in vehicle_tasks:
+                vehicle_tasks[vehicle_id] = []
+            vehicle_tasks[vehicle_id].append(task)
+
+        # Sort vehicles
+        sorted_vehicles = sorted(vehicle_tasks.keys())
+
+        # Assign colors
         color_map = {}
-        for i, vehicle in enumerate(unique_vehicles):
+        for vehicle in sorted_vehicles:
             if "truck" in vehicle.lower():
                 color_map[vehicle] = self.colors_truck[0]
             else:
                 color_map[vehicle] = self.colors_drone[0]
 
-        fig = px.timeline(
-            df,
-            x_start="start_time",
-            x_end="end_time",
-            y="vehicle_id",
-            color="vehicle_id",
-            text="customer_id",
-            title=title,
-            color_discrete_map=color_map,
-        )
+        # Plot each vehicle's tasks
+        for idx, vehicle_id in enumerate(sorted_vehicles):
+            tasks = vehicle_tasks[vehicle_id]
+            color = color_map.get(vehicle_id, "#2563eb")
 
-        fig.update_yaxes(categoryorder="total ascending")
+            for task in tasks:
+                start = task.get("start_time", 0)
+                end = task.get("end_time", 0)
+                customer = task.get("customer_id", "?")
+
+                # Add bar for this task
+                fig.add_trace(
+                    go.Bar(
+                        x=[end - start],
+                        y=[vehicle_id],
+                        base=start,
+                        orientation="h",
+                        marker=dict(color=color, line=dict(color="white", width=1)),
+                        name=vehicle_id,
+                        showlegend=False,
+                        text=customer,
+                        textposition="inside",
+                        textfont=dict(color="white", size=10),
+                        hovertemplate=(
+                            f"<b>{vehicle_id}</b><br>"
+                            f"Customer: {customer}<br>"
+                            f"Start: {start:.1f} min<br>"
+                            f"End: {end:.1f} min<br>"
+                            f"Duration: {end - start:.1f} min<br>"
+                            "<extra></extra>"
+                        ),
+                        width=0.5,
+                    )
+                )
+
+        # Update layout
         fig.update_layout(
-            xaxis_title="Time (minutes)",
-            yaxis_title="Vehicle",
-            height=400,
-            showlegend=True,
+            title=dict(
+                text=title, font=dict(size=16, color="#0f172a"), x=0.5, xanchor="center"
+            ),
+            xaxis=dict(
+                title="Time (minutes)",
+                gridcolor="#e2e8f0",
+                showgrid=True,
+            ),
+            yaxis=dict(
+                title="Vehicle",
+                categoryorder="array",
+                categoryarray=sorted_vehicles,
+            ),
+            height=max(
+                400, len(sorted_vehicles) * 60
+            ),  # Dynamic height based on vehicles
             template="plotly_white",
+            hovermode="closest",
+            barmode="overlay",
+            plot_bgcolor="white",
+            paper_bgcolor="white",
         )
 
         return fig

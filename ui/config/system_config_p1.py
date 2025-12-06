@@ -9,11 +9,11 @@ def render_system_config_p1():
     st.markdown("**Depot Configuration**")
     col1, col2 = st.columns(2)
     with col1:
-        depot_x = st.number_input("Depot X", value=0.0, key="p1_depot_x")
+        depot_x = st.number_input("Coordinate X", value=0.0, key="p1_depot_x")
     with col2:
-        depot_y = st.number_input("Depot Y", value=0.0, key="p1_depot_y")
+        depot_y = st.number_input("Coordinate Y", value=0.0, key="p1_depot_y")
 
-    st.markdown("---")
+    # st.markdown("---")
     st.markdown("**Vehicle Configuration**")
 
     col1, col2 = st.columns(2)
@@ -26,7 +26,7 @@ def render_system_config_p1():
             key="p1_num_technicians",
         )
         technician_speed = st.number_input(
-            "Technician speed (km/h)",
+            "Technician speed",
             min_value=10,
             max_value=100,
             value=PROBLEM1_CONFIG["system"]["technician_speed"],
@@ -42,20 +42,20 @@ def render_system_config_p1():
             key="p1_num_drones",
         )
         drone_speed = st.number_input(
-            "Drone speed (km/h)",
+            "Drone speed",
             min_value=10,
             max_value=120,
             value=PROBLEM1_CONFIG["system"]["drone_speed"],
             key="p1_drone_speed",
         )
 
-    st.markdown("---")
+    # st.markdown("---")
     st.markdown("**Constraints**")
 
     col1, col2 = st.columns(2)
     with col1:
         flight_endurance = st.number_input(
-            "Flight endurance limit (seconds)",
+            "Flight endurance limit",
             min_value=600,
             max_value=7200,
             value=PROBLEM1_CONFIG["system"]["flight_endurance_limit"],
@@ -64,7 +64,7 @@ def render_system_config_p1():
 
     with col2:
         waiting_limit = st.number_input(
-            "Sample waiting limit (minutes)",
+            "Sample waiting limit",
             min_value=10,
             max_value=180,
             value=PROBLEM1_CONFIG["system"]["sample_waiting_limit"],
