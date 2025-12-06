@@ -318,7 +318,7 @@ def _generate_timeline_insights(vehicle_schedules, solution):
             )
         else:
             insights.append(
-                f"✓ Balanced workload: Tasks distributed evenly across vehicles"
+                "✓ Balanced workload: Tasks distributed evenly across vehicles"
             )
 
     # Check for parallel execution

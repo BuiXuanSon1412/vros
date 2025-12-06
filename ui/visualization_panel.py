@@ -20,7 +20,7 @@ def render_visualization_panel(problem_type):
         return
 
     # Visualization tabs
-    viz_tabs = st.tabs(["Map", "Metrics", "Convergence", "Timeline", "Comparison"])
+    viz_tabs = st.tabs(["Map", "Metrics", "Convergence", "Timeline"])
 
     # TAB 1: MAP VIEW
     with viz_tabs[0]:
@@ -39,5 +39,5 @@ def render_visualization_panel(problem_type):
         render_timeline_view(problem_type)
 
     # TAB 5: COMPARISON VIEW
-    with viz_tabs[4]:
-        render_comparison_view(problem_type)
+    # with viz_tabs[4]:
+    #    render_comparison_view(problem_type)
