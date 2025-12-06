@@ -606,6 +606,7 @@ class Visualizer:
             )
         """
         # ============== LAYER 5: Current Solution Highlight ==============
+        """
         if current_solution:
             fig.add_trace(
                 go.Scatter(
@@ -628,7 +629,7 @@ class Visualizer:
                     showlegend=True,
                 )
             )
-
+        """
         # ============== LAYER 6: Trade-off Region Shading ==============
         # Add shaded region to show trade-off space
         fig.add_trace(

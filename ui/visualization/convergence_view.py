@@ -109,7 +109,7 @@ def _render_convergence_chart(solution, problem_type, chart_counter):
 
 def _render_pareto_section(solution, problem_type, chart_counter):
     """Render Pareto front section with enhanced visualization"""
-    st.markdown("### 🎯 Pareto Front Visualization")
+    st.markdown("### Pareto Front Visualization")
 
     pareto_front = solution.get("pareto_front", [])
 
@@ -152,10 +152,10 @@ def _render_pareto_section(solution, problem_type, chart_counter):
 
     # Interactive solution selector
     st.markdown("---")
-    _render_solution_selector(pareto_front, problem_type)
+    # _render_solution_selector(pareto_front, problem_type)
 
     # Detailed analysis
-    with st.expander("📊 Detailed Pareto Analysis", expanded=False):
+    with st.expander("Detailed Pareto Analysis", expanded=False):
         _render_pareto_analysis(pareto_front)
 
 
