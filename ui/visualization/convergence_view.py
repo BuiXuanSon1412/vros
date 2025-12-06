@@ -178,7 +178,7 @@ def _render_pareto_statistics(pareto_front, solution):
         range_obj1 = max(objectives_1) - min(objectives_1)
         st.metric(
             "Makespan Range",
-            f"{range_obj1:.1f} min",
+            f"{range_obj1:.1f}",
             help=f"Min: {min(objectives_1):.1f}, Max: {max(objectives_1):.1f}",
         )
 
@@ -186,8 +186,8 @@ def _render_pareto_statistics(pareto_front, solution):
         range_obj2 = max(objectives_2) - min(objectives_2)
         st.metric(
             "Cost Range",
-            f"${range_obj2:,.0f}",
-            help=f"Min: ${min(objectives_2):,.0f}, Max: ${max(objectives_2):,.0f}",
+            f"{range_obj2:,.0f}",
+            help=f"Min: {min(objectives_2):,.0f}, Max: {max(objectives_2):,.0f}",
         )
 
     with col4:
@@ -253,8 +253,8 @@ def _render_solution_selector(pareto_front, problem_type):
         selected_cost = objectives_2[solution_idx]
 
         st.markdown("**Selected Solution:**")
-        st.metric("Makespan", f"{selected_makespan:.1f} min")
-        st.metric("Cost", f"${selected_cost:,.0f}")
+        st.metric("Makespan", f"{selected_makespan:.1f}")
+        st.metric("Cost", f"{selected_cost:,.0f}")
 
         # Compare with extremes
         min_makespan = min(objectives_1)
@@ -293,8 +293,8 @@ def _render_pareto_analysis(pareto_front):
         pareto_data.append(
             {
                 "Solution": f"S{idx + 1}",
-                "Makespan (min)": f"{obj1:.2f}",
-                "Cost ($)": f"{obj2:,.2f}",
+                "Makespan": f"{obj1:.2f}",
+                "Cost": f"{obj2:,.2f}",
                 "Category": _get_tradeoff_category(idx, len(pareto_front)),
                 "Score": f"{combined_score:.3f}",
             }
@@ -322,8 +322,8 @@ def _render_pareto_analysis(pareto_front):
             {
                 "Type": "⚡ Fastest",
                 "Solution": f"S{min_makespan_idx + 1}",
-                "Makespan": f"{objectives_1[min_makespan_idx]:.1f} min",
-                "Cost": f"${objectives_2[min_makespan_idx]:,.0f}",
+                "Makespan": f"{objectives_1[min_makespan_idx]:.1f}",
+                "Cost": f"{objectives_2[min_makespan_idx]:,.0f}",
                 "Why": "Minimum makespan",
             }
         )
@@ -332,8 +332,8 @@ def _render_pareto_analysis(pareto_front):
             {
                 "Type": "💰 Cheapest",
                 "Solution": f"S{min_cost_idx + 1}",
-                "Makespan": f"{objectives_1[min_cost_idx]:.1f} min",
-                "Cost": f"${objectives_2[min_cost_idx]:,.0f}",
+                "Makespan": f"{objectives_1[min_cost_idx]:.1f}",
+                "Cost": f"{objectives_2[min_cost_idx]:,.0f}",
                 "Why": "Minimum cost",
             }
         )
@@ -342,8 +342,8 @@ def _render_pareto_analysis(pareto_front):
             {
                 "Type": "⚖️ Balanced",
                 "Solution": f"S{balanced_idx + 1}",
-                "Makespan": f"{objectives_1[balanced_idx]:.1f} min",
-                "Cost": f"${objectives_2[balanced_idx]:,.0f}",
+                "Makespan": f"{objectives_1[balanced_idx]:.1f}",
+                "Cost": f"{objectives_2[balanced_idx]:,.0f}",
                 "Why": "Best trade-off",
             }
         )

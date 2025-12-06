@@ -49,19 +49,19 @@ def _render_metric_cards(solution, problem_type):
         with metric_cols[0]:
             st.metric(
                 "Makespan",
-                f"{solution['makespan']:.1f} min",
+                f"{solution['makespan']:.1f}",
                 help="Total completion time (Objective 1)",
             )
 
         with metric_cols[1]:
             st.metric(
                 "Cost",
-                f"${solution['cost']:,.0f}",
+                f"{solution['cost']:,.0f}",
                 help="Total operational cost (Objective 2)",
             )
 
         with metric_cols[2]:
-            st.metric("Distance", f"{solution['total_distance']:.1f} km")
+            st.metric("Distance", f"{solution['total_distance']:.1f}")
 
         with metric_cols[3]:
             st.metric("Comp. Time", f"{solution['computation_time']:.2f}s")
@@ -75,13 +75,13 @@ def _render_metric_cards(solution, problem_type):
         metric_cols = st.columns(4)
 
         with metric_cols[0]:
-            st.metric("Makespan", f"{solution['makespan']:.1f} min")
+            st.metric("Makespan", f"{solution['makespan']:.1f}")
 
         with metric_cols[1]:
-            st.metric("Total Cost", f"${solution['cost']:,.0f}")
+            st.metric("Total Cost", f"{solution['cost']:,.0f}")
 
         with metric_cols[2]:
-            st.metric("Distance", f"{solution['total_distance']:.1f} km")
+            st.metric("Distance", f"{solution['total_distance']:.1f}")
 
         with metric_cols[3]:
             st.metric("Comp. Time", f"{solution['computation_time']:.2f}s")
@@ -165,14 +165,16 @@ def _render_detailed_metrics_table(solution, problem_type):
     metrics_data["Value"].extend(
         [
             f"{solution['makespan']:.2f}",
-            f"${solution['cost']:,.2f}",
+            f"{solution['cost']:,.2f}",
             f"{solution['total_distance']:.2f}",
             f"{sum(len(route) for route in solution['routes'].values())}",
             f"{solution['computation_time']:.3f}",
         ]
     )
 
-    metrics_data["Unit"].extend(["minutes", "USD", "km", "customers", "seconds"])
+    metrics_data["Unit"].extend(
+        ["unknown", "unknown", "unknown", "customers", "seconds"]
+    )
 
     # Problem-specific metrics
     if problem_type in [1, 2]:
@@ -253,9 +255,9 @@ def _render_route_details(solution):
 
             col1, col2 = st.columns(2)
             with col1:
-                st.caption(f"📏 Distance: {route_distance:.2f} km")
+                st.caption(f"📏 Distance: {route_distance:.2f}")
             with col2:
-                st.caption(f"⏱️ Time: {route_time:.2f} min")
+                st.caption(f"⏱️ Time: {route_time:.2f}")
 
 
 def _render_vehicle_utilization(solution):
@@ -297,8 +299,8 @@ def _render_vehicle_utilization(solution):
                 {
                     "Vehicle": vehicle_id,
                     "Customers Served": len(route),
-                    "Active Time (min)": f"{active_time:.1f}",
-                    "Idle Time (min)": f"{idle_time:.1f}",
+                    "Active Time": f"{active_time:.1f}",
+                    "Idle Time": f"{idle_time:.1f}",
                     "Utilization": f"{utilization:.1f}%",
                 }
             )

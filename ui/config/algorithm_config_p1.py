@@ -2,14 +2,12 @@
 
 import streamlit as st
 from config.default_config import PROBLEM1_CONFIG
-from ui.problem_info_panel import render_algorithm_help
 
 
 def render_algorithm_config_p1():
     """Render Problem 1 algorithm configuration (Tabu Search only)"""
 
     st.markdown("**Algorithm: Tabu Search**")
-    render_algorithm_help("Tabu Search")
     st.markdown("---")
 
     st.markdown("**Iteration Parameters**")

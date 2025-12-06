@@ -61,7 +61,9 @@ class Visualizer:
 
             xs.append(depot["x"])
             ys.append(depot["y"])
+            print((xs[i], ys[i]) for i in range(len(xs)))
 
+            """
             fig.add_trace(
                 go.Scatter(
                     x=xs,
@@ -74,8 +76,86 @@ class Visualizer:
                     hovertemplate=f"<b>{vehicle_icon} {vehicle_id}</b><extra></extra>",
                 )
             )
+            """
+            for i in range(len(xs) - 1):
+                x0, y0 = xs[i], ys[i]  # start
+                x1, y1 = xs[i + 1], ys[i + 1]  # end
 
+                fig.add_annotation(
+                    x=x1,
+                    y=y1,  # tip (end of segment)
+                    ax=x0,
+                    ay=y0,  # tail very close to tip
+                    xref="x",
+                    yref="y",
+                    axref="x",
+                    ayref="y",
+                    showarrow=True,
+                    arrowhead=3,
+                    arrowsize=1.5,
+                    arrowwidth=1.5,
+                    arrowcolor=color,
+                    opacity=0.9,
+                )
+
+        # ======== CUSTOM LEGEND ========
+
+        # Truck legend entry (solid line + arrowhead)
+        fig.add_trace(
+            go.Scatter(
+                x=[None],
+                y=[None],
+                mode="lines",
+                line=dict(color=self.colors_truck[0], width=2, dash="solid"),
+                name="Truck Route",
+                showlegend=True,
+            )
+        )
+
+        # Drone legend entry (dashed line + arrowhead)
+        fig.add_trace(
+            go.Scatter(
+                x=[None],
+                y=[None],
+                mode="lines",
+                line=dict(color=self.colors_drone[0], width=2, dash="solid"),
+                name="Drone Route",
+                showlegend=True,
+            )
+        )
+
+        # Depot legend entry
+        """
+        fig.add_trace(
+            go.Scatter(
+                x=[None],
+                y=[None],
+                mode="markers+text",
+                text=["🏢"],
+                textfont=dict(size=20),
+                marker=dict(size=1, color="rgba(0,0,0,0)"),
+                name="🏢 Depot",
+                showlegend=True,
+            )
+        )
+        """
+        # Customer legend entry
+        """
+        fig.add_trace(
+            go.Scatter(
+                x=[None],
+                y=[None],
+                mode="markers+text",
+                text=["📦"],
+                textfont=dict(size=20),
+                marker=dict(size=1, color="rgba(0,0,0,0)"),
+                name="📦 Customer",
+                showlegend=True,
+            )
+        )
+        """
         # ============== LAYER 2: DEPOT BACKGROUND CIRCLE ==============
+        """
         fig.add_trace(
             go.Scatter(
                 x=[depot["x"]],
@@ -88,7 +168,7 @@ class Visualizer:
                 hoverinfo="skip",
             )
         )
-
+        """
         # ============== LAYER 3: DEPOT ICON ==============
         fig.add_trace(
             go.Scatter(
@@ -96,7 +176,7 @@ class Visualizer:
                 y=[depot["y"]],
                 mode="markers+text",
                 text=["🏢"],
-                textfont=dict(size=20),
+                textfont=dict(size=25),
                 textposition="middle center",
                 marker=dict(size=1, color="rgba(0,0,0,0)"),
                 name="🏢 Depot",
@@ -106,6 +186,7 @@ class Visualizer:
         )
 
         # ============== LAYER 4: CUSTOMER BACKGROUND CIRCLES ==============
+        """
         fig.add_trace(
             go.Scatter(
                 x=customers["x"],
@@ -120,12 +201,12 @@ class Visualizer:
                 hoverinfo="skip",
             )
         )
-
+        """
         # ============== LAYER 5: CUSTOMER ICONS ==============
         hover_text = []
         customer_icons = []
         for _, row in customers.iterrows():
-            text = f"<b>Customer {row['id']}</b><br>Coordinates: ({row['x']:.1f}, {row['y']:.1f})<br>Demand: {row['demand']:.2f} kg"
+            text = f"<b>Customer {int(row['id'])}</b><br>Coordinates: ({row['x']:.1f}, {row['y']:.1f})<br>Demand: {row['demand']:.2f} kg"
             if "service_time" in row:
                 text += f"<br>Service: {row['service_time']} min"
             hover_text.append(text)
@@ -137,7 +218,7 @@ class Visualizer:
                 y=customers["y"],
                 mode="markers+text",
                 text=customer_icons,
-                textfont=dict(size=16),
+                textfont=dict(size=25),
                 textposition="middle center",
                 marker=dict(size=1, color="rgba(0,0,0,0)"),
                 name="📦 Customers",

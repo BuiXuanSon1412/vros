@@ -65,7 +65,7 @@ def _render_schedule_statistics(solution):
         st.metric("Active Vehicles", unique_vehicles)
 
     with col3:
-        st.metric("Total Makespan", f"{total_makespan:.1f} min")
+        st.metric("Total Makespan", f"{total_makespan:.1f}")
 
     with col4:
         st.metric("🚚 Truck Tasks", truck_tasks)
@@ -141,10 +141,10 @@ def _render_schedule_details(solution):
             {
                 "Vehicle": task["vehicle_id"],
                 "Customer": task["customer_id"],
-                "Start (min)": f"{task['start_time']:.1f}",
-                "End (min)": f"{task['end_time']:.1f}",
-                "Duration (min)": f"{task['end_time'] - task['start_time']:.1f}",
-                "Service Time (min)": f"{task.get('service_time', 0):.1f}",
+                "Start": f"{task['start_time']:.1f}",
+                "End": f"{task['end_time']:.1f}",
+                "Duration": f"{task['end_time'] - task['start_time']:.1f}",
+                "Service Time": f"{task.get('service_time', 0):.1f}",
             }
         )
 
@@ -220,8 +220,8 @@ def _render_timeline_analysis(solution, problem_type):
                 {
                     "Vehicle": vehicle_id,
                     "Efficiency": f"{efficiency:.1f}%",
-                    "Active": f"{active_time:.1f} min",
-                    "Idle": f"{idle_time:.1f} min",
+                    "Active": f"{active_time:.1f}",
+                    "Idle": f"{idle_time:.1f}",
                 }
             )
 
@@ -258,10 +258,10 @@ def _render_timeline_analysis(solution, problem_type):
                 {
                     "Vehicle": vehicle_id,
                     "Tasks": num_tasks,
-                    "Service Time": f"{total_service_time:.1f} min",
-                    "Avg per Task": f"{total_service_time / num_tasks:.1f} min"
+                    "Service Time": f"{total_service_time:.1f}",
+                    "Avg per Task": f"{total_service_time / num_tasks:.1f}"
                     if num_tasks > 0
-                    else "0 min",
+                    else "0",
                 }
             )
 
