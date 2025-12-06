@@ -140,7 +140,7 @@ def _render_pareto_section(solution, problem_type, chart_counter):
 
     fig_pareto = viz.plot_pareto_front(
         pareto_front,
-        title="Pareto Front - Trade-off between Makespan and Cost",
+        title="Pareto Front - Makespan and Cost",
         current_solution=current_solution,
     )
 
@@ -263,8 +263,8 @@ def _render_solution_selector(pareto_front, problem_type):
         time_penalty = (selected_makespan - min_makespan) / min_makespan * 100
         cost_penalty = (selected_cost - min_cost) / min_cost * 100
 
-        st.caption(f"⏱️ +{time_penalty:.1f}% vs fastest")
-        st.caption(f"💰 +{cost_penalty:.1f}% vs cheapest")
+        st.caption(f"+{time_penalty:.1f}% vs fastest")
+        st.caption(f"+{cost_penalty:.1f}% vs cheapest")
 
 
 def _render_pareto_analysis(pareto_front):
@@ -320,7 +320,7 @@ def _render_pareto_analysis(pareto_front):
 
         recommendations.append(
             {
-                "Type": "⚡ Fastest",
+                "Type": "Fastest",
                 "Solution": f"S{min_makespan_idx + 1}",
                 "Makespan": f"{objectives_1[min_makespan_idx]:.1f}",
                 "Cost": f"{objectives_2[min_makespan_idx]:,.0f}",
@@ -330,21 +330,11 @@ def _render_pareto_analysis(pareto_front):
 
         recommendations.append(
             {
-                "Type": "💰 Cheapest",
+                "Type": "Cheapest",
                 "Solution": f"S{min_cost_idx + 1}",
                 "Makespan": f"{objectives_1[min_cost_idx]:.1f}",
                 "Cost": f"{objectives_2[min_cost_idx]:,.0f}",
                 "Why": "Minimum cost",
-            }
-        )
-
-        recommendations.append(
-            {
-                "Type": "⚖️ Balanced",
-                "Solution": f"S{balanced_idx + 1}",
-                "Makespan": f"{objectives_1[balanced_idx]:.1f}",
-                "Cost": f"{objectives_2[balanced_idx]:,.0f}",
-                "Why": "Best trade-off",
             }
         )
 

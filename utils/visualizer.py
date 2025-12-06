@@ -208,7 +208,7 @@ class Visualizer:
         for _, row in customers.iterrows():
             text = f"<b>Customer {int(row['id'])}</b><br>Coordinates: ({row['x']:.1f}, {row['y']:.1f})<br>Demand: {row['demand']:.2f} kg"
             if "service_time" in row:
-                text += f"<br>Service: {row['service_time']} min"
+                text += f"<br>Service: {row['service_time']}"
             hover_text.append(text)
             customer_icons.append("📦")
 
@@ -351,9 +351,9 @@ class Visualizer:
                         hovertemplate=(
                             f"<b>{vehicle_id}</b><br>"
                             f"Customer: {customer}<br>"
-                            f"Start: {start:.1f} min<br>"
-                            f"End: {end:.1f} min<br>"
-                            f"Duration: {end - start:.1f} min<br>"
+                            f"Start: {start:.1f}<br>"
+                            f"End: {end:.1f}<br>"
+                            f"Duration: {end - start:.1f}<br>"
                             "<extra></extra>"
                         ),
                         width=0.5,
@@ -366,7 +366,7 @@ class Visualizer:
                 text=title, font=dict(size=16, color="#0f172a"), x=0.5, xanchor="center"
             ),
             xaxis=dict(
-                title="Time (minutes)",
+                title="Time",
                 gridcolor="#e2e8f0",
                 showgrid=True,
             ),
@@ -464,7 +464,7 @@ class Visualizer:
         for i, (obj1, obj2) in enumerate(zip(obj1_values, obj2_values)):
             hover_text = (
                 f"<b>Solution {i + 1}</b><br>"
-                f"Makespan: {obj1:.2f} min<br>"
+                f"Makespan: {obj1:.2f}<br>"
                 f"Cost: ${obj2:,.2f}<br>"
                 f"<extra></extra>"
             )
@@ -506,10 +506,10 @@ class Visualizer:
                     symbol="star",
                     line=dict(width=2, color="white"),
                 ),
-                name="⚡ Fastest",
+                name="Fastest",
                 hovertemplate=(
-                    f"<b>⚡ Fastest Solution</b><br>"
-                    f"Makespan: {obj1_values[min_obj1_idx]:.2f} min<br>"
+                    f"<b>Fastest Solution</b><br>"
+                    f"Makespan: {obj1_values[min_obj1_idx]:.2f}<br>"
                     f"Cost: ${obj2_values[min_obj1_idx]:,.2f}<br>"
                     f"<extra></extra>"
                 ),
@@ -521,7 +521,7 @@ class Visualizer:
         fig.add_annotation(
             x=obj1_values[min_obj1_idx],
             y=obj2_values[min_obj1_idx],
-            text="⚡ Fastest",
+            text="Fastest",
             showarrow=True,
             arrowhead=2,
             arrowsize=1,
@@ -548,9 +548,9 @@ class Visualizer:
                     symbol="star",
                     line=dict(width=2, color="white"),
                 ),
-                name="💰 Cheapest",
+                name="Cheapest",
                 hovertemplate=(
-                    f"<b>💰 Cheapest Solution</b><br>"
+                    f"<b>Cheapest Solution</b><br>"
                     f"Makespan: {obj1_values[min_obj2_idx]:.2f} min<br>"
                     f"Cost: ${obj2_values[min_obj2_idx]:,.2f}<br>"
                     f"<extra></extra>"
@@ -563,7 +563,7 @@ class Visualizer:
         fig.add_annotation(
             x=obj1_values[min_obj2_idx],
             y=obj2_values[min_obj2_idx],
-            text="💰 Cheapest",
+            text="Cheapest",
             showarrow=True,
             arrowhead=2,
             arrowsize=1,
@@ -579,6 +579,7 @@ class Visualizer:
         )
 
         # ============== LAYER 4: Balanced Solution (Middle point) ==============
+        """
         if len(obj1_values) >= 3:
             mid_idx = len(obj1_values) // 2
 
@@ -593,17 +594,17 @@ class Visualizer:
                         symbol="diamond",
                         line=dict(width=2, color="white"),
                     ),
-                    name="⚖️ Balanced",
+                    name="Balanced",
                     hovertemplate=(
-                        f"<b>⚖️ Balanced Solution</b><br>"
-                        f"Makespan: {obj1_values[mid_idx]:.2f} min<br>"
+                        f"<b>Balanced Solution</b><br>"
+                        f"Makespan: {obj1_values[mid_idx]:.2f}<br>"
                         f"Cost: ${obj2_values[mid_idx]:,.2f}<br>"
                         f"<extra></extra>"
                     ),
                     showlegend=True,
                 )
             )
-
+        """
         # ============== LAYER 5: Current Solution Highlight ==============
         if current_solution:
             fig.add_trace(
@@ -617,10 +618,10 @@ class Visualizer:
                         symbol="x",
                         line=dict(width=3, color="white"),
                     ),
-                    name="📍 Current",
+                    name="Current",
                     hovertemplate=(
-                        f"<b>📍 Current Solution</b><br>"
-                        f"Makespan: {current_solution[0]:.2f} min<br>"
+                        f"<b>Current Solution</b><br>"
+                        f"Makespan: {current_solution[0]:.2f}<br>"
                         f"Cost: ${current_solution[1]:,.2f}<br>"
                         f"<extra></extra>"
                     ),
@@ -652,7 +653,7 @@ class Visualizer:
                 xanchor="center",
             ),
             xaxis=dict(
-                title="<b>Objective 1: Makespan (minutes)</b>",
+                title="<b>Objective 1: Makespan</b>",
                 title_font=dict(size=14, color="#475569"),
                 gridcolor="#e2e8f0",
                 showgrid=True,
@@ -660,7 +661,7 @@ class Visualizer:
                 tickfont=dict(size=12),
             ),
             yaxis=dict(
-                title="<b>Objective 2: Cost (USD)</b>",
+                title="<b>Objective 2: Cost</b>",
                 title_font=dict(size=14, color="#475569"),
                 gridcolor="#e2e8f0",
                 showgrid=True,
@@ -749,7 +750,7 @@ class Visualizer:
                     name=algo_name,
                     hovertemplate=(
                         f"<b>{algo_name}</b><br>"
-                        "Makespan: %{x:.2f} min<br>"
+                        "Makespan: %{x:.2f}<br>"
                         "Cost: $%{y:,.2f}<br>"
                         "<extra></extra>"
                     ),
@@ -758,8 +759,8 @@ class Visualizer:
 
         fig.update_layout(
             title=dict(text=title, font=dict(size=18, color="#0f172a"), x=0.5),
-            xaxis_title="<b>Makespan (minutes)</b>",
-            yaxis_title="<b>Cost (USD)</b>",
+            xaxis_title="<b>Makespan</b>",
+            yaxis_title="<b>Cost</b>",
             height=550,
             template="plotly_white",
             hovermode="closest",

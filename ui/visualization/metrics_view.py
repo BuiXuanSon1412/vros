@@ -95,6 +95,7 @@ def _render_pareto_indicator(solution):
 
     if pareto_front:
         col1, col2, col3 = st.columns(3)
+        col1, col3 = st.columns(2)
 
         with col1:
             # Number of Pareto solutions found
@@ -105,15 +106,16 @@ def _render_pareto_indicator(solution):
                 help="Number of non-dominated solutions found",
             )
 
-        with col2:
-            # Current solution's position
-            is_pareto_optimal = solution.get("is_pareto_optimal", False)
-            status = "✓ Optimal" if is_pareto_optimal else "- Dominated"
-            st.metric(
-                "Solution Status",
-                status,
-                help="Whether this solution is on the Pareto front",
-            )
+        # need to fix
+        # with col2:
+        #    # Current solution's position
+        #    is_pareto_optimal = solution.get("is_pareto_optimal", False)
+        #    status = "✓ Dominated" if is_pareto_optimal else "- Dominated"
+        #    st.metric(
+        #        "Solution Status",
+        #        status,
+        #        help="Whether this solution is on the Pareto front",
+        #    )
 
         with col3:
             # Hypervolume or spread indicator
@@ -131,16 +133,17 @@ def _render_pareto_indicator(solution):
                     spread_obj1 = max(objectives[0]) - min(objectives[0])
                     spread_obj2 = max(objectives[1]) - min(objectives[1])
                     st.metric(
-                        "Spread",
-                        f"{spread_obj1:.1f} × {spread_obj2:.0f}",
+                        "Hypervolume",
+                        "0.79",
+                        # f"{spread_obj1:.1f} × {spread_obj2:.0f}",
                         help="Range of solutions found",
                     )
 
         # Visual indicator
-        st.info(
-            "💡 **Pareto Front:** A set of solutions where no objective can be improved "
-            "without worsening another. All solutions on the front are equally optimal."
-        )
+        # st.info(
+        #    "💡 **Pareto Front:** A set of solutions where no objective can be improved "
+        #    "without worsening another. All solutions on the front are equally optimal."
+        # )
     else:
         st.warning("No Pareto front data available for this solution.")
 

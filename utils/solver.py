@@ -99,7 +99,80 @@ class DummySolver:
         self, base_makespan: float, base_cost: float, num_solutions: int = 25
     ) -> List[Tuple[float, float]]:
         """
-        Generate a realistic Pareto front for bi-objective optimization
+        Generate a clean Pareto front following a hyperbolic shape (cost = k / makespan)
+        suitable for MINIMIZATION problems.
+        """
+
+        solutions = []
+
+        # Compute a constant k so that the curve passes near your base values
+        k = base_makespan * base_cost
+
+        # Range makespan from small -> large (minimization front)
+        min_ms = base_makespan * 0.7
+        max_ms = base_makespan * 1.0
+
+        makespan_values = np.linspace(min_ms, max_ms, num_solutions)
+
+        for ms in makespan_values:
+            cost = k / ms
+
+            # Optional: Smooth slight noise if you want realism
+            # cost *= 1.0 + np.random.uniform(-0.01, 0.01)
+            # ms *= 1.0 + np.random.uniform(-0.005, 0.005)
+
+            solutions.append((ms, cost))
+
+        # Sort by makespan for plotting
+        solutions.sort(key=lambda x: x[0])
+        return solutions
+
+    def _generate_pareto_front2(
+        self, base_makespan: float, base_cost: float, num_solutions: int = 25
+    ) -> List[Tuple[float, float]]:
+        """
+        Generate a Pareto front that approximately follows y = k/x
+        while still adding small random noise for realism.
+        """
+        solutions = []
+
+        # Choose constant such that (base_makespan, base_cost) lies on the curve
+        k = base_makespan * base_cost
+
+        for i in range(num_solutions):
+            # Generate x (makespan) equally spaced in a realistic range
+            alpha = i / (num_solutions - 1)
+
+            # Makespan from ~0.7*base to ~1.0*base
+            makespan = base_makespan * (0.7 + 0.3 * alpha)
+
+            # Ideal Pareto cost following y = k/x
+            cost = k / makespan
+
+            # --- Add small random noise ---
+            # noise ±1.5%
+            noise_m = np.random.uniform(-0.015, 0.015)
+            noise_c = np.random.uniform(-0.015, 0.015)
+
+            makespan *= 1 + noise_m
+            cost *= 1 + noise_c
+
+            # Keep values positive & within reasonable range
+            makespan = max(makespan, base_makespan * 0.65)
+            cost = max(cost, base_cost * 0.65)
+
+            solutions.append((makespan, cost))
+
+        # Sort by makespan for smooth plotting
+        solutions.sort(key=lambda x: x[0])
+
+        return solutions
+
+    def _generate_pareto_front1(
+        self, base_makespan: float, base_cost: float, num_solutions: int = 25
+    ) -> List[Tuple[float, float]]:
+        """
+        Generate a realistic Pareto front for bi-objective MINIMIZATION
 
         Args:
             base_makespan: Reference makespan value
@@ -108,36 +181,42 @@ class DummySolver:
 
         Returns:
             List of (makespan, cost) tuples representing Pareto front
+            For minimization: lower values are better, front curves toward origin
         """
         solutions = []
 
         for i in range(num_solutions):
-            # Create trade-off: as we optimize one objective, the other gets worse
+            # Create trade-off: as we minimize one objective, the other increases
             alpha = i / (num_solutions - 1) if num_solutions > 1 else 0.5
 
-            # Makespan: ranges from base*0.8 to base*1.2
+            # MINIMIZATION PROBLEM:
+            # alpha = 0: minimum makespan (fast), but higher cost
+            # alpha = 1: minimum cost (cheap), but higher makespan
+
+            # Makespan: ranges from base*0.7 to base*1.0
             # Lower alpha = faster (lower makespan) but more expensive
-            makespan = base_makespan * (0.8 + 0.4 * alpha)
+            makespan = base_makespan * (0.7 + 0.3 * alpha)
 
-            # Cost: inverse relationship - ranges from base*1.2 to base*0.8
+            # Cost: inverse relationship - ranges from base*1.0 to base*0.7
             # Lower alpha = more expensive, higher alpha = cheaper
-            cost = base_cost * (1.2 - 0.4 * alpha)
+            cost = base_cost * (1.0 - 0.3 * alpha)
 
-            # Add slight curvature to make it look more realistic (Pareto fronts are often curved)
-            curvature = 0.1 * np.sin(alpha * np.pi)
-            makespan *= 1 + curvature
-            cost *= 1 + curvature
+            # Add convex curvature (typical for minimization Pareto fronts)
+            # This creates the characteristic curve toward the origin
+            curvature_factor = 0.08 * (alpha * (1 - alpha))  # Peaks at alpha=0.5
+            makespan *= 1 + curvature_factor
+            cost *= 1 + curvature_factor
 
             # Add small random noise for realism
-            noise_makespan = np.random.uniform(-0.02, 0.02)
-            noise_cost = np.random.uniform(-0.02, 0.02)
+            noise_makespan = np.random.uniform(-0.015, 0.015)
+            noise_cost = np.random.uniform(-0.015, 0.015)
 
             makespan *= 1 + noise_makespan
             cost *= 1 + noise_cost
 
-            # Ensure positive values
-            makespan = max(makespan, base_makespan * 0.75)
-            cost = max(cost, base_cost * 0.75)
+            # Ensure positive values and realistic bounds
+            makespan = max(makespan, base_makespan * 0.65)
+            cost = max(cost, base_cost * 0.65)
 
             solutions.append((makespan, cost))
 
