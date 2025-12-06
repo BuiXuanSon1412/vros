@@ -19,6 +19,8 @@ header[data-testid="stHeader"] {
 .main .block-container {
     padding-top: 0 !important;
     padding-bottom: 0 !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
     max-width: 100%;
 }
 
@@ -29,6 +31,8 @@ header[data-testid="stHeader"] {
 section[data-testid="stAppViewContainer"] > .main {
     padding-top: 0 !important;
     padding-bottom: 0 !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
 }
 
 .element-container {
@@ -38,7 +42,22 @@ section[data-testid="stAppViewContainer"] > .main {
 .block-container {
     padding-top: 0 !important;
     padding-bottom: 0 !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
 }
+
+/* Remove default Streamlit container padding */
+section.main > div {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+}
+
+/* Ensure full width usage */
+.stApp {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
 
 footer {visibility: hidden;}
 
