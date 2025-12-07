@@ -37,6 +37,11 @@ def render_metrics_view(problem_type):
         # Display route details
         _render_route_details(solution)
 
+        # For Problem 3: Show resupply operations
+        if problem_type == 3 and solution.get("resupply_operations"):
+            st.markdown("---")
+            _render_resupply_operations_table(solution)
+
         st.markdown("---")
 
         # Display vehicle utilization
@@ -277,6 +282,55 @@ def _get_tradeoff_category(index, total):
         return "🟢 Cost-focused"
     else:
         return "🟡 Balanced"
+
+
+def _render_resupply_operations_table(solution):
+    """Render resupply operations table for Problem 3"""
+    st.markdown("**Resupply Operations**")
+
+    resupply_ops = solution.get("resupply_operations", [])
+    if not resupply_ops:
+        st.info("No resupply operations")
+        return
+
+    # Filter loaded trips only
+    loaded_trips = [op for op in resupply_ops if op.get("is_loaded", False)]
+
+    if not loaded_trips:
+        return
+
+    table_data = []
+    for idx, op in enumerate(loaded_trips, 1):
+        packages_str = ", ".join([f"C{p}" for p in op["packages"]])
+
+        table_data.append(
+            {
+                "Trip": idx,
+                "Drone": op["drone_id"],
+                "Truck": op["truck_id"],
+                "Meeting At": f"C{op['meeting_customer_id']}",
+                "Packages": packages_str,
+                "Weight (kg)": f"{op['total_weight']:.2f}",
+                "Departure": f"{op['departure_time']:.1f}",
+                "Arrival": f"{op['arrival_time']:.1f}",
+                "Distance (km)": f"{op['distance']:.2f}",
+            }
+        )
+
+    df = pd.DataFrame(table_data)
+    st.dataframe(df, use_container_width=True, hide_index=True)
+
+    # Export button
+    col1, col2, col3 = st.columns([2, 1, 1])
+    with col3:
+        csv_data = df.to_csv(index=False)
+        st.download_button(
+            label="📥 Export",
+            data=csv_data,
+            file_name="resupply_operations.csv",
+            mime="text/csv",
+            use_container_width=True,
+        )
 
 
 def _render_detailed_metrics_table(solution, problem_type):

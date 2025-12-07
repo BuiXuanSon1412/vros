@@ -97,7 +97,49 @@ class Visualizer:
                     opacity=0.9,
                 )
 
-        # ======== CUSTOM LEGEND ========
+        # Enhanced hover text for drone routes with package information
+        if problem_type == 3:
+            solution = st.session_state.get(f"solution_3")
+            if solution and solution.get("resupply_operations"):
+                resupply_ops = solution["resupply_operations"]
+
+                for op in resupply_ops:
+                    if not op.get("is_loaded"):
+                        continue
+
+                    drone_id = op["drone_id"]
+                    meeting_id = op["meeting_customer_id"]
+                    packages = op["packages"]
+                    total_weight = op["total_weight"]
+
+                    # Get meeting point coordinates
+                    meeting_customer = customers[customers["id"] == meeting_id].iloc[0]
+
+                    # Create hover text
+                    package_str = ", ".join([f"C{p}" for p in packages])
+                    hover_text = (
+                        f"<b>{drone_id} Resupply</b><br>"
+                        f"Truck: {op['truck_id']}<br>"
+                        f"Meeting at: C{meeting_id}<br>"
+                        f"Carrying: {package_str}<br>"
+                        f"Total weight: {total_weight:.2f} kg<br>"
+                        f"Departure: {op['departure_time']:.1f}<br>"
+                        f"Arrival: {op['arrival_time']:.1f}"
+                    )
+
+                    # Add invisible scatter point for hover
+                    fig.add_trace(
+                        go.Scatter(
+                            x=[(depot["x"] + meeting_customer["x"]) / 2],
+                            y=[(depot["y"] + meeting_customer["y"]) / 2],
+                            mode="markers",
+                            marker=dict(size=15, color="rgba(0,0,0,0)"),
+                            hovertemplate=hover_text + "<extra></extra>",
+                            showlegend=False,
+                        )
+                    )
+
+            # ======== CUSTOM LEGEND ========
         # Truck legend entry
         truck_legend_name = (
             "Ambulance Route" if problem_type in [1, 2] else "Truck Route"
