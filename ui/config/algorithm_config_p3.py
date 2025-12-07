@@ -54,7 +54,7 @@ def render_algorithm_config_p3():
     col1, col2, col3 = st.columns(3)
     with col1:
         eta = st.number_input(
-            "Variable max iteration (η)",
+            "Variable max iteration",
             min_value=10,
             max_value=500,
             value=PROBLEM3_CONFIG["algorithm"]["eta"],
@@ -64,7 +64,7 @@ def render_algorithm_config_p3():
 
     with col2:
         loop = st.number_input(
-            "Fixed max iteration (LOOP)",
+            "Fixed max iteration",
             min_value=100,
             max_value=5000,
             value=PROBLEM3_CONFIG["algorithm"]["loop"],
@@ -74,7 +74,7 @@ def render_algorithm_config_p3():
 
     with col3:
         seg = st.number_input(
-            "Number of segments (SEG)",
+            "Number of segments",
             min_value=1,
             max_value=20,
             value=PROBLEM3_CONFIG["algorithm"]["seg"],

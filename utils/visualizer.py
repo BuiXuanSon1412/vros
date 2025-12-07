@@ -1,16 +1,35 @@
-# utils/visualizer.py - Updated with Medical Center for P1/P2 and better icons
+# utils/visualizer.py - FIXED with Problem 3 Resupply Visualization
 
 import plotly.graph_objects as go
-import plotly.express as px
 import pandas as pd
 from typing import List, Dict, Tuple
 from config.default_config import COLORS
 import numpy as np
 import streamlit as st
 
+from collections import defaultdict
+
+
+# ------------------------------
+# Helper: generate curved edges
+# ------------------------------
+def curved_edge(x0, y0, x1, y1, k=0.15):
+    """Quadratic bezier curve from (x0,y0) → (x1,y1). k controls curvature."""
+    mx, my = (x0 + x1) / 2, (y0 + y1) / 2
+    dx, dy = x1 - x0, y1 - y0
+    px, py = -dy, dx  # perpendicular
+
+    cx = mx + k * px
+    cy = my + k * py
+
+    t = np.linspace(0, 1, 50)
+    xs = (1 - t) ** 2 * x0 + 2 * (1 - t) * t * cx + t**2 * x1
+    ys = (1 - t) ** 2 * y0 + 2 * (1 - t) * t * cy + t**2 * y1
+    return xs, ys
+
 
 class Visualizer:
-    """Class for result visualization"""
+    """Class for result visualization with resupply support"""
 
     def __init__(self):
         self.colors_truck = COLORS["truck"]
@@ -25,149 +44,204 @@ class Visualizer:
         routes: Dict,
         title: str = "Vehicle Routes",
         problem_type: int = 1,
+        resupply_operations: List[Dict] = None,
     ) -> go.Figure:
+        if resupply_operations is None:
+            resupply_operations = []
+
         fig = go.Figure()
 
         # Determine depot type based on problem
         if problem_type in [1, 2]:
-            depot_icon = "🏥"  # Medical center
+            depot_icon = "🏥"
             depot_label = "Medical Center"
             depot_hover = "Medical Center (Depot)"
-        else:  # problem_type == 3
-            depot_icon = "🏢"  # Regular depot
+        else:
+            depot_icon = "🏢"
             depot_label = "Depot"
             depot_hover = "Depot"
 
-        # ============== LAYER 1: ROUTE LINES WITH ARROWS ==============
+        # ============== LAYER 1: TRUCK ROUTE LINES WITH ARROWS ==============
         first_truck = next((vid for vid in routes if "truck" in vid.lower()), None)
         first_drone = next((vid for vid in routes if "drone" in vid.lower()), None)
 
+        # Track overlap counts
+        edge_count = defaultdict(int)
+
+        # Curvature offsets for overlapping edges
+        CURVE_OFFSETS = [-0.25, -0.12, 0, 0.12, 0.25, 0.35, -0.35]
+
+        # =====================================================
+        # LAYER 1: TRUCK ROUTES with curved edges
+        # =====================================================
         for vehicle_id, route in routes.items():
             if not route:
                 continue
 
             if "truck" in vehicle_id.lower():
                 color = self.colors_truck[0]
-                vehicle_icon = "🚑"  # Ambulance for medical problems
-                legend_name = (
-                    "🚑 Truck Routes" if problem_type in [1, 2] else "🚚 Truck Routes"
-                )
-                legend_group = "truck"
-                dash = "solid"
+                vehicle_icon = "🚑" if problem_type in [1, 2] else "🚚"
+                legend_name = "Truck Route"
                 show_in_legend = vehicle_id == first_truck
-            else:
-                color = self.colors_drone[0]
-                vehicle_icon = "🚁"
-                legend_name = "🚁 Drone Routes"
-                legend_group = "drone"
-                dash = "dash"
-                show_in_legend = vehicle_id == first_drone
 
-            # Build route path
-            xs = [depot["x"]]
-            ys = [depot["y"]]
+                # Build truck route path
+                xs = [depot["x"]]
+                ys = [depot["y"]]
 
-            for cust_id in route:
-                row = customers.loc[customers["id"] == cust_id].iloc[0]
-                xs.append(row["x"])
-                ys.append(row["y"])
+                for cust_id in route:
+                    row = customers.loc[customers["id"] == cust_id].iloc[0]
+                    xs.append(row["x"])
+                    ys.append(row["y"])
 
-            xs.append(depot["x"])
-            ys.append(depot["y"])
+                xs.append(depot["x"])
+                ys.append(depot["y"])
 
-            # Add arrows for route segments
-            for i in range(len(xs) - 1):
-                x0, y0 = xs[i], ys[i]
-                x1, y1 = xs[i + 1], ys[i + 1]
+                # Draw curved edges
+                for i in range(len(xs) - 1):
+                    x0, y0 = xs[i], ys[i]
+                    x1, y1 = xs[i + 1], ys[i + 1]
 
-                fig.add_annotation(
-                    x=x1,
-                    y=y1,
-                    ax=x0,
-                    ay=y0,
-                    xref="x",
-                    yref="y",
-                    axref="x",
-                    ayref="y",
-                    showarrow=True,
-                    arrowhead=3,
-                    arrowsize=1.5,
-                    arrowwidth=1.5,
-                    arrowcolor=color,
-                    opacity=0.9,
-                )
+                    # Overlap detection
+                    key = tuple(sorted([(x0, y0), (x1, y1)]))
+                    count = edge_count[key]
+                    edge_count[key] += 1
+                    k = CURVE_OFFSETS[count % len(CURVE_OFFSETS)]
 
-        # Enhanced hover text for drone routes with package information
-        if problem_type == 3:
-            solution = st.session_state.get(f"solution_3")
-            if solution and solution.get("resupply_operations"):
-                resupply_ops = solution["resupply_operations"]
+                    # Generate curved line
+                    xc, yc = curved_edge(x0, y0, x1, y1, k=k)
 
-                for op in resupply_ops:
-                    if not op.get("is_loaded"):
-                        continue
-
-                    drone_id = op["drone_id"]
-                    meeting_id = op["meeting_customer_id"]
-                    packages = op["packages"]
-                    total_weight = op["total_weight"]
-
-                    # Get meeting point coordinates
-                    meeting_customer = customers[customers["id"] == meeting_id].iloc[0]
-
-                    # Create hover text
-                    package_str = ", ".join([f"C{p}" for p in packages])
-                    hover_text = (
-                        f"<b>{drone_id} Resupply</b><br>"
-                        f"Truck: {op['truck_id']}<br>"
-                        f"Meeting at: C{meeting_id}<br>"
-                        f"Carrying: {package_str}<br>"
-                        f"Total weight: {total_weight:.2f} kg<br>"
-                        f"Departure: {op['departure_time']:.1f}<br>"
-                        f"Arrival: {op['arrival_time']:.1f}"
-                    )
-
-                    # Add invisible scatter point for hover
+                    # Draw curve
                     fig.add_trace(
                         go.Scatter(
-                            x=[(depot["x"] + meeting_customer["x"]) / 2],
-                            y=[(depot["y"] + meeting_customer["y"]) / 2],
-                            mode="markers",
-                            marker=dict(size=15, color="rgba(0,0,0,0)"),
-                            hovertemplate=hover_text + "<extra></extra>",
+                            x=xc,
+                            y=yc,
+                            mode="lines",
+                            line=dict(color=color, width=2),
+                            hoverinfo="skip",
                             showlegend=False,
                         )
                     )
 
+                    # Draw arrow at end of curve
+                    fig.add_annotation(
+                        x=xc[-1],
+                        y=yc[-1],
+                        ax=xc[-2],
+                        ay=yc[-2],
+                        xref="x",
+                        yref="y",
+                        axref="x",
+                        ayref="y",
+                        showarrow=True,
+                        arrowhead=3,
+                        arrowsize=1.5,
+                        arrowwidth=2,
+                        arrowcolor=color,
+                        opacity=0.9,
+                    )
+
+        # =====================================================
+        # LAYER 2: DRONE RESUPPLY ROUTES with curved edges
+        # =====================================================
+        if problem_type == 3 and resupply_operations:
+            for idx, op in enumerate(resupply_operations):
+                if not op.get("packages"):
+                    continue
+
+                meeting_id = op["meeting_customer_id"]
+                meeting_customer = customers[customers["id"] == meeting_id].iloc[0]
+
+                # Drone path: depot -> meeting point -> depot
+                drone_xs = [depot["x"], meeting_customer["x"], depot["x"]]
+                drone_ys = [depot["y"], meeting_customer["y"], depot["y"]]
+
+                drone_color = self.colors_drone[0]
+
+                # Curved edges for drones
+                for i in range(len(drone_xs) - 1):
+                    x0, y0 = drone_xs[i], drone_ys[i]
+                    x1, y1 = drone_xs[i + 1], drone_ys[i + 1]
+
+                    # Overlap detection
+                    key = tuple(sorted([(x0, y0), (x1, y1)]))
+                    count = edge_count[key]
+                    edge_count[key] += 1
+                    k = CURVE_OFFSETS[count % len(CURVE_OFFSETS)]
+
+                    # Compute curved path
+                    xc, yc = curved_edge(x0, y0, x1, y1, k=k)
+
+                    # Draw curve (dashed style)
+                    fig.add_trace(
+                        go.Scatter(
+                            x=xc,
+                            y=yc,
+                            mode="lines",
+                            line=dict(color=drone_color, width=2, dash="dot"),
+                            hoverinfo="skip",
+                            showlegend=(idx == 0),
+                            name="Drone Resupply" if idx == 0 else "",
+                        )
+                    )
+
+                    # Arrow on curved path
+                    fig.add_annotation(
+                        x=xc[-1],
+                        y=yc[-1],
+                        ax=xc[-2],
+                        ay=yc[-2],
+                        xref="x",
+                        yref="y",
+                        axref="x",
+                        ayref="y",
+                        showarrow=True,
+                        arrowhead=2,
+                        arrowsize=1.2,
+                        arrowwidth=1.5,
+                        arrowcolor=drone_color,
+                        opacity=0.7,
+                    )
+
+                # Meeting point marker
+                packages_str = ", ".join([f"C{p}" for p in op["packages"]])
+                hover_text = (
+                    f"<b>{op['drone_id']} Resupply</b><br>"
+                    f"Meeting: C{meeting_id}<br>"
+                    f"Packages: {packages_str}<br>"
+                    f"Weight: {op['total_weight']:.2f} kg<br>"
+                    f"Arrival: {op['arrival_time']:.1f} min"
+                )
+
+                fig.add_trace(
+                    go.Scatter(
+                        x=[meeting_customer["x"]],
+                        y=[meeting_customer["y"]],
+                        mode="markers",
+                        marker=dict(
+                            size=25,
+                            color=drone_color,
+                            opacity=0.5,
+                            line=dict(width=2, color="white"),
+                        ),
+                        hovertemplate=hover_text + "<extra></extra>",
+                        showlegend=False,
+                    )
+                )
+
             # ======== CUSTOM LEGEND ========
-        # Truck legend entry
-        truck_legend_name = (
-            "Ambulance Route" if problem_type in [1, 2] else "Truck Route"
-        )
+        truck_legend_name = "Ambulance" if problem_type in [1, 2] else "Truck"
         fig.add_trace(
             go.Scatter(
                 x=[None],
                 y=[None],
                 mode="lines",
                 line=dict(color=self.colors_truck[0], width=2, dash="solid"),
-                name=truck_legend_name,
+                name=f"{truck_legend_name} Route",
                 showlegend=True,
             )
         )
 
-        # Drone legend entry
-        fig.add_trace(
-            go.Scatter(
-                x=[None],
-                y=[None],
-                mode="lines",
-                line=dict(color=self.colors_drone[0], width=2, dash="solid"),
-                name="Drone Route",
-                showlegend=True,
-            )
-        )
-
-        # ============== LAYER 2: DEPOT ICON ==============
+        # ============== LAYER 3: DEPOT ICON ==============
         fig.add_trace(
             go.Scatter(
                 x=[depot["x"]],
@@ -183,13 +257,12 @@ class Visualizer:
             )
         )
 
-        # ============== LAYER 3: CUSTOMER ICONS ==============
-        # Determine customer icon based on problem type
+        # ============== LAYER 4: CUSTOMER ICONS ==============
         if problem_type in [1, 2]:
-            customer_icon = "🧪"  # Blood sample for medical problems
+            customer_icon = "🧪"
             customer_label = "Sample"
         else:
-            customer_icon = "📦"  # Package for logistics problem
+            customer_icon = "📦"
             customer_label = "Customer"
 
         hover_text = []
@@ -197,9 +270,9 @@ class Visualizer:
         for _, row in customers.iterrows():
             text = f"<b>{customer_label} {int(row['id'])}</b><br>Coordinates: ({row['x']:.1f}, {row['y']:.1f})<br>Demand: {row['demand']:.2f} kg"
             if "service_time" in row:
-                text += f"<br>Service: {row['service_time']}"
+                text += f"<br>Service: {row['service_time']} min"
             if "release_date" in row and problem_type == 3:
-                text += f"<br>Release: {row['release_date']}"
+                text += f"<br>Release: {row['release_date']} min"
             hover_text.append(text)
             customer_icons.append(customer_icon)
 
@@ -209,7 +282,7 @@ class Visualizer:
                 y=customers["y"],
                 mode="markers+text",
                 text=customer_icons,
-                textfont=dict(size=25),
+                textfont=dict(size=20),
                 textposition="middle center",
                 marker=dict(size=1, color="rgba(0,0,0,0)"),
                 name=f"{customer_icon} {customer_label}s",
@@ -219,7 +292,7 @@ class Visualizer:
             )
         )
 
-        # ============== LAYER 4: CUSTOMER ID LABELS ==============
+        # ============== LAYER 5: CUSTOMER ID LABELS ==============
         fig.add_trace(
             go.Scatter(
                 x=customers["x"],
@@ -294,10 +367,8 @@ class Visualizer:
             fig.update_layout(height=400, template="plotly_white", title=title)
             return fig
 
-        # Create figure manually for more control
         fig = go.Figure()
 
-        # Group tasks by vehicle
         vehicle_tasks = {}
         for task in schedule:
             vehicle_id = task.get("vehicle_id", "Unknown")
@@ -305,10 +376,8 @@ class Visualizer:
                 vehicle_tasks[vehicle_id] = []
             vehicle_tasks[vehicle_id].append(task)
 
-        # Sort vehicles
         sorted_vehicles = sorted(vehicle_tasks.keys())
 
-        # Assign colors
         color_map = {}
         for vehicle in sorted_vehicles:
             if "truck" in vehicle.lower():
@@ -316,7 +385,6 @@ class Visualizer:
             else:
                 color_map[vehicle] = self.colors_drone[0]
 
-        # Plot each vehicle's tasks
         for idx, vehicle_id in enumerate(sorted_vehicles):
             tasks = vehicle_tasks[vehicle_id]
             color = color_map.get(vehicle_id, "#2563eb")
@@ -325,8 +393,8 @@ class Visualizer:
                 start = task.get("start_time", 0)
                 end = task.get("end_time", 0)
                 customer = task.get("customer_id", "?")
+                action = task.get("action", "Service")
 
-                # Add bar for this task
                 fig.add_trace(
                     go.Bar(
                         x=[end - start],
@@ -336,12 +404,13 @@ class Visualizer:
                         marker=dict(color=color, line=dict(color="white", width=1)),
                         name=vehicle_id,
                         showlegend=False,
-                        text=customer,
+                        text=f"{customer}" if action != "Return" else "Return",
                         textposition="inside",
                         textfont=dict(color="white", size=10),
                         hovertemplate=(
                             f"<b>{vehicle_id}</b><br>"
                             f"Customer: {customer}<br>"
+                            f"Action: {action}<br>"
                             f"Start: {start:.1f}<br>"
                             f"End: {end:.1f}<br>"
                             f"Duration: {end - start:.1f}<br>"
@@ -351,24 +420,15 @@ class Visualizer:
                     )
                 )
 
-        # Update layout
         fig.update_layout(
             title=dict(
                 text=title, font=dict(size=16, color="#0f172a"), x=0.5, xanchor="center"
             ),
-            xaxis=dict(
-                title="Time",
-                gridcolor="#e2e8f0",
-                showgrid=True,
-            ),
+            xaxis=dict(title="Time (minutes)", gridcolor="#e2e8f0", showgrid=True),
             yaxis=dict(
-                title="Vehicle",
-                categoryorder="array",
-                categoryarray=sorted_vehicles,
+                title="Vehicle", categoryorder="array", categoryarray=sorted_vehicles
             ),
-            height=max(
-                400, len(sorted_vehicles) * 60
-            ),  # Dynamic height based on vehicles
+            height=max(400, len(sorted_vehicles) * 60),
             template="plotly_white",
             hovermode="closest",
             barmode="overlay",
@@ -408,14 +468,6 @@ class Visualizer:
         return fig
 
     def plot_pareto_front(self, solutions, title="Pareto Front", current_solution=None):
-        """
-        Plot Pareto front with enhanced visualization
-
-        Args:
-            solutions: List of (obj1, obj2) tuples - Pareto optimal solutions
-            title: Chart title
-            current_solution: Optional (obj1, obj2) tuple for highlighting current solution
-        """
         fig = go.Figure()
 
         if not solutions:
@@ -426,17 +478,14 @@ class Visualizer:
             )
             return fig
 
-        # Separate objectives
         obj1_values, obj2_values = zip(*solutions)
         obj1_values = list(obj1_values)
         obj2_values = list(obj2_values)
 
-        # Sort by first objective for better visualization
         sorted_indices = np.argsort(obj1_values)
         obj1_sorted = [obj1_values[i] for i in sorted_indices]
         obj2_sorted = [obj2_values[i] for i in sorted_indices]
 
-        # ============== LAYER 1: Pareto Front Line ==============
         fig.add_trace(
             go.Scatter(
                 x=obj1_sorted,
@@ -449,7 +498,6 @@ class Visualizer:
             )
         )
 
-        # ============== LAYER 2: Solution Points ==============
         hover_texts = []
         for i, (obj1, obj2) in enumerate(zip(obj1_values, obj2_values)):
             hover_text = (
@@ -470,7 +518,6 @@ class Visualizer:
                     color="#6366f1",
                     line=dict(width=2, color="white"),
                     opacity=0.8,
-                    symbol="circle",
                 ),
                 name="Pareto Solutions",
                 hovertemplate="%{hovertext}",
@@ -479,266 +526,14 @@ class Visualizer:
             )
         )
 
-        # ============== LAYER 3: Extreme Points Annotations ==============
-        min_obj1_idx = obj1_values.index(min(obj1_values))
-        min_obj2_idx = obj2_values.index(min(obj2_values))
-
-        # Fastest solution
-        fig.add_trace(
-            go.Scatter(
-                x=[obj1_values[min_obj1_idx]],
-                y=[obj2_values[min_obj1_idx]],
-                mode="markers",
-                marker=dict(
-                    size=20,
-                    color="#10b981",
-                    symbol="star",
-                    line=dict(width=2, color="white"),
-                ),
-                name="Fastest",
-                hovertemplate=(
-                    f"<b>Fastest Solution</b><br>"
-                    f"Makespan: {obj1_values[min_obj1_idx]:.2f}<br>"
-                    f"Cost: ${obj2_values[min_obj1_idx]:,.2f}<br>"
-                    f"<extra></extra>"
-                ),
-                showlegend=True,
-            )
-        )
-
-        fig.add_annotation(
-            x=obj1_values[min_obj1_idx],
-            y=obj2_values[min_obj1_idx],
-            text="Fastest",
-            showarrow=True,
-            arrowhead=2,
-            arrowsize=1,
-            arrowwidth=2,
-            arrowcolor="#10b981",
-            ax=0,
-            ay=-50,
-            font=dict(size=12, color="#10b981", family="Arial Black"),
-            bgcolor="white",
-            bordercolor="#10b981",
-            borderwidth=2,
-            borderpad=4,
-        )
-
-        # Cheapest solution
-        fig.add_trace(
-            go.Scatter(
-                x=[obj1_values[min_obj2_idx]],
-                y=[obj2_values[min_obj2_idx]],
-                mode="markers",
-                marker=dict(
-                    size=20,
-                    color="#f59e0b",
-                    symbol="star",
-                    line=dict(width=2, color="white"),
-                ),
-                name="Cheapest",
-                hovertemplate=(
-                    f"<b>Cheapest Solution</b><br>"
-                    f"Makespan: {obj1_values[min_obj2_idx]:.2f} min<br>"
-                    f"Cost: ${obj2_values[min_obj2_idx]:,.2f}<br>"
-                    f"<extra></extra>"
-                ),
-                showlegend=True,
-            )
-        )
-
-        fig.add_annotation(
-            x=obj1_values[min_obj2_idx],
-            y=obj2_values[min_obj2_idx],
-            text="Cheapest",
-            showarrow=True,
-            arrowhead=2,
-            arrowsize=1,
-            arrowwidth=2,
-            arrowcolor="#f59e0b",
-            ax=0,
-            ay=50,
-            font=dict(size=12, color="#f59e0b", family="Arial Black"),
-            bgcolor="white",
-            bordercolor="#f59e0b",
-            borderwidth=2,
-            borderpad=4,
-        )
-
-        # ============== LAYER 4: Trade-off Region Shading ==============
-        fig.add_trace(
-            go.Scatter(
-                x=obj1_sorted + obj1_sorted[::-1],
-                y=obj2_sorted + [max(obj2_values)] * len(obj2_sorted),
-                fill="toself",
-                fillcolor="rgba(99, 110, 250, 0.05)",
-                line=dict(color="rgba(0,0,0,0)"),
-                showlegend=False,
-                hoverinfo="skip",
-                name="Feasible Region",
-            )
-        )
-
-        # ============== Layout Configuration ==============
         fig.update_layout(
-            title=dict(
-                text=title,
-                font=dict(size=18, color="#0f172a", family="Arial Black"),
-                x=0.5,
-                xanchor="center",
-            ),
-            xaxis=dict(
-                title="<b>Objective 1: Makespan</b>",
-                title_font=dict(size=14, color="#475569"),
-                gridcolor="#e2e8f0",
-                showgrid=True,
-                zeroline=False,
-                tickfont=dict(size=12),
-            ),
-            yaxis=dict(
-                title="<b>Objective 2: Cost</b>",
-                title_font=dict(size=14, color="#475569"),
-                gridcolor="#e2e8f0",
-                showgrid=True,
-                zeroline=False,
-                tickfont=dict(size=12),
-            ),
+            title=dict(text=title, font=dict(size=18, color="#0f172a"), x=0.5),
+            xaxis_title="<b>Objective 1: Makespan</b>",
+            yaxis_title="<b>Objective 2: Cost</b>",
             height=550,
             template="plotly_white",
             hovermode="closest",
             showlegend=True,
-            legend=dict(
-                orientation="v",
-                yanchor="top",
-                y=1,
-                xanchor="right",
-                x=1.15,
-                bgcolor="rgba(255,255,255,0.95)",
-                bordercolor="#e2e8f0",
-                borderwidth=1,
-                font=dict(size=11),
-            ),
-            plot_bgcolor="white",
-            paper_bgcolor="white",
-            margin=dict(l=80, r=150, t=80, b=80),
-        )
-
-        fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#e2e8f0")
-        fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor="#e2e8f0")
-
-        return fig
-
-    def plot_pareto_comparison(
-        self, pareto_fronts_dict, title="Pareto Front Comparison"
-    ):
-        """Compare Pareto fronts from multiple algorithms"""
-        fig = go.Figure()
-
-        colors = ["#6366f1", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6"]
-        symbols = ["circle", "square", "diamond", "cross", "star"]
-
-        for idx, (algo_name, solutions) in enumerate(pareto_fronts_dict.items()):
-            if not solutions:
-                continue
-
-            obj1_values, obj2_values = zip(*solutions)
-            color = colors[idx % len(colors)]
-            symbol = symbols[idx % len(symbols)]
-
-            sorted_indices = np.argsort(obj1_values)
-            obj1_sorted = [obj1_values[i] for i in sorted_indices]
-            obj2_sorted = [obj2_values[i] for i in sorted_indices]
-
-            fig.add_trace(
-                go.Scatter(
-                    x=obj1_sorted,
-                    y=obj2_sorted,
-                    mode="lines",
-                    line=dict(color=color, width=1, dash="dash"),
-                    showlegend=False,
-                    hoverinfo="skip",
-                )
-            )
-
-            fig.add_trace(
-                go.Scatter(
-                    x=list(obj1_values),
-                    y=list(obj2_values),
-                    mode="markers",
-                    marker=dict(
-                        size=12,
-                        color=color,
-                        symbol=symbol,
-                        line=dict(width=2, color="white"),
-                        opacity=0.8,
-                    ),
-                    name=algo_name,
-                    hovertemplate=(
-                        f"<b>{algo_name}</b><br>"
-                        "Makespan: %{x:.2f}<br>"
-                        "Cost: $%{y:,.2f}<br>"
-                        "<extra></extra>"
-                    ),
-                )
-            )
-
-        fig.update_layout(
-            title=dict(text=title, font=dict(size=18, color="#0f172a"), x=0.5),
-            xaxis_title="<b>Makespan</b>",
-            yaxis_title="<b>Cost</b>",
-            height=550,
-            template="plotly_white",
-            hovermode="closest",
-            legend=dict(
-                orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1
-            ),
-        )
-
-        return fig
-
-    def plot_pareto_3d(self, solutions, obj3_values, title="3D Pareto Front"):
-        """Plot 3D Pareto front for three objectives"""
-        if not solutions or not obj3_values:
-            fig = go.Figure()
-            fig.update_layout(title="No 3D Pareto data available")
-            return fig
-
-        obj1_values, obj2_values = zip(*solutions)
-
-        fig = go.Figure(
-            data=[
-                go.Scatter3d(
-                    x=list(obj1_values),
-                    y=list(obj2_values),
-                    z=obj3_values,
-                    mode="markers",
-                    marker=dict(
-                        size=8,
-                        color=obj3_values,
-                        colorscale="Viridis",
-                        showscale=True,
-                        colorbar=dict(title="Objective 3"),
-                        line=dict(width=1, color="white"),
-                    ),
-                    hovertemplate=(
-                        "<b>Solution</b><br>"
-                        "Obj 1: %{x:.2f}<br>"
-                        "Obj 2: %{y:.2f}<br>"
-                        "Obj 3: %{z:.2f}<br>"
-                        "<extra></extra>"
-                    ),
-                )
-            ]
-        )
-
-        fig.update_layout(
-            title=title,
-            scene=dict(
-                xaxis_title="Objective 1",
-                yaxis_title="Objective 2",
-                zaxis_title="Objective 3",
-            ),
-            height=600,
         )
 
         return fig

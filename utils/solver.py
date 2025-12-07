@@ -1,4 +1,4 @@
-# utils/solver.py - Enhanced with Problem 3 Resupply Logic
+# utils/solver.py - FIXED Problem 3 VRP-MRDR Implementation
 
 import numpy as np
 import pandas as pd
@@ -77,7 +77,7 @@ class ParetoFrontTracker:
 
 
 class DummySolver:
-    """Enhanced solver with Problem 3 resupply logic"""
+    """Enhanced solver with FIXED Problem 3 resupply logic"""
 
     def __init__(self, problem_type: int, algorithm: str):
         self.problem_type = problem_type
@@ -148,12 +148,12 @@ class DummySolver:
         max_iterations: int,
     ) -> Dict:
         """
-        Solve Problem 3 with resupply logic:
-        - All customers served by trucks
-        - Drones resupply trucks at customer locations
-        - Trucks wait for drones if packages not available at departure
+        FIXED Problem 3: VRP with Multi-point Drone Resupply
+        - Trucks visit all customers in sequence
+        - Drones resupply trucks with packages at customer locations
+        - Packages have release dates - drone delivers if not ready at truck departure
         """
-        print("[DEBUG] Problem 3: Resupply mode activated")
+        print("[DEBUG] Problem 3: VRP-MRDR mode activated")
 
         num_trucks = vehicle_config["truck"]["count"]
         num_drones = vehicle_config["drone"]["count"]
@@ -161,14 +161,18 @@ class DummySolver:
         drone_speed = vehicle_config["drone"]["speed"]
         drone_capacity = vehicle_config["drone"]["capacity"]
 
-        # Sort customers by release date for easier assignment
-        customers_sorted = customers.sort_values("release_date").reset_index(drop=True)
+        # Sort customers by release date and proximity
+        customers_sorted = customers.sort_values(
+            ["release_date", "x", "y"]
+        ).reset_index(drop=True)
 
-        # Generate truck routes (all customers assigned to trucks)
-        truck_routes = self._assign_customers_to_trucks(customers_sorted, num_trucks)
+        # Generate truck routes (assign customers to trucks)
+        truck_routes = self._assign_customers_to_trucks_balanced(
+            customers_sorted, num_trucks, depot, distance_matrix
+        )
 
-        # Simulate truck operations with drone resupply
-        schedule, resupply_operations = self._simulate_truck_operations_with_resupply(
+        # Simulate truck operations with intelligent drone resupply
+        schedule, resupply_operations = self._simulate_vrp_with_resupply(
             truck_routes,
             customers_sorted,
             depot,
@@ -184,60 +188,122 @@ class DummySolver:
         total_distance = self._calculate_total_distance_p3(
             truck_routes, distance_matrix
         )
-        cost = self._calculate_cost(
-            {f"Truck_{i + 1}": route for i, route in enumerate(truck_routes)},
-            distance_matrix,
-            vehicle_config,
-        )
 
-        # Add resupply flight costs
+        # Calculate costs
+        truck_cost = total_distance * vehicle_config["truck"]["cost_per_km"]
         resupply_distance = sum(op["distance"] for op in resupply_operations)
-        cost += resupply_distance * vehicle_config["drone"]["cost_per_km"]
+        drone_cost = resupply_distance * vehicle_config["drone"]["cost_per_km"]
+        total_cost = truck_cost + drone_cost
 
         # Generate convergence history
         convergence_history = self._generate_convergence_history(
             max_iterations, makespan
         )
 
-        # Count resupply statistics
-        num_resupplies = len(resupply_operations)
+        # Statistics
+        num_resupplies = len([op for op in resupply_operations if op.get("packages")])
         total_waiting_time = sum(
             task.get("waiting_time", 0) for task in schedule if "waiting_time" in task
         )
+        packages_delivered_by_drone = sum(
+            len(op.get("packages", [])) for op in resupply_operations
+        )
 
-        print(f"[DEBUG] Makespan: {makespan:.2f}, Resupplies: {num_resupplies}")
+        print(
+            f"[DEBUG] Makespan: {makespan:.2f}, Resupplies: {num_resupplies}, Packages by drone: {packages_delivered_by_drone}"
+        )
 
         return {
             "routes": {f"Truck_{i + 1}": route for i, route in enumerate(truck_routes)},
             "schedule": schedule,
             "resupply_operations": resupply_operations,
             "makespan": makespan,
-            "cost": cost,
-            "total_distance": total_distance,
+            "cost": total_cost,
+            "total_distance": total_distance + resupply_distance,
+            "truck_distance": total_distance,
+            "drone_distance": resupply_distance,
             "convergence_history": convergence_history,
-            "computation_time": np.random.uniform(2, 6),
+            "computation_time": np.random.uniform(3, 8),
             "algorithm": self.algorithm,
             "pareto_front": [],
             "num_resupplies": num_resupplies,
+            "packages_delivered_by_drone": packages_delivered_by_drone,
             "total_waiting_time": total_waiting_time,
-            "resupply_distance": resupply_distance,
         }
 
-    def _assign_customers_to_trucks(
-        self, customers: pd.DataFrame, num_trucks: int
+    def _assign_customers_to_trucks_balanced(
+        self,
+        customers: pd.DataFrame,
+        num_trucks: int,
+        depot: Dict,
+        distance_matrix: np.ndarray,
     ) -> List[List[int]]:
-        """Assign all customers to trucks (balanced distribution)"""
+        """Assign customers to trucks with spatial clustering"""
         customer_ids = customers["id"].tolist()
-        truck_routes = [[] for _ in range(num_trucks)]
 
-        # Simple round-robin assignment
-        for idx, cust_id in enumerate(customer_ids):
-            truck_idx = idx % num_trucks
-            truck_routes[truck_idx].append(cust_id)
+        if num_trucks == 1:
+            return [customer_ids]
+
+        # Simple nearest neighbor clustering
+        truck_routes = [[] for _ in range(num_trucks)]
+        assigned = set()
+
+        # Start each truck with a seed customer (spatially distributed)
+        angles = np.linspace(0, 2 * np.pi, num_trucks, endpoint=False)
+        for truck_idx, angle in enumerate(angles):
+            # Find customer closest to this direction from depot
+            best_customer = None
+            best_score = -float("inf")
+
+            for cust_id in customer_ids:
+                if cust_id in assigned:
+                    continue
+
+                cust = customers[customers["id"] == cust_id].iloc[0]
+                dx = cust["x"] - depot["x"]
+                dy = cust["y"] - depot["y"]
+                cust_angle = np.arctan2(dy, dx)
+
+                # Score based on angle difference
+                angle_diff = abs(cust_angle - angle)
+                if angle_diff > np.pi:
+                    angle_diff = 2 * np.pi - angle_diff
+
+                score = -angle_diff
+
+                if score > best_score:
+                    best_score = score
+                    best_customer = cust_id
+
+            if best_customer is not None:
+                truck_routes[truck_idx].append(best_customer)
+                assigned.add(best_customer)
+
+        # Assign remaining customers to nearest truck
+        for cust_id in customer_ids:
+            if cust_id in assigned:
+                continue
+
+            # Find truck with closest last customer
+            best_truck = 0
+            best_distance = float("inf")
+
+            for truck_idx, route in enumerate(truck_routes):
+                if not route:
+                    distance = distance_matrix[0][cust_id]
+                else:
+                    distance = distance_matrix[route[-1]][cust_id]
+
+                if distance < best_distance:
+                    best_distance = distance
+                    best_truck = truck_idx
+
+            truck_routes[best_truck].append(cust_id)
+            assigned.add(cust_id)
 
         return truck_routes
 
-    def _simulate_truck_operations_with_resupply(
+    def _simulate_vrp_with_resupply(
         self,
         truck_routes: List[List[int]],
         customers: pd.DataFrame,
@@ -249,12 +315,12 @@ class DummySolver:
         drone_capacity: int,
     ) -> Tuple[List[Dict], List[Dict]]:
         """
-        Simulate truck operations with drone resupply
-        Returns: (schedule, resupply_operations)
+        FIXED: Simulate VRP with intelligent drone resupply
+        Key logic: Drone only resupplies if package not ready when truck departs depot
         """
         schedule = []
         resupply_operations = []
-        drone_available_times = [0.0] * num_drones  # Track when each drone is free
+        drone_available_times = [0.0] * num_drones
 
         for truck_idx, route in enumerate(truck_routes):
             if not route:
@@ -263,90 +329,72 @@ class DummySolver:
             truck_id = f"Truck_{truck_idx + 1}"
             current_time = 0.0
             current_location = 0  # depot
+            truck_load = []  # Packages currently on truck
 
-            # Truck departs at time 0
-            truck_departure_time = 0.0
-
+            # Determine which packages are ready at departure
             for customer_id in route:
                 customer = customers[customers["id"] == customer_id].iloc[0]
                 release_date = customer["release_date"]
 
+                if release_date <= 0:  # Ready at start
+                    truck_load.append(customer_id)
+
+            # Packages needing drone resupply
+            packages_needing_resupply = [cid for cid in route if cid not in truck_load]
+
+            print(
+                f"[DEBUG] {truck_id}: {len(truck_load)} ready, {len(packages_needing_resupply)} need resupply"
+            )
+
+            # Schedule drone resupply trips
+            drone_trips = self._schedule_drone_trips(
+                truck_id,
+                packages_needing_resupply,
+                truck_routes[truck_idx],
+                customers,
+                depot,
+                distance_matrix,
+                num_drones,
+                drone_available_times,
+                drone_speed,
+                drone_capacity,
+            )
+
+            resupply_operations.extend(drone_trips)
+
+            # Simulate truck journey
+            for customer_id in route:
+                customer = customers[customers["id"] == customer_id].iloc[0]
+
                 # Travel to customer
                 travel_time = (
                     distance_matrix[current_location][customer_id] / truck_speed
-                ) * 60  # minutes
+                ) * 60
                 arrival_time = current_time + travel_time
 
                 # Check if package is available
-                package_available_at_departure = release_date <= truck_departure_time
                 waiting_time = 0.0
+                package_ready = customer_id in truck_load
 
-                if not package_available_at_departure:
-                    # Need drone resupply!
-                    # Find available drone
-                    drone_idx = drone_available_times.index(min(drone_available_times))
-                    drone_id = f"Drone_{drone_idx + 1}"
-
-                    # Drone can only depart after package is released
-                    drone_departure_time = max(
-                        drone_available_times[drone_idx], release_date
+                if not package_ready:
+                    # Find drone delivery for this package
+                    drone_delivery = next(
+                        (
+                            trip
+                            for trip in drone_trips
+                            if customer_id in trip.get("packages", [])
+                            and trip["meeting_customer_id"] == customer_id
+                        ),
+                        None,
                     )
 
-                    # Drone travel time: depot -> customer location
-                    drone_travel_time = (
-                        distance_matrix[0][customer_id] / drone_speed
-                    ) * 60
-                    drone_arrival_time = drone_departure_time + drone_travel_time
+                    if drone_delivery:
+                        drone_arrival = drone_delivery["arrival_time"]
+                        if drone_arrival > arrival_time:
+                            waiting_time = drone_arrival - arrival_time
+                            arrival_time = drone_arrival
 
-                    # Truck must wait if drone arrives after truck
-                    if drone_arrival_time > arrival_time:
-                        waiting_time = drone_arrival_time - arrival_time
-                        arrival_time = drone_arrival_time
-
-                    # Drone returns to depot
-                    drone_return_time = drone_arrival_time + drone_travel_time
-                    drone_available_times[drone_idx] = drone_return_time
-
-                    # Record resupply operation
-                    resupply_operations.append(
-                        {
-                            "drone_id": drone_id,
-                            "truck_id": truck_id,
-                            "customer_id": f"C{customer_id}",
-                            "departure_time": drone_departure_time,
-                            "arrival_time": drone_arrival_time,
-                            "return_time": drone_return_time,
-                            "distance": distance_matrix[0][customer_id]
-                            * 2,  # round trip
-                        }
-                    )
-
-                    # Add drone schedule entry
-                    schedule.append(
-                        {
-                            "vehicle_id": drone_id,
-                            "customer_id": f"C{customer_id}",
-                            "action": "Resupply",
-                            "start_time": drone_departure_time,
-                            "end_time": drone_arrival_time,
-                            "service_time": 0,
-                            "is_resupply": True,
-                        }
-                    )
-
-                    schedule.append(
-                        {
-                            "vehicle_id": drone_id,
-                            "customer_id": "Return to Depot",
-                            "action": "Return",
-                            "start_time": drone_arrival_time,
-                            "end_time": drone_return_time,
-                            "service_time": 0,
-                            "is_return": True,
-                        }
-                    )
-
-                # Truck serves customer
+                # Service customer
                 service_time = customer.get("service_time", 5)
                 departure_time = arrival_time + service_time
 
@@ -359,7 +407,6 @@ class DummySolver:
                         "end_time": departure_time,
                         "service_time": service_time,
                         "waiting_time": waiting_time,
-                        "is_resupply": False,
                     }
                 )
 
@@ -373,16 +420,118 @@ class DummySolver:
             schedule.append(
                 {
                     "vehicle_id": truck_id,
-                    "customer_id": "Return to Depot",
+                    "customer_id": "Depot",
                     "action": "Return",
                     "start_time": current_time,
                     "end_time": return_time,
                     "service_time": 0,
-                    "is_return": True,
+                }
+            )
+
+        # Add drone schedules
+        for trip in resupply_operations:
+            if not trip.get("packages"):
+                continue
+
+            schedule.append(
+                {
+                    "vehicle_id": trip["drone_id"],
+                    "customer_id": f"C{trip['meeting_customer_id']}",
+                    "action": "Resupply",
+                    "start_time": trip["departure_time"],
+                    "end_time": trip["arrival_time"],
+                    "service_time": 0,
                 }
             )
 
         return schedule, resupply_operations
+
+    def _schedule_drone_trips(
+        self,
+        truck_id: str,
+        packages_needing_resupply: List[int],
+        truck_route: List[int],
+        customers: pd.DataFrame,
+        depot: Dict,
+        distance_matrix: np.ndarray,
+        num_drones: int,
+        drone_available_times: List[float],
+        drone_speed: float,
+        drone_capacity: int,
+    ) -> List[Dict]:
+        """Schedule drone trips to resupply truck"""
+        trips = []
+
+        if not packages_needing_resupply:
+            return trips
+
+        # Group packages by meeting point (where on route to deliver)
+        package_groups = []
+        current_group = []
+        current_weight = 0
+
+        for pkg_id in packages_needing_resupply:
+            customer = customers[customers["id"] == pkg_id].iloc[0]
+            pkg_weight = customer["demand"]
+            release_date = customer["release_date"]
+
+            if current_weight + pkg_weight <= drone_capacity and len(current_group) < 3:
+                current_group.append(pkg_id)
+                current_weight += pkg_weight
+            else:
+                if current_group:
+                    package_groups.append(current_group)
+                current_group = [pkg_id]
+                current_weight = pkg_weight
+
+        if current_group:
+            package_groups.append(current_group)
+
+        # Schedule each group
+        for group_idx, group in enumerate(package_groups):
+            # Meeting point: deliver to first customer in group
+            meeting_customer_id = group[0]
+            meeting_customer = customers[customers["id"] == meeting_customer_id].iloc[0]
+
+            # Find available drone
+            drone_idx = drone_available_times.index(min(drone_available_times))
+            drone_id = f"Drone_{drone_idx + 1}"
+
+            # Drone can depart after latest release date in group
+            max_release = max(
+                customers[customers["id"] == pid].iloc[0]["release_date"]
+                for pid in group
+            )
+            earliest_departure = max(drone_available_times[drone_idx], max_release)
+
+            # Flight time to meeting point
+            flight_time = (distance_matrix[0][meeting_customer_id] / drone_speed) * 60
+            arrival_time = earliest_departure + flight_time
+            return_time = arrival_time + flight_time
+
+            # Update drone availability
+            drone_available_times[drone_idx] = return_time
+
+            # Record trip
+            total_weight = sum(
+                customers[customers["id"] == pid].iloc[0]["demand"] for pid in group
+            )
+
+            trips.append(
+                {
+                    "drone_id": drone_id,
+                    "truck_id": truck_id,
+                    "meeting_customer_id": meeting_customer_id,
+                    "packages": group,
+                    "total_weight": total_weight,
+                    "departure_time": earliest_departure,
+                    "arrival_time": arrival_time,
+                    "return_time": return_time,
+                    "distance": distance_matrix[0][meeting_customer_id] * 2,
+                }
+            )
+
+        return trips
 
     def _calculate_total_distance_p3(
         self, truck_routes: List[List[int]], distance_matrix: np.ndarray
@@ -401,8 +550,7 @@ class DummySolver:
             total += distance_matrix[route[-1]][0]
         return total
 
-    # ============= Other methods remain the same =============
-
+    # ============= Other methods (Problem 1 & 2) remain the same =============
     def _solve_biobjective(
         self,
         routes,
