@@ -38,7 +38,7 @@ def render_algorithm_config_p1():
     col1, col2, col3 = st.columns(3)
     with col1:
         alpha1 = st.number_input(
-            "Flight endurance penalty (α)",
+            "Flight endurance penalty",
             min_value=0.1,
             max_value=10.0,
             value=PROBLEM1_CONFIG["algorithm"]["alpha1"],
@@ -48,7 +48,7 @@ def render_algorithm_config_p1():
 
     with col2:
         alpha2 = st.number_input(
-            "Waiting time penalty (α₂)",
+            "Waiting time penalty",
             min_value=0.1,
             max_value=10.0,
             value=PROBLEM1_CONFIG["algorithm"]["alpha2"],
@@ -58,7 +58,7 @@ def render_algorithm_config_p1():
 
     with col3:
         beta = st.number_input(
-            "Penalty factor (β)",
+            "Penalty scale factor",
             min_value=1.0,
             max_value=5.0,
             value=PROBLEM1_CONFIG["algorithm"]["beta"],
