@@ -93,11 +93,12 @@ footer {visibility: hidden;}
 
 }
 /* Remove spacing between markdown blocks */
+/*
 div[data-testid="stMarkdown"] {
     margin: 0 !important;
     padding: 0 !important;
 }
-
+*/
 
 /* Enhanced section titles - Minimalist - LARGER */
 .config-section-title {

@@ -10,8 +10,8 @@ def render_dataset_info(problem_type, customers_df):
     if customers_df is None or len(customers_df) == 0:
         return
 
-    st.markdown("---")
-    st.markdown("**Dataset Information (reflected from uploaded file)**")
+    # st.markdown("---")
+    st.markdown("**Dataset Information**")
 
     # Common metrics
     col1, col2, col3 = st.columns(3)

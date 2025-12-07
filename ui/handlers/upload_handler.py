@@ -18,7 +18,7 @@ def handle_file_upload(problem_type, uploaded_file):
         # File already processed
         if st.session_state.get(f"file_processed_{problem_type}", False):
             customers_df = st.session_state[f"customers_{problem_type}"]
-            st.success(f"✅ File loaded: {len(customers_df)} customers")
+            st.success(f"File loaded: {len(customers_df)} customers")
         return
 
     # Parse new file
@@ -33,11 +33,11 @@ def handle_file_upload(problem_type, uploaded_file):
         _store_parsed_data(problem_type, parsed_data, file_id)
 
         st.success(
-            f"✅ File uploaded successfully! {len(parsed_data['customers'])} customers loaded."
+            f"File uploaded successfully! {len(parsed_data['customers'])} customers loaded."
         )
 
     except Exception as e:
-        st.error(f"❌ Error parsing file: {str(e)}")
+        st.error(f"Error parsing file: {str(e)}")
         st.info("Please check that your file matches the expected format.")
 
 
