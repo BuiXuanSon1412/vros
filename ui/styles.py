@@ -74,7 +74,7 @@ footer {visibility: hidden;}
     color: #0f172a;
     text-align: center;
     margin-bottom: 0rem;
-    margin-top: 0.rem;
+    margin-top: 0rem;
     padding-top: 0rem;
     padding-bottom: 0rem;
     letter-spacing: -0.02em;
@@ -85,7 +85,7 @@ footer {visibility: hidden;}
     font-size: 0.875rem;
     color: #0f172a;
     text-align: center;
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.4rem;
     margin-top: 0;
     padding-top: 0;
     font-weight: 400;
@@ -93,12 +93,12 @@ footer {visibility: hidden;}
 
 }
 /* Remove spacing between markdown blocks */
-/*
-div[data-testid="stMarkdown"] {
+
+div[data-testid="stMarkdown"]:has(.main-header),
+div[data-testid="stMarkdown"]:has(.sub-header) {
     margin: 0 !important;
     padding: 0 !important;
 }
-*/
 
 /* Enhanced section titles - Minimalist - LARGER */
 .config-section-title {
@@ -302,6 +302,8 @@ div[data-testid="stMetric"] {
     font-weight: 600;
     color: #1e293b;
     font-size: 1rem;
+    margin-bottom: 0rem,
+    padding-bottom: 0rem
 }
 
 /* Minimalist tabs styling - LARGER FONT */

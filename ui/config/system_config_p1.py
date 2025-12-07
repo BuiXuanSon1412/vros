@@ -6,7 +6,7 @@ from config.default_config import PROBLEM1_CONFIG
 
 def render_system_config_p1():
     """Render Problem 1 system configuration"""
-    st.markdown("**Depot Configuration**")
+    st.markdown("**Depot**")
     col1, col2 = st.columns(2)
     with col1:
         depot_x = st.number_input("Coordinate X", value=0.0, key="p1_depot_x")
@@ -14,7 +14,7 @@ def render_system_config_p1():
         depot_y = st.number_input("Coordinate Y", value=0.0, key="p1_depot_y")
 
     # st.markdown("---")
-    st.markdown("**Vehicle Configuration**")
+    st.markdown("**Vehicle**")
 
     col1, col2 = st.columns(2)
     with col1:

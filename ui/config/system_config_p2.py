@@ -6,7 +6,7 @@ from config.default_config import PROBLEM2_CONFIG
 
 def render_system_config_p2():
     """Render Problem 2 system configuration"""
-    st.markdown("**Depot Configuration**")
+    st.markdown("**Depot**")
     col1, col2 = st.columns(2)
     with col1:
         depot_x = st.number_input("Coordinate X", value=0.0, key="p2_depot_x")
@@ -14,7 +14,7 @@ def render_system_config_p2():
         depot_y = st.number_input("Coordinate Y", value=0.0, key="p2_depot_y")
 
     # st.markdown("---")
-    st.markdown("**Vehicle Configuration**")
+    st.markdown("**Vehicle**")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -63,7 +63,7 @@ def render_system_config_p2():
             key="p2_congestion_max",
         )
 
-    st.markdown("**Drone Speed Configuration**")
+    st.markdown("**Drone Speed**")
     col1, col2, col3 = st.columns(3)
     with col1:
         takeoff_speed = st.number_input(

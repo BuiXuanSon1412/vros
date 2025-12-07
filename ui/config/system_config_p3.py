@@ -9,32 +9,34 @@ def render_system_config_p3():
 
     # Check if file is loaded and has depot info
     depot_data = st.session_state.get("depot_3")
-    file_loaded = depot_data is not None
-
-    st.markdown("**Depot Configuration**")
+    # file_loaded = depot_data is not None
+    file_loaded = depot_data is not None and st.session_state.get(
+        "file_processed_3", False
+    )
+    st.markdown("**Depot**")
     col1, col2 = st.columns(2)
     with col1:
         depot_x = st.number_input(
             "Coordinate X",
-            value=depot_data["x"] if file_loaded else 0.0,
+            value=depot_data["x"] if depot_data and file_loaded else 0.0,
             disabled=file_loaded,
             key="p3_depot_x",
         )
     with col2:
         depot_y = st.number_input(
             "Coordinate Y",
-            value=depot_data["y"] if file_loaded else 0.0,
+            value=depot_data["y"] if depot_data and file_loaded else 0.0,
             disabled=file_loaded,
             key="p3_depot_y",
         )
 
-    if file_loaded:
+    if depot_data and file_loaded:
         st.caption(
-            f"ℹ️ Depot location loaded from file: ({depot_data['x']}, {depot_data['y']})"
+            f"Depot location loaded from file: ({depot_data['x']}, {depot_data['y']})"
         )
 
     # st.markdown("---")
-    st.markdown("**Vehicle Configuration**")
+    st.markdown("**Vehicle**")
 
     # Get vehicle config from uploaded file
     file_vehicle_config = st.session_state.get("file_vehicle_config_3")
