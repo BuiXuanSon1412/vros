@@ -59,7 +59,7 @@ class Visualizer:
             depot_label = "Depot"
             depot_hover = "Depot"
 
-        # ============== LAYER 1: TRUCK ROUTE LINES WITH ARROWS ==============
+        # ============== LAYER 1: TRUCK & DRONE ROUTE LINES WITH ARROWS ==============
         first_truck = next((vid for vid in routes if "truck" in vid.lower()), None)
         first_drone = next((vid for vid in routes if "drone" in vid.lower()), None)
 
@@ -67,45 +67,56 @@ class Visualizer:
             if not route:
                 continue
 
-            if "truck" in vehicle_id.lower():
+            is_truck = "truck" in vehicle_id.lower()
+
+            if is_truck:
                 color = self.colors_truck[0]
                 vehicle_icon = "🚑" if problem_type in [1, 2] else "🚚"
-                legend_name = "Truck Route"
                 show_in_legend = vehicle_id == first_truck
+            else:  # drone
+                color = self.colors_drone[0]
+                vehicle_icon = "🚁"
+                show_in_legend = vehicle_id == first_drone
 
-                # Build truck route path
-                xs = [depot["x"]]
-                ys = [depot["y"]]
+            # Build route path
+            xs = [depot["x"]]
+            ys = [depot["y"]]
 
-                for cust_id in route:
-                    row = customers.loc[customers["id"] == cust_id].iloc[0]
-                    xs.append(row["x"])
-                    ys.append(row["y"])
+            for cust_id in route:
+                row = customers.loc[customers["id"] == cust_id].iloc[0]
+                xs.append(row["x"])
+                ys.append(row["y"])
 
-                xs.append(depot["x"])
-                ys.append(depot["y"])
+            xs.append(depot["x"])
+            ys.append(depot["y"])
 
-                # Add arrows for route segments
-                for i in range(len(xs) - 1):
-                    x0, y0 = xs[i], ys[i]
-                    x1, y1 = xs[i + 1], ys[i + 1]
+            # Add arrows for route segments
+            for i in range(len(xs) - 1):
+                x0, y0 = xs[i], ys[i]
+                x1, y1 = xs[i + 1], ys[i + 1]
 
-                    fig.add_annotation(
-                        x=x1,
-                        y=y1,
-                        ax=x0,
-                        ay=y0,
-                        xref="x",
-                        yref="y",
-                        axref="x",
-                        ayref="y",
-                        showarrow=True,
-                        arrowhead=3,
-                        arrowsize=1.5,
-                        arrowwidth=2,
-                        arrowcolor=color,
-                        opacity=0.9,
-                    )
+                # Use dashed line for drones in Problems 1 & 2
+                line_dash = (
+                    "dot" if not is_truck and problem_type in [1, 2] else "solid"
+                )
+                arrow_size = 1.5 if is_truck else 1.2
+
+                fig.add_annotation(
+                    x=x1,
+                    y=y1,
+                    ax=x0,
+                    ay=y0,
+                    xref="x",
+                    yref="y",
+                    axref="x",
+                    ayref="y",
+                    showarrow=True,
+                    arrowhead=3 if is_truck else 2,
+                    arrowsize=arrow_size,
+                    arrowwidth=2,
+                    arrowcolor=color,
+                    opacity=0.9 if is_truck else 0.7,
+                )
 
         # ============== LAYER 2: DRONE RESUPPLY ROUTES (Problem 3) ==============
         if problem_type == 3 and resupply_operations:
