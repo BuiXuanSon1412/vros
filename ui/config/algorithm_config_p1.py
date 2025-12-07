@@ -10,17 +10,12 @@ def render_algorithm_config_p1():
     st.markdown("**Algorithm Selection**")
 
     # Available algorithms for Problem 1
-    available_algorithms = [
-        "Tabu Search",
-        "Tabu Search Multi-Level",
-        "Simulated Annealing",
-        "Genetic Algorithm",
-    ]
+    available_algorithms = ["Tabu Search", "Tabu Search Multi-Level"]
 
     selected_algorithms = st.multiselect(
         "Select algorithms to run",
         options=available_algorithms,
-        default=["Tabu Search Multi-Level"],
+        default=["Tabu Search"],
         key="p1_selected_algorithms",
         help="You can select multiple algorithms to compare results",
     )

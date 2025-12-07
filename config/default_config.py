@@ -1,4 +1,4 @@
-# config/default_config.py - Updated with problem-specific configurations
+# config/default_config.py - Updated with Algorithm Lists
 
 # Problem names
 PROBLEM_TYPES = {
@@ -7,11 +7,18 @@ PROBLEM_TYPES = {
     3: "VRP-MRDR: Vehicle Routing Problem with Multiple Release Dates",
 }
 
-# Algorithms per problem
+# Algorithms per problem - Exact available algorithms
 ALGORITHMS = {
-    1: ["Tabu Search"],  # Single algorithm, no selection
-    2: ["HNSGAII-TS"],  # Single algorithm
-    3: ["ATS"],  # Single algorithm
+    1: ["Tabu Search", "Tabu Search Multi-Level"],
+    2: ["Tabu Search", "MOEA/D", "NSGAII", "HNSGAII-TS"],
+    3: ["Adaptive Tabu Search"],
+}
+
+# Default selected algorithms
+DEFAULT_ALGORITHMS = {
+    1: ["Tabu Search"],
+    2: ["HNSGAII-TS"],
+    3: ["Adaptive Tabu Search"],
 }
 
 # Problem 1: PTDS-DDSS

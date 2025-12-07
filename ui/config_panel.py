@@ -1,7 +1,7 @@
-# ui/config_panel.py - Configuration Panel with Problem-Specific UI
+# ui/config_panel.py - UPDATED for Multiple Algorithm Support
 
 import streamlit as st
-from ui.handlers.run_handler import handle_run_button
+from ui.handlers.run_handler import handle_run_button_multi
 
 # Problem-specific imports
 from ui.config.system_config_p1 import render_system_config_p1
@@ -32,18 +32,38 @@ def render_config_panel(problem_type):
     with config_tabs[2]:
         algorithm_params = _render_algorithm_tab(problem_type)
 
+        if algorithm_params is None:
+            st.error("Please select at least one algorithm")
+            return
+
+        # Show selected algorithms
+        selected_algos = algorithm_params.get("algorithms", [])
+        if selected_algos:
+            st.markdown("")
+            st.info(
+                f"**{len(selected_algos)} algorithm(s) selected:** {', '.join(selected_algos)}"
+            )
+
         st.markdown("")
+
+        # Run button with dynamic text
+        button_text = (
+            f"Run {len(selected_algos)} Algorithm(s)"
+            if len(selected_algos) > 1
+            else "Run Algorithm"
+        )
         run_button = st.button(
-            "Run Algorithm",
+            button_text,
             type="primary",
             key=f"run_{problem_type}",
             use_container_width=True,
+            disabled=not selected_algos,
         )
 
     # Handle run button
-    if run_button:
-        handle_run_button(
-            problem_type, algorithm_params["algorithm"], system_config, algorithm_params
+    if run_button and selected_algos:
+        handle_run_button_multi(
+            problem_type, selected_algos, system_config, algorithm_params
         )
 
 
@@ -70,4 +90,4 @@ def _render_algorithm_tab(problem_type):
         return render_algorithm_config_p3()
     else:
         st.error("Invalid problem type")
-        return {"algorithm": "Unknown"}
+        return None

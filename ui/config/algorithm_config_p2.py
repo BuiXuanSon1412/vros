@@ -1,14 +1,32 @@
-# ui/config/algorithm_config_p2.py - Problem 2: HNSGAII-TS Algorithm
+# ui/config/algorithm_config_p2.py - UPDATED with Multiple Algorithm Selection
 
 import streamlit as st
 from config.default_config import PROBLEM2_CONFIG
 
 
 def render_algorithm_config_p2():
-    """Render Problem 2 algorithm configuration (HNSGAII-TS only)"""
+    """Render Problem 2 algorithm configuration with multiple selection"""
 
-    st.markdown("**Algorithm:** HNSGAII-TS")
-    # st.markdown("---")
+    st.markdown("**Algorithm Selection**")
+
+    # Available algorithms for Problem 2
+    available_algorithms = ["Tabu Search", "MOEA/D", "NSGAII", "HNSGAII-TS"]
+
+    selected_algorithms = st.multiselect(
+        "Select algorithms to run",
+        options=available_algorithms,
+        default=["HNSGAII-TS"],
+        key="p2_selected_algorithms",
+        help="You can select multiple algorithms to compare Pareto fronts",
+    )
+
+    if not selected_algorithms:
+        st.warning("⚠️ Please select at least one algorithm")
+        return None
+
+    st.markdown("---")
+    st.markdown("**Algorithm Parameters**")
+    st.caption("These parameters apply to all selected algorithms")
 
     st.markdown("**Genetic Algorithm Parameters**")
     col1, col2 = st.columns(2)
@@ -48,7 +66,6 @@ def render_algorithm_config_p2():
             key="p2_population_size",
         )
 
-    # st.markdown("---")
     st.markdown("**Tabu Search Parameters**")
 
     tabu_iterations = st.number_input(
@@ -61,7 +78,7 @@ def render_algorithm_config_p2():
     )
 
     return {
-        "algorithm": "HNSGAII-TS",
+        "algorithms": selected_algorithms,
         "crossover_rate": crossover_rate,
         "mutation_rate": mutation_rate,
         "num_generations": num_generations,

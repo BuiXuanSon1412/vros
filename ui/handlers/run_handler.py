@@ -1,31 +1,62 @@
-# ui/handlers/run_handler.py - Run Algorithm Handler (Fixed)
+# ui/handlers/run_handler.py - UPDATED for Multiple Algorithm Support
 
 import streamlit as st
 from utils.solver import DummySolver
+import time
 
 
-def handle_run_button(
-    problem_type, selected_algorithm, system_config, algorithm_params
+def handle_run_button_multi(
+    problem_type, selected_algorithms, system_config, algorithm_params
 ):
-    """Handle run algorithm button click"""
+    """Handle run button for multiple algorithms"""
     # Validate data exists
     if not _validate_data_exists(problem_type):
         st.error("Please upload data first!")
         return
 
-    # Run algorithm
-    with st.spinner(f"Running {selected_algorithm}..."):
-        # Convert system_config to vehicle_config format expected by solver
-        vehicle_config = _convert_to_vehicle_config(problem_type, system_config)
+    # Convert system_config to vehicle_config format
+    vehicle_config = _convert_to_vehicle_config(problem_type, system_config)
 
-        solution = _run_algorithm(
-            problem_type, selected_algorithm, vehicle_config, algorithm_params
+    # Progress tracking
+    total_algorithms = len(selected_algorithms)
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+
+    # Run each algorithm
+    for idx, algorithm in enumerate(selected_algorithms):
+        status_text.markdown(
+            f"**Running {algorithm}... ({idx + 1}/{total_algorithms})**"
         )
 
-        # Store results
-        _store_results(problem_type, selected_algorithm, solution)
+        with st.spinner(f"Running {algorithm}..."):
+            solution = _run_algorithm(
+                problem_type, algorithm, vehicle_config, algorithm_params
+            )
 
-        st.success("Completed!")
+            # Store results
+            _store_results(problem_type, algorithm, solution)
+
+            # Small delay for UI update
+            time.sleep(0.3)
+
+        # Update progress
+        progress_bar.progress((idx + 1) / total_algorithms)
+
+    # Clear progress indicators
+    progress_bar.empty()
+    status_text.empty()
+
+    # Success message
+    if total_algorithms == 1:
+        st.success(f"✅ {selected_algorithms[0]} completed!")
+    else:
+        st.success(
+            f"✅ All {total_algorithms} algorithms completed! Check the Comparison tab to see results."
+        )
+
+    # Auto-switch to comparison view if multiple algorithms
+    if total_algorithms > 1:
+        st.info("💡 **Tip:** Switch to the **Metrics** tab to see detailed comparison")
 
 
 def _validate_data_exists(problem_type):
@@ -94,6 +125,24 @@ def _run_algorithm(problem_type, selected_algorithm, vehicle_config, algorithm_p
 
 def _store_results(problem_type, selected_algorithm, solution):
     """Store solution in session state"""
+    # Store as current solution (for single view)
     st.session_state[f"solution_{problem_type}"] = solution
+
+    # Store in results dictionary (for comparison)
+    if f"results_{problem_type}" not in st.session_state:
+        st.session_state[f"results_{problem_type}"] = {}
+
     st.session_state[f"results_{problem_type}"][selected_algorithm] = solution
+
+    # Increment chart counter to force refresh
     st.session_state[f"chart_counter_{problem_type}"] += 1
+
+
+# Keep backward compatibility with old single-algorithm function
+def handle_run_button(
+    problem_type, selected_algorithm, system_config, algorithm_params
+):
+    """Legacy single-algorithm handler (for backward compatibility)"""
+    handle_run_button_multi(
+        problem_type, [selected_algorithm], system_config, algorithm_params
+    )
