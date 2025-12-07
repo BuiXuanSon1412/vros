@@ -1,0 +1,89 @@
+HƯỚNG DẪN SỬ DỤNG PHẦN MỀM VROS
+
+Mục lục
+1. Giới thiệu ngắn
+2. Chương 1 — Kiến trúc phần mềm
+3. Chương 2 — Các chức năng
+4. Chương 3 — Hướng dẫn sử dụng
+5. Phụ lục: Xử lý sự cố, sao lưu, liên hệ hỗ trợ
+
+1. Giới thiệu ngắn
+Phần mềm VROS là hệ thống quản lý và điều phối phương tiện gồm truck và drone, hỗ trợ lập kế hoạch nhiệm vụ, theo dõi thời gian thực và báo cáo. Tài liệu này mô tả tổng quan kiến trúc, chức năng chính và hướng dẫn vận hành cơ bản.
+
+2. Chương 1 — Kiến trúc phần mềm
+- Tổng quan tầng:
+  - Giao diện người dùng (UI): web app/SPA chạy trên trình duyệt.
+  - API/Service: REST/GraphQL xử lý yêu cầu, chuyển tiếp tới các dịch vụ.
+  - Luồng nghiệp vụ (Business logic): xử lý lập kế hoạch, phân bổ nhiệm vụ, an toàn bay.
+  - Lớp truy cập dữ liệu (Data access): ORM / repository tương tác DB (Postgres/Mongo).
+  - Tích hợp phần cứng: module giao tiếp với drone/truck (MQTT/HTTP/SDK).
+  - Hạ tầng hỗ trợ: message broker (RabbitMQ/Redis), lưu trữ file, hệ thống logging/monitoring.
+- Triển khai:
+  - Hỗ trợ chạy trên máy đơn hoặc container (Docker/Docker Compose). Có thể triển khai trên Kubernetes.
+  - Cổng mặc định: UI http://localhost:8080, API http://localhost:8000 (tuỳ cấu hình).
+- Lưu trữ & cấu hình:
+  - File cấu hình: config/*.yaml hoặc .env
+  - Thư mục logs/, data/, backups/
+- Luồng dữ liệu cơ bản:
+  1. Người dùng thao tác trên UI.
+  2. UI gọi API.
+  3. API xử lý và lưu trạng thái vào DB, gửi lệnh tới module phần cứng qua broker.
+  4. Thiết bị phản hồi trạng thái; API cập nhật UI theo kênh thời gian thực (WebSocket).
+
+3. Chương 2 — Các chức năng
+- Đăng nhập & phân quyền:
+  - Quản trị, vận hành, giám sát với quyền khác nhau.
+- Quản lý phương tiện:
+  - Thêm/sửa/xóa truck và drone, quản lý trạng thái phần cứng (pin, vị trí).
+- Lập kế hoạch nhiệm vụ:
+  - Tạo nhiệm vụ (mission), xác định điểm đi/đến, thời gian, ưu tiên, ràng buộc an toàn.
+- Điều phối & phân bổ:
+  - Hệ thống gợi ý phương tiện phù hợp, phân công tự động hoặc thủ công.
+- Theo dõi thời gian thực:
+  - Bản đồ hiển thị vị trí, trạng thái nhiệm vụ, cảnh báo.
+- Báo cáo & lịch sử:
+  - Báo cáo hoàn thành, nhật ký hoạt động, thống kê hiệu suất.
+- Cấu hình & giám sát:
+  - Thiết lập tham số hệ thống, xem logs, kiểm tra trạng thái dịch vụ.
+
+4. Chương 3 — Hướng dẫn sử dụng
+- Yêu cầu hệ thống (ví dụ):
+  - OS: Windows/Linux, Docker (nếu dùng container).
+  - Node.js cho UI, Python/Go/Node cho API (tuỳ triển khai).
+  - DB: PostgreSQL hoặc MongoDB.
+- Cài đặt cơ bản:
+  1. Sao chép mã nguồn về máy: git clone <repo>
+  2. Thiết lập file cấu hình: sửa config/config.yaml hoặc .env theo môi trường.
+  3. Khởi chạy DB và broker.
+  4. Khởi động dịch vụ: docker-compose up -d  (hoặc hướng dẫn khởi chạy riêng từng service).
+- Cấu hình ban đầu:
+  - Mở file .env hoặc config để cấu hình cổng, chuỗi kết nối DB, thông tin broker.
+  - Thiết lập tài khoản admin đầu tiên (thông qua script khởi tạo hoặc UI).
+- Khởi động và truy cập:
+  - Mở trình duyệt tới http://localhost:8080
+  - Đăng nhập bằng tài khoản admin (mật khẩu mặc định: đổi ngay sau lần đăng nhập đầu).
+- Quy trình sử dụng chính (mẫu):
+  1. Thêm phương tiện: Menu -> Quản lý phương tiện -> Thêm mới -> nhập thông tin.
+  2. Tạo nhiệm vụ: Menu -> Nhiệm vụ -> Tạo nhiệm vụ -> chọn điểm, thời gian, ưu tiên.
+  3. Phân công: Chọn nhiệm vụ -> Phân công tự động/ thủ công sang phương tiện.
+  4. Giám sát: Mở màn hình giám sát để xem trạng thái thời gian thực, nhận cảnh báo.
+  5. Kết thúc và báo cáo: Sau hoàn thành, vào Báo cáo -> Chọn phạm vi -> Xuất báo cáo.
+- Xử lý sự cố cơ bản:
+  - Không truy cập được UI: kiểm tra service UI chạy, kiểm tra cổng, logs/ui.log.
+  - API lỗi: xem logs/api.log, kiểm tra kết nối tới DB và broker.
+  - Thiết bị không nhận lệnh: kiểm tra module phần cứng, kết nối mạng, broker topic.
+  - Khôi phục dịch vụ: docker-compose restart <service> hoặc systemctl restart <service>.
+- Sao lưu & khôi phục:
+  - Sao lưu DB định kỳ (dump), lưu thư mục data và config sang nơi an toàn.
+  - Trước nâng cấp, tạo snapshot DB và backup configs.
+- Bảo mật:
+  - Thay mật khẩu mặc định, bật HTTPS cho UI/API, giới hạn truy cập admin, cập nhật phần mềm thường xuyên.
+
+Phụ lục — Liên hệ và hỗ trợ
+- Log chính: logs/
+- Cấu hình: config/
+- Email hỗ trợ: support@example.com
+- Hướng dẫn nâng cao và API docs: docs/api.md (nếu có)
+
+Kết thúc
+Tài liệu này là bản tóm tắt hướng dẫn vận hành cơ bản. Để chi tiết hơn, bổ sung phần mô tả API, sơ đồ triển khai và hướng dẫn cài đặt cụ thể theo môi trường triển khai.

@@ -14,7 +14,7 @@ def render_algorithm_config_p3():
     col1, col2 = st.columns(2)
     with col1:
         gamma1 = st.number_input(
-            "Score factor 1 (γ₁)",
+            "Score factor 1",
             min_value=0.0,
             max_value=5.0,
             value=PROBLEM3_CONFIG["algorithm"]["gamma1"],
@@ -22,7 +22,7 @@ def render_algorithm_config_p3():
             key="p3_gamma1",
         )
         gamma2 = st.number_input(
-            "Score factor 2 (γ₂)",
+            "Score factor 2",
             min_value=0.0,
             max_value=5.0,
             value=PROBLEM3_CONFIG["algorithm"]["gamma2"],
@@ -32,7 +32,7 @@ def render_algorithm_config_p3():
 
     with col2:
         gamma3 = st.number_input(
-            "Score factor 3 (γ₃)",
+            "Score factor 3",
             min_value=0.0,
             max_value=5.0,
             value=PROBLEM3_CONFIG["algorithm"]["gamma3"],
@@ -40,7 +40,7 @@ def render_algorithm_config_p3():
             key="p3_gamma3",
         )
         gamma4 = st.number_input(
-            "Score factor 4 (γ₄)",
+            "Score factor 4",
             min_value=0.0,
             max_value=5.0,
             value=PROBLEM3_CONFIG["algorithm"]["gamma4"],
