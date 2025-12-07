@@ -39,7 +39,6 @@ def render_algorithm_config_p1():
     with col1:
         alpha1 = st.number_input(
             "Flight endurance penalty",
-            "Flight endurance penalty",
             min_value=0.1,
             max_value=10.0,
             value=PROBLEM1_CONFIG["algorithm"]["alpha1"],
@@ -49,7 +48,6 @@ def render_algorithm_config_p1():
 
     with col2:
         alpha2 = st.number_input(
-            "Waiting time penalty",
             "Waiting time penalty",
             min_value=0.1,
             max_value=10.0,
