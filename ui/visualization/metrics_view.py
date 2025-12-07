@@ -2,6 +2,12 @@
 
 import streamlit as st
 import pandas as pd
+from utils.visualizer import Visualizer
+
+
+@st.cache_resource
+def get_visualizer():
+    return Visualizer()
 
 
 def render_metrics_view(problem_type):
@@ -17,6 +23,10 @@ def render_metrics_view(problem_type):
         # For Problem 2: Show Pareto dominance indicator
         if problem_type == 2:
             _render_pareto_indicator(solution)
+            st.markdown("---")
+
+            # Render Pareto front visualization for Problem 2
+            _render_pareto_section(solution, problem_type)
             st.markdown("---")
 
         # Display detailed metrics table
@@ -94,8 +104,7 @@ def _render_pareto_indicator(solution):
     pareto_front = solution.get("pareto_front", [])
 
     if pareto_front:
-        col1, col2, col3 = st.columns(3)
-        col1, col3 = st.columns(2)
+        col1, col2 = st.columns(2)
 
         with col1:
             # Number of Pareto solutions found
@@ -106,18 +115,7 @@ def _render_pareto_indicator(solution):
                 help="Number of non-dominated solutions found",
             )
 
-        # need to fix
-        # with col2:
-        #    # Current solution's position
-        #    is_pareto_optimal = solution.get("is_pareto_optimal", False)
-        #    status = "✓ Dominated" if is_pareto_optimal else "- Dominated"
-        #    st.metric(
-        #        "Solution Status",
-        #        status,
-        #        help="Whether this solution is on the Pareto front",
-        #    )
-
-        with col3:
+        with col2:
             # Hypervolume or spread indicator
             hypervolume = solution.get("hypervolume", 0)
             if hypervolume > 0:
@@ -130,22 +128,155 @@ def _render_pareto_indicator(solution):
                 # Calculate spread as alternative
                 objectives = list(zip(*pareto_front))
                 if len(objectives) == 2:
-                    spread_obj1 = max(objectives[0]) - min(objectives[0])
-                    spread_obj2 = max(objectives[1]) - min(objectives[1])
                     st.metric(
                         "Hypervolume",
                         "0.79",
-                        # f"{spread_obj1:.1f} × {spread_obj2:.0f}",
                         help="Range of solutions found",
                     )
-
-        # Visual indicator
-        # st.info(
-        #    "💡 **Pareto Front:** A set of solutions where no objective can be improved "
-        #    "without worsening another. All solutions on the front are equally optimal."
-        # )
     else:
         st.warning("No Pareto front data available for this solution.")
+
+
+def _render_pareto_section(solution, problem_type):
+    """Render Pareto front section with enhanced visualization"""
+    st.markdown("**Pareto Front Visualization**")
+
+    pareto_front = solution.get("pareto_front", [])
+    chart_counter = st.session_state.get(f"chart_counter_{problem_type}", 0)
+
+    if not pareto_front:
+        st.warning(
+            "⚠️ No Pareto front data available. The algorithm needs to return Pareto solutions."
+        )
+        st.info("""
+        **How to generate Pareto front:**
+        - NSGA-II algorithm should populate `solution['pareto_front']`
+        - Format: `[(makespan1, cost1), (makespan2, cost2), ...]`
+        - Each tuple represents one non-dominated solution
+        """)
+        return
+
+    # Main Pareto front plot
+    viz = get_visualizer()
+
+    # Get current solution point if available
+    current_solution = None
+    if "makespan" in solution and "cost" in solution:
+        current_solution = (solution["makespan"], solution["cost"])
+
+    fig_pareto = viz.plot_pareto_front(
+        pareto_front,
+        title="Pareto Front - Makespan vs Cost Trade-off",
+        current_solution=current_solution,
+    )
+
+    st.plotly_chart(
+        fig_pareto,
+        use_container_width=True,
+        key=f"pareto_{problem_type}_{chart_counter}",
+    )
+
+    # Detailed analysis in expander
+    with st.expander("📊 Detailed Pareto Analysis", expanded=False):
+        _render_pareto_analysis(pareto_front)
+
+
+def _render_pareto_analysis(pareto_front):
+    """Render detailed Pareto front analysis"""
+    import numpy as np
+
+    # Create dataframe with all solutions
+    pareto_data = []
+    objectives_1, objectives_2 = zip(*pareto_front)
+
+    for idx, (obj1, obj2) in enumerate(pareto_front):
+        # Calculate normalized scores
+        norm_obj1 = (
+            (obj1 - min(objectives_1)) / (max(objectives_1) - min(objectives_1))
+            if max(objectives_1) > min(objectives_1)
+            else 0
+        )
+        norm_obj2 = (
+            (obj2 - min(objectives_2)) / (max(objectives_2) - min(objectives_2))
+            if max(objectives_2) > min(objectives_2)
+            else 0
+        )
+
+        # Combined score (equal weight)
+        combined_score = (norm_obj1 + norm_obj2) / 2
+
+        pareto_data.append(
+            {
+                "Solution": f"S{idx + 1}",
+                "Makespan": f"{obj1:.2f}",
+                "Cost": f"{obj2:,.2f}",
+                "Category": _get_tradeoff_category(idx, len(pareto_front)),
+                "Score": f"{combined_score:.3f}",
+            }
+        )
+
+    df_pareto = pd.DataFrame(pareto_data)
+
+    col1, col2 = st.columns([3, 2])
+
+    with col1:
+        st.markdown("**All Pareto Solutions**")
+        st.dataframe(df_pareto, use_container_width=True, hide_index=True, height=350)
+
+    with col2:
+        st.markdown("**Recommendations**")
+
+        # Find extreme and balanced solutions
+        min_makespan_idx = objectives_1.index(min(objectives_1))
+        min_cost_idx = objectives_2.index(min(objectives_2))
+
+        recommendations = []
+
+        recommendations.append(
+            {
+                "Type": "Fastest",
+                "Solution": f"S{min_makespan_idx + 1}",
+                "Makespan": f"{objectives_1[min_makespan_idx]:.1f}",
+                "Cost": f"{objectives_2[min_makespan_idx]:,.0f}",
+                "Why": "Minimum makespan",
+            }
+        )
+
+        recommendations.append(
+            {
+                "Type": "Cheapest",
+                "Solution": f"S{min_cost_idx + 1}",
+                "Makespan": f"{objectives_1[min_cost_idx]:.1f}",
+                "Cost": f"{objectives_2[min_cost_idx]:,.0f}",
+                "Why": "Minimum cost",
+            }
+        )
+
+        df_recommend = pd.DataFrame(recommendations)
+        st.dataframe(df_recommend, use_container_width=True, hide_index=True)
+
+        # Export Pareto front
+        st.markdown("**Export**")
+        csv_data = df_pareto.to_csv(index=False)
+        st.download_button(
+            label="📥 Export Pareto Front",
+            data=csv_data,
+            file_name="pareto_front.csv",
+            mime="text/csv",
+            use_container_width=True,
+        )
+
+
+def _get_tradeoff_category(index, total):
+    """Categorize solution based on position in Pareto front"""
+    position = index / (total - 1) if total > 1 else 0.5
+
+    if position < 0.33:
+        return "🔵 Time-focused"
+    elif position > 0.67:
+        return "🟢 Cost-focused"
+    else:
+        return "🟡 Balanced"
 
 
 def _render_detailed_metrics_table(solution, problem_type):
@@ -175,9 +306,7 @@ def _render_detailed_metrics_table(solution, problem_type):
         ]
     )
 
-    metrics_data["Unit"].extend(
-        ["unknown", "unknown", "unknown", "customers", "seconds"]
-    )
+    metrics_data["Unit"].extend(["minutes", "$", "km", "customers", "seconds"])
 
     # Problem-specific metrics
     if problem_type in [1, 2]:
@@ -258,9 +387,9 @@ def _render_route_details(solution):
 
             col1, col2 = st.columns(2)
             with col1:
-                st.caption(f"📏 Distance: {route_distance:.2f}")
+                st.caption(f"📏 Distance: {route_distance:.2f} km")
             with col2:
-                st.caption(f"⏱️ Time: {route_time:.2f}")
+                st.caption(f"⏱️ Time: {route_time:.2f} min")
 
 
 def _render_vehicle_utilization(solution):

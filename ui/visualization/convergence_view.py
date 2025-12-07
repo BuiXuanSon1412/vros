@@ -1,4 +1,4 @@
-# ui/visualization/convergence_view.py - Updated with enhanced Pareto visualization
+# ui/visualization/convergence_view.py - Updated without Pareto visualization
 
 import streamlit as st
 from utils.visualizer import Visualizer
@@ -12,7 +12,7 @@ def get_visualizer():
 
 
 def render_convergence_view(problem_type):
-    """Render convergence charts with statistics and Pareto front"""
+    """Render convergence charts with statistics"""
     solution = st.session_state.get(f"solution_{problem_type}")
     chart_counter = st.session_state.get(f"chart_counter_{problem_type}", 0)
 
@@ -25,10 +25,11 @@ def render_convergence_view(problem_type):
         # Main convergence chart
         _render_convergence_chart(solution, problem_type, chart_counter)
 
-        # Render Pareto front for bi-objective problems (Problem 2)
-        if problem_type == 2:
-            st.markdown("---")
-            _render_pareto_section(solution, problem_type, chart_counter)
+        st.markdown("---")
+
+        # Convergence analysis
+        with st.expander("📊 Detailed Convergence Analysis", expanded=False):
+            _render_convergence_analysis(solution)
     else:
         st.info("Run algorithm to see convergence")
 
@@ -107,259 +108,98 @@ def _render_convergence_chart(solution, problem_type, chart_counter):
     )
 
 
-def _render_pareto_section(solution, problem_type, chart_counter):
-    """Render Pareto front section with enhanced visualization"""
-    st.markdown("### Pareto Front Visualization")
+def _render_convergence_analysis(solution):
+    """Render detailed convergence analysis"""
+    convergence_history = solution.get("convergence_history", [])
 
-    pareto_front = solution.get("pareto_front", [])
-
-    if not pareto_front:
-        st.warning(
-            "⚠️ No Pareto front data available. The algorithm needs to return Pareto solutions."
-        )
-        st.info("""
-        **How to generate Pareto front:**
-        - NSGA-II algorithm should populate `solution['pareto_front']`
-        - Format: `[(makespan1, cost1), (makespan2, cost2), ...]`
-        - Each tuple represents one non-dominated solution
-        """)
+    if not convergence_history:
+        st.info("No convergence data available")
         return
 
-    # Pareto statistics
-    _render_pareto_statistics(pareto_front, solution)
+    iterations, fitness_values = zip(*convergence_history)
+    fitness_values = list(fitness_values)
 
-    st.markdown("")
-
-    # Main Pareto front plot
-    viz = get_visualizer()
-
-    # Get current solution point if available
-    current_solution = None
-    if "makespan" in solution and "cost" in solution:
-        current_solution = (solution["makespan"], solution["cost"])
-
-    fig_pareto = viz.plot_pareto_front(
-        pareto_front,
-        title="Pareto Front - Makespan and Cost",
-        current_solution=current_solution,
-    )
-
-    st.plotly_chart(
-        fig_pareto,
-        use_container_width=True,
-        key=f"pareto_{problem_type}_{chart_counter}",
-    )
-
-    # Interactive solution selector
-    st.markdown("---")
-    # _render_solution_selector(pareto_front, problem_type)
-
-    # Detailed analysis
-    with st.expander("Detailed Pareto Analysis", expanded=False):
-        _render_pareto_analysis(pareto_front)
-
-
-def _render_pareto_statistics(pareto_front, solution):
-    """Render Pareto front statistics"""
-    st.markdown("**Pareto Front Statistics**")
-
-    objectives_1, objectives_2 = zip(*pareto_front)
-
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2 = st.columns(2)
 
     with col1:
-        st.metric(
-            "Solutions Found",
-            len(pareto_front),
-            help="Number of non-dominated solutions",
-        )
+        st.markdown("**Convergence Metrics**")
+
+        # Calculate improvement rate
+        initial = fitness_values[0]
+        final = fitness_values[-1]
+        total_improvement = initial - final
+        improvement_pct = (total_improvement / initial * 100) if initial > 0 else 0
+
+        # Calculate average improvement per iteration
+        num_iters = len(iterations)
+        avg_improvement_per_iter = total_improvement / num_iters if num_iters > 0 else 0
+
+        metrics_data = {
+            "Metric": [
+                "Total Improvement",
+                "Improvement %",
+                "Avg per Iteration",
+                "Total Iterations",
+                "Best Iteration",
+            ],
+            "Value": [
+                f"{total_improvement:.2f}",
+                f"{improvement_pct:.2f}%",
+                f"{avg_improvement_per_iter:.4f}",
+                f"{num_iters}",
+                f"{iterations[fitness_values.index(min(fitness_values))]}",
+            ],
+        }
+
+        df_metrics = pd.DataFrame(metrics_data)
+        st.dataframe(df_metrics, use_container_width=True, hide_index=True)
 
     with col2:
-        range_obj1 = max(objectives_1) - min(objectives_1)
-        st.metric(
-            "Makespan Range",
-            f"{range_obj1:.1f}",
-            help=f"Min: {min(objectives_1):.1f}, Max: {max(objectives_1):.1f}",
-        )
+        st.markdown("**Convergence Phases**")
 
+        # Divide convergence into phases
+        phase_size = max(1, len(fitness_values) // 4)
+
+        phases_data = []
+        for i in range(4):
+            start_idx = i * phase_size
+            end_idx = min((i + 1) * phase_size, len(fitness_values))
+
+            if start_idx >= len(fitness_values):
+                break
+
+            phase_values = fitness_values[start_idx:end_idx]
+            phase_improvement = phase_values[0] - phase_values[-1]
+
+            phases_data.append(
+                {
+                    "Phase": f"Phase {i + 1}",
+                    "Iterations": f"{iterations[start_idx]}-{iterations[end_idx - 1]}",
+                    "Improvement": f"{phase_improvement:.2f}",
+                    "Rate": f"{phase_improvement / len(phase_values):.4f}/iter"
+                    if len(phase_values) > 0
+                    else "0",
+                }
+            )
+
+        df_phases = pd.DataFrame(phases_data)
+        st.dataframe(df_phases, use_container_width=True, hide_index=True)
+
+    # Export convergence data
+    st.markdown("**Export Convergence Data**")
+
+    convergence_df = pd.DataFrame(
+        {"Iteration": list(iterations), "Fitness": fitness_values}
+    )
+
+    csv_data = convergence_df.to_csv(index=False)
+
+    col1, col2, col3 = st.columns([2, 1, 1])
     with col3:
-        range_obj2 = max(objectives_2) - min(objectives_2)
-        st.metric(
-            "Cost Range",
-            f"{range_obj2:,.0f}",
-            help=f"Min: {min(objectives_2):,.0f}, Max: {max(objectives_2):,.0f}",
-        )
-
-    with col4:
-        # Calculate spread quality
-        spread_quality = (range_obj1 / max(objectives_1)) * (
-            range_obj2 / max(objectives_2)
-        )
-        quality_label = (
-            "Excellent"
-            if spread_quality > 0.5
-            else "Good"
-            if spread_quality > 0.3
-            else "Limited"
-        )
-        st.metric(
-            "Spread Quality",
-            quality_label,
-            help="Diversity of solutions in the Pareto front",
-        )
-
-
-def _render_solution_selector(pareto_front, problem_type):
-    """Interactive solution selector from Pareto front"""
-    st.markdown("**🎛️ Solution Selector**")
-    st.caption("Choose a solution from the Pareto front based on your priority")
-
-    # Create solution options
-    objectives_1, objectives_2 = zip(*pareto_front)
-
-    col1, col2 = st.columns([2, 1])
-
-    with col1:
-        # Slider to select solution
-        solution_idx = st.slider(
-            "Select Solution",
-            min_value=0,
-            max_value=len(pareto_front) - 1,
-            value=len(pareto_front) // 2,
-            help="Move slider to explore different trade-offs",
-            key=f"pareto_selector_{problem_type}",
-        )
-
-        # Show trade-off position
-        position = (
-            solution_idx / (len(pareto_front) - 1) if len(pareto_front) > 1 else 0.5
-        )
-
-        if position < 0.33:
-            category = "🔵 Time-Focused"
-            description = "Prioritizes fast completion over cost savings"
-        elif position > 0.67:
-            category = "🟢 Cost-Focused"
-            description = "Prioritizes low cost over speed"
-        else:
-            category = "🟡 Balanced"
-            description = "Good balance between time and cost"
-
-        st.info(f"**{category}**: {description}")
-
-    with col2:
-        # Display selected solution
-        selected_makespan = objectives_1[solution_idx]
-        selected_cost = objectives_2[solution_idx]
-
-        st.markdown("**Selected Solution:**")
-        st.metric("Makespan", f"{selected_makespan:.1f}")
-        st.metric("Cost", f"{selected_cost:,.0f}")
-
-        # Compare with extremes
-        min_makespan = min(objectives_1)
-        min_cost = min(objectives_2)
-
-        time_penalty = (selected_makespan - min_makespan) / min_makespan * 100
-        cost_penalty = (selected_cost - min_cost) / min_cost * 100
-
-        st.caption(f"+{time_penalty:.1f}% vs fastest")
-        st.caption(f"+{cost_penalty:.1f}% vs cheapest")
-
-
-def _render_pareto_analysis(pareto_front):
-    """Render detailed Pareto front analysis"""
-
-    # Create dataframe with all solutions
-    pareto_data = []
-    objectives_1, objectives_2 = zip(*pareto_front)
-
-    for idx, (obj1, obj2) in enumerate(pareto_front):
-        # Calculate normalized scores
-        norm_obj1 = (
-            (obj1 - min(objectives_1)) / (max(objectives_1) - min(objectives_1))
-            if max(objectives_1) > min(objectives_1)
-            else 0
-        )
-        norm_obj2 = (
-            (obj2 - min(objectives_2)) / (max(objectives_2) - min(objectives_2))
-            if max(objectives_2) > min(objectives_2)
-            else 0
-        )
-
-        # Combined score (equal weight)
-        combined_score = (norm_obj1 + norm_obj2) / 2
-
-        pareto_data.append(
-            {
-                "Solution": f"S{idx + 1}",
-                "Makespan": f"{obj1:.2f}",
-                "Cost": f"{obj2:,.2f}",
-                "Category": _get_tradeoff_category(idx, len(pareto_front)),
-                "Score": f"{combined_score:.3f}",
-            }
-        )
-
-    df_pareto = pd.DataFrame(pareto_data)
-
-    col1, col2 = st.columns([3, 2])
-
-    with col1:
-        st.markdown("**All Pareto Solutions**")
-        st.dataframe(df_pareto, use_container_width=True, hide_index=True, height=350)
-
-    with col2:
-        st.markdown("**Recommendations**")
-
-        # Find extreme and balanced solutions
-        min_makespan_idx = objectives_1.index(min(objectives_1))
-        min_cost_idx = objectives_2.index(min(objectives_2))
-        balanced_idx = len(pareto_front) // 2
-
-        recommendations = []
-
-        recommendations.append(
-            {
-                "Type": "Fastest",
-                "Solution": f"S{min_makespan_idx + 1}",
-                "Makespan": f"{objectives_1[min_makespan_idx]:.1f}",
-                "Cost": f"{objectives_2[min_makespan_idx]:,.0f}",
-                "Why": "Minimum makespan",
-            }
-        )
-
-        recommendations.append(
-            {
-                "Type": "Cheapest",
-                "Solution": f"S{min_cost_idx + 1}",
-                "Makespan": f"{objectives_1[min_cost_idx]:.1f}",
-                "Cost": f"{objectives_2[min_cost_idx]:,.0f}",
-                "Why": "Minimum cost",
-            }
-        )
-
-        df_recommend = pd.DataFrame(recommendations)
-        st.dataframe(df_recommend, use_container_width=True, hide_index=True)
-
-        # Export Pareto front
-        st.markdown("**Export**")
-        csv_data = df_pareto.to_csv(index=False)
         st.download_button(
-            label="📥 Export Pareto Front",
+            label="📥 Export CSV",
             data=csv_data,
-            file_name="pareto_front.csv",
+            file_name=f"convergence_{solution.get('algorithm', 'solution')}.csv",
             mime="text/csv",
             use_container_width=True,
         )
-
-
-def _get_tradeoff_category(index, total):
-    """Categorize solution based on position in Pareto front"""
-    position = index / (total - 1) if total > 1 else 0.5
-
-    if position < 0.33:
-        return "🔵 Time-focused"
-    elif position > 0.67:
-        return "🟢 Cost-focused"
-    else:
-        return "🟡 Balanced"
