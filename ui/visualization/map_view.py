@@ -1,3 +1,5 @@
+# ui/visualization/map_view.py - Updated to pass problem_type
+
 import streamlit as st
 from utils.visualizer import Visualizer
 
@@ -26,6 +28,7 @@ def render_map_view(problem_type):
             depot,
             solution["routes"],
             title=f"Routes - {solution['algorithm']}",
+            problem_type=problem_type,
         )
 
         st.plotly_chart(
@@ -35,11 +38,18 @@ def render_map_view(problem_type):
         )
 
     else:
+        # Determine title based on problem type
+        if problem_type in [1, 2]:
+            title = "Sample Collection Locations"
+        else:
+            title = "Customer Locations"
+
         fig = viz.plot_routes_2d(
             customers,
             depot,
             {},
-            title="Customer Locations",
+            title=title,
+            problem_type=problem_type,
         )
 
         st.plotly_chart(
