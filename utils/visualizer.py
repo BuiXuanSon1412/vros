@@ -144,7 +144,7 @@ class Visualizer:
         # ============== LAYER 3: CUSTOMER ICONS ==============
         # Determine customer icon based on problem type
         if problem_type in [1, 2]:
-            customer_icon = "🩸"  # Blood sample for medical problems
+            customer_icon = "🧪"  # Blood sample for medical problems
             customer_label = "Sample"
         else:
             customer_icon = "📦"  # Package for logistics problem
