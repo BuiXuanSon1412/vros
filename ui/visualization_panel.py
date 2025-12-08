@@ -26,8 +26,8 @@ def render_visualization_panel(problem_type):
     # Adaptive tab configuration
     if num_results > 1:
         # Multiple algorithms - show comparison prominently
-        # viz_tabs = st.tabs(["Comparison", "Map", "Metrics", "Convergence", "Timeline"])
-        viz_tabs = st.tabs(["Map", "Metrics", "Convergence", "Timeline"])
+        viz_tabs = st.tabs(["Comparison", "Map", "Metrics", "Convergence", "Timeline"])
+        # viz_tabs = st.tabs(["Map", "Metrics", "Convergence", "Timeline"])
         # TAB 1: COMPARISON (prioritized for multi-algorithm)
         with viz_tabs[0]:
             render_comparison_view(problem_type)
