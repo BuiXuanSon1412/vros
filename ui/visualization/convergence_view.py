@@ -103,7 +103,7 @@ def _render_convergence_chart(solution, problem_type, chart_counter):
 
     st.plotly_chart(
         fig_conv,
-        use_container_width=True,
+        width="stretch",
         key=f"convergence_{problem_type}_{chart_counter}",
     )
 
@@ -152,7 +152,7 @@ def _render_convergence_analysis(solution):
         }
 
         df_metrics = pd.DataFrame(metrics_data)
-        st.dataframe(df_metrics, use_container_width=True, hide_index=True)
+        st.dataframe(df_metrics, width="stretch", hide_index=True)
 
     with col2:
         st.markdown("**Convergence Phases**")
@@ -183,7 +183,7 @@ def _render_convergence_analysis(solution):
             )
 
         df_phases = pd.DataFrame(phases_data)
-        st.dataframe(df_phases, use_container_width=True, hide_index=True)
+        st.dataframe(df_phases, width="stretch", hide_index=True)
 
     # Export convergence data
     st.markdown("**Export Convergence Data**")
@@ -201,5 +201,5 @@ def _render_convergence_analysis(solution):
             data=csv_data,
             file_name=f"convergence_{solution.get('algorithm', 'solution')}.csv",
             mime="text/csv",
-            use_container_width=True,
+            width="stretch",
         )

@@ -110,7 +110,7 @@ def _render_comparison_table(problem_type, results):
 
     styled_df = comparison_df.style.apply(highlight_best)
 
-    st.dataframe(styled_df, use_container_width=True, hide_index=True)
+    st.dataframe(styled_df, width="stretch", hide_index=True)
 
     # Export comparison
     col1, col2, col3 = st.columns([2, 1, 1])
@@ -121,7 +121,7 @@ def _render_comparison_table(problem_type, results):
             data=csv_data,
             file_name=f"comparison_p{problem_type}.csv",
             mime="text/csv",
-            use_container_width=True,
+            width="stretch",
         )
 
 
@@ -142,7 +142,7 @@ def _render_comparison_charts(problem_type, results, chart_counter):
         fig_makespan = viz.plot_metrics_comparison(comparison_df, "Makespan")
         st.plotly_chart(
             fig_makespan,
-            use_container_width=True,
+            width="stretch",
             key=f"comp_makespan_{problem_type}_{chart_counter}",
         )
 
@@ -150,7 +150,7 @@ def _render_comparison_charts(problem_type, results, chart_counter):
         fig_cost = viz.plot_metrics_comparison(comparison_df, "Cost")
         st.plotly_chart(
             fig_cost,
-            use_container_width=True,
+            width="stretch",
             key=f"comp_cost_{problem_type}_{chart_counter}",
         )
 
@@ -161,7 +161,7 @@ def _render_comparison_charts(problem_type, results, chart_counter):
         fig_distance = viz.plot_metrics_comparison(comparison_df, "Total Distance")
         st.plotly_chart(
             fig_distance,
-            use_container_width=True,
+            width="stretch",
             key=f"comp_distance_{problem_type}_{chart_counter}",
         )
 
@@ -169,7 +169,7 @@ def _render_comparison_charts(problem_type, results, chart_counter):
         fig_time = viz.plot_metrics_comparison(comparison_df, "Computation Time")
         st.plotly_chart(
             fig_time,
-            use_container_width=True,
+            width="stretch",
             key=f"comp_time_{problem_type}_{chart_counter}",
         )
 
@@ -297,7 +297,7 @@ def _render_detailed_comparison(results):
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     # Convergence statistics comparison
     with st.expander("📊 Convergence Statistics", expanded=False):
@@ -342,4 +342,4 @@ def _render_convergence_statistics_comparison(results):
 
     if stats_data:
         df_stats = pd.DataFrame(stats_data)
-        st.dataframe(df_stats, use_container_width=True, hide_index=True)
+        st.dataframe(df_stats, width="stretch", hide_index=True)

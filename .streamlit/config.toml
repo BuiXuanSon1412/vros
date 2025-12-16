@@ -28,7 +28,7 @@ secondaryBackgroundColor = "#e2e8f0"     # Nested elements in sidebar
 # Server configuration
 headless = true
 port = 8501
-enableCORS = false
+enableCORS = true
 enableXsrfProtection = true
 
 [browser]

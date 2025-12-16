@@ -47,7 +47,7 @@ def render_map_view(problem_type):
 
         st.plotly_chart(
             fig,
-            use_container_width=True,
+            width="stretch",
             key=f"map_{problem_type}_{chart_counter}",
         )
 
@@ -72,7 +72,7 @@ def render_map_view(problem_type):
 
         st.plotly_chart(
             fig,
-            use_container_width=True,
+            width="stretch",
             key=f"map_empty_{problem_type}",
         )
 

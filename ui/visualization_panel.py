@@ -173,7 +173,7 @@ def _render_convergence_comparison(problem_type, selected_algos, results):
         hovermode="x unified",
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     # Show statistics
     st.markdown("**Convergence Statistics**")
@@ -202,7 +202,7 @@ def _render_convergence_comparison(problem_type, selected_algos, results):
         import pandas as pd
 
         df = pd.DataFrame(stats_data)
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        st.dataframe(df, width="stretch", hide_index=True)
 
 
 def _render_timeline_with_selector(problem_type):

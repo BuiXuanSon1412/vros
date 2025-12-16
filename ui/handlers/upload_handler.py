@@ -85,3 +85,8 @@ def _store_parsed_data(problem_type, parsed_data, file_id):
     ]
     st.session_state[f"last_uploaded_file_{problem_type}"] = file_id
     st.session_state[f"file_processed_{problem_type}"] = True
+
+    # CLEAR OLD SOLUTIONS when new file is uploaded
+    st.session_state[f"solution_{problem_type}"] = None
+    st.session_state[f"results_{problem_type}"] = {}
+    st.session_state[f"chart_counter_{problem_type}"] = 0

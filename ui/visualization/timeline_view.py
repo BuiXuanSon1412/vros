@@ -97,7 +97,7 @@ def _render_gantt_chart(solution, problem_type, chart_counter):
         if fig_gantt:
             st.plotly_chart(
                 fig_gantt,
-                use_container_width=True,
+                width="stretch",
                 key=f"timeline_{problem_type}_{chart_counter}",
             )
         else:
@@ -160,7 +160,7 @@ def _render_schedule_details(solution):
         df_filtered = df_schedule
 
     # Display table
-    st.dataframe(df_filtered, use_container_width=True, hide_index=True, height=400)
+    st.dataframe(df_filtered, width="stretch", hide_index=True, height=400)
 
     # Export schedule
     col1, col2, col3 = st.columns([2, 1, 1])
@@ -171,7 +171,7 @@ def _render_schedule_details(solution):
             data=csv_data,
             file_name=f"schedule_{solution.get('algorithm', 'solution')}.csv",
             mime="text/csv",
-            use_container_width=True,
+            width="stretch",
         )
 
 
@@ -231,11 +231,11 @@ def _render_timeline_analysis(solution, problem_type):
                     return "background-color: #f8d7da"
             return ""
 
-        styled_efficiency = df_efficiency.style.applymap(
+        styled_efficiency = df_efficiency.style.map(
             color_efficiency, subset=["Efficiency"]
         )
 
-        st.dataframe(styled_efficiency, use_container_width=True, hide_index=True)
+        st.dataframe(styled_efficiency, width="stretch", hide_index=True)
 
     with col2:
         st.markdown("**Workload Distribution**")
@@ -258,7 +258,7 @@ def _render_timeline_analysis(solution, problem_type):
             )
 
         df_workload = pd.DataFrame(workload_data)
-        st.dataframe(df_workload, use_container_width=True, hide_index=True)
+        st.dataframe(df_workload, width="stretch", hide_index=True)
 
     # Insights
     st.markdown("**💡 Insights**")

@@ -177,7 +177,7 @@ def _render_pareto_section(solution, problem_type):
 
     st.plotly_chart(
         fig_pareto,
-        use_container_width=True,
+        width="stretch",
         key=f"pareto_{problem_type}_{chart_counter}",
     )
 
@@ -226,7 +226,7 @@ def _render_pareto_analysis(pareto_front):
 
     with col1:
         st.markdown("**All Pareto Solutions**")
-        st.dataframe(df_pareto, use_container_width=True, hide_index=True, height=350)
+        st.dataframe(df_pareto, width="stretch", hide_index=True, height=350)
 
     with col2:
         st.markdown("**Recommendations**")
@@ -258,7 +258,7 @@ def _render_pareto_analysis(pareto_front):
         )
 
         df_recommend = pd.DataFrame(recommendations)
-        st.dataframe(df_recommend, use_container_width=True, hide_index=True)
+        st.dataframe(df_recommend, width="stretch", hide_index=True)
 
         # Export Pareto front
         st.markdown("**Export**")
@@ -268,7 +268,7 @@ def _render_pareto_analysis(pareto_front):
             data=csv_data,
             file_name="pareto_front.csv",
             mime="text/csv",
-            use_container_width=True,
+            width="stretch",
         )
 
 
@@ -318,7 +318,7 @@ def _render_resupply_operations_table(solution):
         )
 
     df = pd.DataFrame(table_data)
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.dataframe(df, width="stretch", hide_index=True)
 
     # Export button
     col1, col2, col3 = st.columns([2, 1, 1])
@@ -329,7 +329,7 @@ def _render_resupply_operations_table(solution):
             data=csv_data,
             file_name="resupply_operations.csv",
             mime="text/csv",
-            use_container_width=True,
+            width="stretch",
         )
 
 
@@ -386,7 +386,7 @@ def _render_detailed_metrics_table(solution, problem_type):
             metrics_data["Unit"].append("minutes")
 
     df = pd.DataFrame(metrics_data)
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.dataframe(df, width="stretch", hide_index=True)
 
 
 def _render_route_details(solution):
@@ -493,7 +493,7 @@ def _render_vehicle_utilization(solution):
 
     if utilization_data:
         df_util = pd.DataFrame(utilization_data)
-        st.dataframe(df_util, use_container_width=True, hide_index=True)
+        st.dataframe(df_util, width="stretch", hide_index=True)
 
 
 def _render_export_button(problem_type, solution):
@@ -530,7 +530,7 @@ def _render_export_button(problem_type, solution):
             data=json.dumps(export_data, indent=2),
             file_name=filename,
             mime="application/json",
-            use_container_width=True,
+            width="stretch",
         )
 
     with col3:
@@ -554,7 +554,7 @@ def _render_export_button(problem_type, solution):
             data=csv_data,
             file_name=csv_filename,
             mime="text/csv",
-            use_container_width=True,
+            width="stretch",
         )
 
 

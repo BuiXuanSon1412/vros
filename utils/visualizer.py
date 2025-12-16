@@ -26,6 +26,16 @@ def curved_edge(x0, y0, x1, y1, k=0.15):
     return xs, ys
 
 
+def arrow_angle(x0, y0, x1, y1, fig):
+    x_range = fig.layout.xaxis.range
+    y_range = fig.layout.yaxis.range
+
+    dx = (x1 - x0) / (x_range[1] - x_range[0])
+    dy = (y1 - y0) / (y_range[1] - y_range[0])
+
+    return np.degrees(np.arctan2(dy, dx))
+
+
 def _add_marker_arrow(
     fig,
     x0,
@@ -33,15 +43,22 @@ def _add_marker_arrow(
     x1,
     y1,
     color,
-    size=9,
+    size=16,
     opacity=1.0,
 ):
+    """Add a directional marker arrow at the middle of a segment"""
+    # Direction angle
+    # angle = arrow_angle(x0, y0, x1, y1, fig)
     angle = np.degrees(np.arctan2(y1 - y0, x1 - x0))
+
+    # Middle of the segment
+    arrow_x = (x0 + x1) / 2
+    arrow_y = (y0 + y1) / 2
 
     fig.add_trace(
         go.Scatter(
-            x=[x1],
-            y=[y1],
+            x=[arrow_x],
+            y=[arrow_y],
             mode="markers",
             marker=dict(
                 symbol="triangle-up",
@@ -49,6 +66,7 @@ def _add_marker_arrow(
                 color=color,
                 angle=angle,
                 opacity=opacity,
+                line=dict(width=1, color="white"),
             ),
             hoverinfo="skip",
             showlegend=False,
@@ -80,7 +98,7 @@ class Visualizer:
         fig = go.Figure()
 
         # ==========================================================
-        # DEPOT INFO
+        # DEPOT META
         # ==========================================================
         if problem_type in [1, 2]:
             depot_icon, depot_label, depot_hover = (
@@ -94,15 +112,87 @@ class Visualizer:
         first_truck = next((v for v in routes if "truck" in v.lower()), None)
         first_drone = next((v for v in routes if "drone" in v.lower()), None)
 
-        use_curvature = problem_type == 3
+        # ==========================================================
+        # PASS 1 — COUNT UNDIRECTED EDGE USAGE (ALL SOURCES)
+        # ==========================================================
+        edge_usage = defaultdict(int)
 
-        CURVE_OFFSETS = [-0.15, -0.08, 0.0, 0.08, 0.15]
-        truck_edges = defaultdict(int)
-        drone_edges = defaultdict(int)
+        # Main routes
+        for route in routes.values():
+            if not route:
+                continue
+            path = ["depot"] + route + ["depot"]
+            for i in range(len(path) - 1):
+                a, b = str(path[i]), str(path[i + 1])
+                edge_usage[tuple(sorted((a, b)))] += 1
+
+        # Resupply routes (Problem 3)
+        if problem_type == 3:
+            for op in resupply_operations:
+                meet = op.get("meeting_customer_id")
+                if meet is None:
+                    continue
+                path = ["depot", meet, "depot"]
+                for i in range(2):
+                    a, b = str(path[i]), str(path[i + 1])
+                    edge_usage[tuple(sorted((a, b)))] += 1
 
         # ==========================================================
-        # LAYER 1: ROUTES FROM `routes`
+        # PASS 2 — DRAW ROUTES
         # ==========================================================
+        CURVE_OFFSETS = [-0.18, -0.1, 0.1, 0.18]
+        edge_draw_count = defaultdict(int)
+
+        def draw_edge(
+            id0, x0, y0, id1, x1, y1, color, dash, show_legend, legend_name, arrow_size
+        ):
+            key = tuple(sorted((str(id0), str(id1))))
+            usage = edge_usage[key]
+
+            # ---------- straight ----------
+            if usage == 1:
+                fig.add_trace(
+                    go.Scatter(
+                        x=[x0, x1],
+                        y=[y0, y1],
+                        mode="lines",
+                        line=dict(color=color, width=2, dash=dash),
+                        hoverinfo="skip",
+                        showlegend=show_legend,
+                        name=legend_name if show_legend else "",
+                    )
+                )
+                _add_marker_arrow(fig, x0, y0, x1, y1, color, size=arrow_size)
+
+            # ---------- curved ----------
+            else:
+                k = CURVE_OFFSETS[edge_draw_count[key] % len(CURVE_OFFSETS)]
+                edge_draw_count[key] += 1
+
+                xc, yc = curved_edge(x0, y0, x1, y1, k=k)
+                fig.add_trace(
+                    go.Scatter(
+                        x=xc,
+                        y=yc,
+                        mode="lines",
+                        line=dict(color=color, width=2, dash=dash),
+                        hoverinfo="skip",
+                        showlegend=show_legend,
+                        name=legend_name if show_legend else "",
+                    )
+                )
+                mid = len(xc) // 2
+                _add_marker_arrow(
+                    fig,
+                    xc[mid - 1],
+                    yc[mid - 1],
+                    xc[mid],
+                    yc[mid],
+                    color,
+                    size=arrow_size,
+                )
+
+        # ---------- main routes ----------
         for vehicle_id, route in routes.items():
             if not route:
                 continue
@@ -113,87 +203,27 @@ class Visualizer:
             color = self.colors_truck[0] if is_truck else self.colors_drone[0]
             dash = "solid" if is_truck else "dot"
 
-            edge_counter = truck_edges if is_truck else drone_edges
+            show_legend = vehicle_id == (first_truck if is_truck else first_drone)
             legend_name = "Truck Route" if is_truck else "Drone Route"
-            show_legend = (
-                vehicle_id == first_truck if is_truck else vehicle_id == first_drone
-            )
 
-            # Build path
-            xs = [depot["x"]]
-            ys = [depot["y"]]
-
+            nodes = [("depot", depot["x"], depot["y"])]
             for cid in route:
-                row = customers.loc[customers["id"] == cid].iloc[0]
-                xs.append(row["x"])
-                ys.append(row["y"])
+                r = customers.loc[customers["id"] == cid].iloc[0]
+                nodes.append((cid, r["x"], r["y"]))
+            nodes.append(("depot", depot["x"], depot["y"]))
 
-            xs.append(depot["x"])
-            ys.append(depot["y"])
+            for i in range(len(nodes) - 1):
+                draw_edge(
+                    *nodes[i],
+                    *nodes[i + 1],
+                    color=color,
+                    dash=dash,
+                    show_legend=show_legend and i == 0,
+                    legend_name=legend_name,
+                    arrow_size=12 if is_truck else 10,
+                )
 
-            # Draw segments
-            for i in range(len(xs) - 1):
-                x0, y0 = xs[i], ys[i]
-                x1, y1 = xs[i + 1], ys[i + 1]
-
-                if use_curvature:
-                    key = tuple(sorted([(x0, y0), (x1, y1)]))
-                    k = CURVE_OFFSETS[edge_counter[key] % len(CURVE_OFFSETS)]
-                    edge_counter[key] += 1
-
-                    xc, yc = curved_edge(x0, y0, x1, y1, k=k)
-
-                    fig.add_trace(
-                        go.Scatter(
-                            x=xc,
-                            y=yc,
-                            mode="lines",
-                            line=dict(color=color, width=2, dash=dash),
-                            hoverinfo="skip",
-                            showlegend=show_legend and i == 0,
-                            name=legend_name if show_legend and i == 0 else "",
-                        )
-                    )
-
-                    ai = int(len(xc) * 0.85)
-                    _add_marker_arrow(
-                        fig,
-                        xc[ai - 1],
-                        yc[ai - 1],
-                        xc[ai],
-                        yc[ai],
-                        color,
-                        size=10 if is_truck else 8,
-                        opacity=1.0 if is_truck else 0.8,
-                    )
-
-                else:
-                    fig.add_trace(
-                        go.Scatter(
-                            x=[x0, x1],
-                            y=[y0, y1],
-                            mode="lines",
-                            line=dict(color=color, width=2, dash=dash),
-                            hoverinfo="skip",
-                            showlegend=show_legend and i == 0,
-                            name=legend_name if show_legend and i == 0 else "",
-                        )
-                    )
-
-                    _add_marker_arrow(
-                        fig,
-                        x0,
-                        y0,
-                        x1,
-                        y1,
-                        color,
-                        size=10 if is_truck else 8,
-                        opacity=1.0 if is_truck else 0.8,
-                    )
-
-        # ==========================================================
-        # LAYER 2: DRONE RESUPPLY (Problem 3)
-        # ==========================================================
+        # ---------- resupply routes ----------
         if problem_type == 3:
             for idx, op in enumerate(resupply_operations):
                 meet_id = op.get("meeting_customer_id")
@@ -203,38 +233,35 @@ class Visualizer:
                 meet = customers.loc[customers["id"] == meet_id].iloc[0]
                 color = self.colors_drone[0]
 
-                xs = [depot["x"], meet["x"], depot["x"]]
-                ys = [depot["y"], meet["y"], depot["y"]]
-
-                for i in range(2):
-                    xc, yc = curved_edge(xs[i], ys[i], xs[i + 1], ys[i + 1], k=0.12)
-
-                    fig.add_trace(
-                        go.Scatter(
-                            x=xc,
-                            y=yc,
-                            mode="lines",
-                            line=dict(color=color, width=2, dash="dot"),
-                            hoverinfo="skip",
-                            showlegend=idx == 0 and i == 0,
-                            name="Drone Resupply" if idx == 0 and i == 0 else "",
-                        )
-                    )
-
-                    ai = int(len(xc) * 0.85)
-                    _add_marker_arrow(
-                        fig,
-                        xc[ai - 1],
-                        yc[ai - 1],
-                        xc[ai],
-                        yc[ai],
-                        color,
-                        size=8,
-                        opacity=0.75,
-                    )
+                draw_edge(
+                    "depot",
+                    depot["x"],
+                    depot["y"],
+                    meet_id,
+                    meet["x"],
+                    meet["y"],
+                    color=color,
+                    dash="dot",
+                    show_legend=idx == 0,
+                    legend_name="Drone Resupply",
+                    arrow_size=10,
+                )
+                draw_edge(
+                    meet_id,
+                    meet["x"],
+                    meet["y"],
+                    "depot",
+                    depot["x"],
+                    depot["y"],
+                    color=color,
+                    dash="dot",
+                    show_legend=False,
+                    legend_name="",
+                    arrow_size=10,
+                )
 
         # ==========================================================
-        # LAYER 3: DEPOT
+        # DEPOT + CUSTOMERS
         # ==========================================================
         fig.add_trace(
             go.Scatter(
@@ -246,14 +273,10 @@ class Visualizer:
                 marker=dict(size=1, color="rgba(0,0,0,0)"),
                 textposition="middle center",
                 name=f"{depot_icon} {depot_label}",
-                hovertemplate=f"<b>{depot_hover}</b><br>(%{{x:.1f}}, %{{y:.1f}})<extra></extra>",
                 showlegend=True,
             )
         )
 
-        # ==========================================================
-        # LAYER 4: CUSTOMERS
-        # ==========================================================
         cust_icon = "🧪" if problem_type in [1, 2] else "📦"
         cust_label = "Sample" if problem_type in [1, 2] else "Customer"
 
@@ -268,25 +291,16 @@ class Visualizer:
                 textposition="middle center",
                 name=f"{cust_icon} {cust_label}s",
                 showlegend=True,
-                hovertemplate=(
-                    # f"<b>{cust_label} %{text}</b><br>"
-                    f"<b>{cust_label}</b><br>"
-                    "Coordinates: (%{x:.1f}, %{y:.1f})<extra></extra>"
-                ),
-                # customdata=customers["id"],
             )
         )
 
-        # ==========================================================
-        # LAYOUT
-        # ==========================================================
         fig.update_layout(
             title=dict(text=title, x=0.5),
             template="plotly_white",
             height=600,
             hovermode="closest",
             margin=dict(l=60, r=120, t=60, b=60),
-            legend=dict(x=1.02, y=1, bgcolor="rgba(255,255,255,0.95)"),
+            legend=dict(x=1.02, y=1),
         )
 
         fig.update_yaxes(scaleanchor="x", scaleratio=1)
