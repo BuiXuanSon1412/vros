@@ -187,37 +187,6 @@ class Visualizer:
                     position=0.5,  # arrow at the middle of these 4 points
                 )
 
-        # ---------- main routes ----------
-        for vehicle_id, route in routes.items():
-            if not route:
-                continue
-
-            is_truck = "truck" in vehicle_id.lower()
-            is_drone = "drone" in vehicle_id.lower()
-
-            color = self.colors_truck[0] if is_truck else self.colors_drone[0]
-            dash = "solid" if is_truck else "dot"
-
-            show_legend = vehicle_id == (first_truck if is_truck else first_drone)
-            legend_name = "Truck Route" if is_truck else "Drone Route"
-
-            nodes = [("depot", depot["x"], depot["y"])]
-            for cid in route:
-                r = customers.loc[customers["id"] == cid].iloc[0]
-                nodes.append((cid, r["x"], r["y"]))
-            nodes.append(("depot", depot["x"], depot["y"]))
-
-            for i in range(len(nodes) - 1):
-                draw_edge(
-                    *nodes[i],
-                    *nodes[i + 1],
-                    color=color,
-                    dash=dash,
-                    show_legend=show_legend and i == 0,
-                    legend_name=legend_name,
-                    arrow_size=12 if is_truck else 10,
-                )
-
         # ---------- resupply routes ----------
         if problem_type == 3:
             for idx, op in enumerate(resupply_operations):
@@ -255,9 +224,51 @@ class Visualizer:
                     arrow_size=10,
                 )
 
+        # ---------- main routes ----------
+        for vehicle_id, route in routes.items():
+            if not route:
+                continue
+
+            is_truck = "truck" in vehicle_id.lower()
+            is_drone = "drone" in vehicle_id.lower()
+
+            color = self.colors_truck[0] if is_truck else self.colors_drone[0]
+            dash = "solid" if is_truck else "dot"
+
+            show_legend = vehicle_id == (first_truck if is_truck else first_drone)
+            legend_name = "Truck Route" if is_truck else "Drone Route"
+
+            nodes = [("depot", depot["x"], depot["y"])]
+            for cid in route:
+                r = customers.loc[customers["id"] == cid].iloc[0]
+                nodes.append((cid, r["x"], r["y"]))
+            nodes.append(("depot", depot["x"], depot["y"]))
+
+            for i in range(len(nodes) - 1):
+                draw_edge(
+                    *nodes[i],
+                    *nodes[i + 1],
+                    color=color,
+                    dash=dash,
+                    show_legend=show_legend and i == 0,
+                    legend_name=legend_name,
+                    arrow_size=12 if is_truck else 10,
+                )
+
         # ==========================================================
         # DEPOT + CUSTOMERS
         # ==========================================================
+        # Depot hover text
+        depot_hover_text = f"<b>{depot_hover}</b><br>"
+        depot_hover_text += f"Location: ({depot['x']:.2f}, {depot['y']:.2f})<br>"
+
+        # Count vehicles starting here
+        num_trucks = sum(1 for v in routes if "truck" in v.lower() and routes[v])
+        num_drones = sum(1 for v in routes if "drone" in v.lower() and routes[v])
+
+        depot_hover_text += f"Trucks: {num_trucks}<br>"
+        depot_hover_text += f"Drones: {num_drones}"
+
         fig.add_trace(
             go.Scatter(
                 x=[depot["x"]],
@@ -269,12 +280,82 @@ class Visualizer:
                 textposition="middle center",
                 name=f"{depot_icon} {depot_label}",
                 showlegend=True,
+                hovertemplate="%{customdata}<extra></extra>",
+                customdata=[depot_hover_text],
             )
         )
 
         cust_icon = "🧪" if problem_type in [1, 2] else "📦"
         cust_label = "Sample" if problem_type in [1, 2] else "Customer"
 
+        # Build hover text for each customer
+        hover_texts = []
+        for _, customer in customers.iterrows():
+            cust_id = customer["id"]
+
+            # Find which vehicle serves this customer
+            serving_vehicle = "Unassigned"
+            for vehicle_id, route in routes.items():
+                if cust_id in route:
+                    serving_vehicle = vehicle_id
+                    break
+
+            # Base hover info
+            hover_text = f"<b>Customer {int(cust_id)}</b><br>"
+            hover_text += f"  Location: ({customer['x']:.2f}, {customer['y']:.2f})<br>"
+            hover_text += f"  Demand: {customer['demand']:.2f} kg<br>"
+
+            # Problem-specific info
+
+            # Problem 3: Check if customer is served via resupply
+            if problem_type == 3 and "release_date" in customer:
+                hover_text += f"  Release Date: {customer['release_date']:.0f}<br>"
+
+                # Find resupply operation for this customer
+                resupply_info = None
+                for op in resupply_operations:
+                    if cust_id in op.get("packages", []):
+                        resupply_info = op
+                        break
+
+                if resupply_info:
+                    # This customer's package was delivered by drone
+                    hover_text += "<b>Drone Resupply:</b><br>"
+                    hover_text += f"  {resupply_info['drone_id']} → {resupply_info['truck_id']}<br>"
+                    hover_text += (
+                        f"  Meeting Point: C{resupply_info['meeting_customer_id']}<br>"
+                    )
+
+                    # Show all packages in this drone trip
+                    packages = resupply_info["packages"]
+                    # if len(packages) > 1:
+                    package_list = ", ".join([f"C{p}" for p in packages])
+                    hover_text += f"  Batch: {package_list}<br>"
+                    hover_text += (
+                        f"  Total Weight: {resupply_info['total_weight']:.2f} kg<br>"
+                    )
+
+                    hover_text += (
+                        f"  Arrival: {resupply_info['arrival_time']:.1f} min<br>"
+                    )
+
+                elif serving_vehicle != "Unassigned":
+                    # Direct service by truck
+                    hover_text += f"<b>Direct Service:</b> {serving_vehicle}<br>"
+
+            elif problem_type in [1, 2]:
+                if "only_staff" in customer and customer["only_staff"] == 1:
+                    hover_text += "Service: Technician Only<br>"
+                hover_text += (
+                    f"Service Time: {customer.get('service_time', 10)} min<br>"
+                )
+
+            if serving_vehicle != "Unassigned":
+                hover_text += f"<b>Assigned to:</b> {serving_vehicle}"
+
+            hover_texts.append(hover_text)
+
+        # Plot customers with hover info
         fig.add_trace(
             go.Scatter(
                 x=customers["x"],
@@ -286,6 +367,8 @@ class Visualizer:
                 textposition="middle center",
                 name=f"{cust_icon} {cust_label}",
                 showlegend=True,
+                hovertemplate="%{customdata}<extra></extra>",
+                customdata=hover_texts,
             )
         )
 
