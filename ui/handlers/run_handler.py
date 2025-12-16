@@ -48,15 +48,11 @@ def handle_run_button_multi(
 
     # Success message
     if total_algorithms == 1:
-        st.success(f"✅ {selected_algorithms[0]} completed!")
+        st.success(f"{selected_algorithms[0]} completed!")
     else:
         st.success(
-            f"✅ All {total_algorithms} algorithms completed! Check the Comparison tab to see results."
+            f"All {total_algorithms} algorithms completed! Check the Comparison tab to see results."
         )
-
-    # Auto-switch to comparison view if multiple algorithms
-    if total_algorithms > 1:
-        st.info("💡 **Tip:** Switch to the **Metrics** tab to see detailed comparison")
 
 
 def _validate_data_exists(problem_type):

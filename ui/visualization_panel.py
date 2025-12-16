@@ -79,15 +79,17 @@ def _render_map_with_selector(problem_type):
     # Algorithm selector
     col1, col2 = st.columns([3, 1])
     with col1:
-        selected_algo = st.selectbox(
+        selected_algo = st.multiselect(
             "Select algorithm to visualize",
             options=list(results.keys()),
+            max_selections=1,
+            default=[list(results.keys())[0]] if results else [],
             key=f"map_algo_selector_{problem_type}",
         )
 
     # Update current solution
     if selected_algo:
-        st.session_state[f"solution_{problem_type}"] = results[selected_algo]
+        st.session_state[f"solution_{problem_type}"] = results[selected_algo[0]]
         render_map_view(problem_type)
 
 
@@ -102,15 +104,17 @@ def _render_metrics_with_selector(problem_type):
     # Algorithm selector
     col1, col2 = st.columns([3, 1])
     with col1:
-        selected_algo = st.selectbox(
+        selected_algo = st.multiselect(
             "Select algorithm to view details",
             options=list(results.keys()),
+            max_selections=1,
+            default=[list(results.keys())[0]] if results else [],
             key=f"metrics_algo_selector_{problem_type}",
         )
 
     # Update current solution
     if selected_algo:
-        st.session_state[f"solution_{problem_type}"] = results[selected_algo]
+        st.session_state[f"solution_{problem_type}"] = results[selected_algo[0]]
         render_metrics_view(problem_type)
 
 
@@ -216,13 +220,15 @@ def _render_timeline_with_selector(problem_type):
     # Algorithm selector
     col1, col2 = st.columns([3, 1])
     with col1:
-        selected_algo = st.selectbox(
+        selected_algo = st.multiselect(
             "Select algorithm to view schedule",
             options=list(results.keys()),
+            max_selections=1,
+            default=[list(results.keys())[0]] if results else [],
             key=f"timeline_algo_selector_{problem_type}",
         )
 
     # Update current solution
     if selected_algo:
-        st.session_state[f"solution_{problem_type}"] = results[selected_algo]
+        st.session_state[f"solution_{problem_type}"] = results[selected_algo[0]]
         render_timeline_view(problem_type)

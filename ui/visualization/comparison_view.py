@@ -31,17 +31,11 @@ def render_comparison_view(problem_type):
     # Comparison table
     _render_comparison_table(problem_type, results)
 
-    st.markdown("---")
-
     # Comparison charts
     _render_comparison_charts(problem_type, results, chart_counter)
 
-    st.markdown("---")
-
     # Best algorithm recommendation
-    _render_best_algorithm_recommendation(results)
-
-    st.markdown("---")
+    # _render_best_algorithm_recommendation(results)
 
     # Detailed comparison
     _render_detailed_comparison(results)
@@ -300,8 +294,8 @@ def _render_detailed_comparison(results):
     st.plotly_chart(fig, width="stretch")
 
     # Convergence statistics comparison
-    with st.expander("📊 Convergence Statistics", expanded=False):
-        _render_convergence_statistics_comparison(results)
+    # with st.expander("📊 Convergence Statistics", expanded=False):
+    #    _render_convergence_statistics_comparison(results)
 
 
 def _render_convergence_statistics_comparison(results):

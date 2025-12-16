@@ -129,7 +129,7 @@ class Visualizer:
         # ==========================================================
         # PASS 2 — DRAW ROUTES
         # ==========================================================
-        CURVE_OFFSETS = [-0.18, -0.1, 0.1, 0.18]
+        CURVE_OFFSETS = [-0.3, -0.18, -0.1, 0.1, 0.18, 0.3]
         edge_draw_count = defaultdict(int)
 
         def draw_edge(
@@ -230,13 +230,14 @@ class Visualizer:
                 continue
 
             is_truck = "truck" in vehicle_id.lower()
-            is_drone = "drone" in vehicle_id.lower()
 
             color = self.colors_truck[0] if is_truck else self.colors_drone[0]
             dash = "solid" if is_truck else "dot"
 
             show_legend = vehicle_id == (first_truck if is_truck else first_drone)
             legend_name = "Truck Route" if is_truck else "Drone Route"
+            if problem_type == 3 and legend_name == "Truck Route":
+                legend_name = "Technician Route"
 
             nodes = [("depot", depot["x"], depot["y"])]
             for cid in route:
@@ -266,7 +267,10 @@ class Visualizer:
         num_trucks = sum(1 for v in routes if "truck" in v.lower() and routes[v])
         num_drones = sum(1 for v in routes if "drone" in v.lower() and routes[v])
 
-        depot_hover_text += f"Trucks: {num_trucks}<br>"
+        if problem_type == 3:
+            depot_hover_text += f"Technicians: {num_trucks}<br>"
+        else:
+            depot_hover_text += f"Trucks: {num_trucks}<br>"
         depot_hover_text += f"Drones: {num_drones}"
 
         fig.add_trace(
@@ -275,7 +279,7 @@ class Visualizer:
                 y=[depot["y"]],
                 mode="markers+text",
                 text=[depot_icon],
-                textfont=dict(size=30),
+                textfont=dict(size=24),
                 marker=dict(size=1, color="rgba(0,0,0,0)"),
                 textposition="middle center",
                 name=f"{depot_icon} {depot_label}",

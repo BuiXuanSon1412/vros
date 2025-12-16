@@ -24,7 +24,6 @@ def render_algorithm_config_p2():
         st.warning("⚠️ Please select at least one algorithm")
         return None
 
-    st.markdown("---")
     st.markdown("**Algorithm Parameters**")
     st.caption("These parameters apply to all selected algorithms")
 

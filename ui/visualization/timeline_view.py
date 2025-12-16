@@ -68,10 +68,10 @@ def _render_schedule_statistics(solution):
         st.metric("Total Makespan", f"{total_makespan:.1f}")
 
     with col4:
-        st.metric("🚚 Truck Tasks", truck_tasks)
+        st.metric("Truck Tasks", truck_tasks)
 
     with col5:
-        st.metric("🚁 Drone Tasks", drone_tasks)
+        st.metric("Drone Tasks", drone_tasks)
 
 
 def _render_gantt_chart(solution, problem_type, chart_counter):
@@ -261,12 +261,12 @@ def _render_timeline_analysis(solution, problem_type):
         st.dataframe(df_workload, width="stretch", hide_index=True)
 
     # Insights
-    st.markdown("**💡 Insights**")
+    # st.markdown("**💡 Insights**")
 
-    insights = _generate_timeline_insights(vehicle_schedules, solution)
+    # insights = _generate_timeline_insights(vehicle_schedules, solution)
 
-    for insight in insights:
-        st.info(insight)
+    # for insight in insights:
+    #    st.info(insight)
 
 
 def _generate_timeline_insights(vehicle_schedules, solution):

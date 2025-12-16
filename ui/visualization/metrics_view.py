@@ -182,13 +182,12 @@ def _render_pareto_section(solution, problem_type):
     )
 
     # Detailed analysis in expander
-    with st.expander("📊 Detailed Pareto Analysis", expanded=False):
+    with st.expander("Detailed Pareto Analysis", expanded=False):
         _render_pareto_analysis(pareto_front)
 
 
 def _render_pareto_analysis(pareto_front):
     """Render detailed Pareto front analysis"""
-    import numpy as np
 
     # Create dataframe with all solutions
     pareto_data = []
