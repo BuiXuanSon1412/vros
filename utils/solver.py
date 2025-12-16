@@ -214,7 +214,7 @@ class DummySolver:
         )
 
         return {
-            "routes": {f"Truck_{i + 1}": route for i, route in enumerate(truck_routes)},
+            "routes": {f"Truck {i + 1}": route for i, route in enumerate(truck_routes)},
             "schedule": schedule,
             "resupply_operations": resupply_operations,
             "makespan": makespan,
@@ -326,7 +326,7 @@ class DummySolver:
             if not route:
                 continue
 
-            truck_id = f"Truck_{truck_idx + 1}"
+            truck_id = f"Truck {truck_idx + 1}"
             current_time = 0.0
             current_location = 0  # depot
             truck_load = []  # Packages currently on truck
@@ -495,7 +495,7 @@ class DummySolver:
 
             # Find available drone
             drone_idx = drone_available_times.index(min(drone_available_times))
-            drone_id = f"Drone_{drone_idx + 1}"
+            drone_id = f"Drone {drone_idx + 1}"
 
             # Drone can depart after latest release date in group
             max_release = max(
@@ -690,16 +690,16 @@ class DummySolver:
         idx = 0
         for i in range(num_trucks):
             end_idx = min(idx + customers_per_vehicle, len(customer_ids))
-            routes[f"Truck_{i + 1}"] = customer_ids[idx:end_idx]
+            routes[f"Truck {i + 1}"] = customer_ids[idx:end_idx]
             idx = end_idx
 
         for i in range(num_drones):
             end_idx = min(idx + customers_per_vehicle, len(customer_ids))
-            routes[f"Drone_{i + 1}"] = customer_ids[idx:end_idx]
+            routes[f"Drone {i + 1}"] = customer_ids[idx:end_idx]
             idx = end_idx
 
         if idx < len(customer_ids) and num_trucks > 0:
-            routes["Truck_1"].extend(customer_ids[idx:])
+            routes["Truck 1"].extend(customer_ids[idx:])
 
         return routes
 

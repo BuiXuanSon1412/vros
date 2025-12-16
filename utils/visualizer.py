@@ -1,5 +1,6 @@
 # utils/visualizer.py - FIXED with Problem 3 Resupply Visualization
 
+from operator import pos
 import plotly.graph_objects as go
 import pandas as pd
 from typing import List, Dict
@@ -26,34 +27,22 @@ def curved_edge(x0, y0, x1, y1, k=0.15):
     return xs, ys
 
 
-def arrow_angle(x0, y0, x1, y1, fig):
-    x_range = fig.layout.xaxis.range
-    y_range = fig.layout.yaxis.range
-
-    dx = (x1 - x0) / (x_range[1] - x_range[0])
-    dy = (y1 - y0) / (y_range[1] - y_range[0])
-
-    return np.degrees(np.arctan2(dy, dx))
-
-
 def _add_marker_arrow(
     fig,
     x0,
     y0,
     x1,
     y1,
+    angle,
     color,
     size=16,
     opacity=1.0,
+    position=0.5,  # New parameter: where along the line (0 to 1)
 ):
-    """Add a directional marker arrow at the middle of a segment"""
-    # Direction angle
-    # angle = arrow_angle(x0, y0, x1, y1, fig)
-    angle = np.degrees(np.arctan2(y1 - y0, x1 - x0))
-
-    # Middle of the segment
-    arrow_x = (x0 + x1) / 2
-    arrow_y = (y0 + y1) / 2
+    """Add a directional marker arrow at a specified position along a segment"""
+    # Calculate arrow position
+    arrow_x = x0 + (x1 - x0) * position
+    arrow_y = y0 + (y1 - y0) * position
 
     fig.add_trace(
         go.Scatter(
@@ -148,6 +137,7 @@ class Visualizer:
         ):
             key = tuple(sorted((str(id0), str(id1))))
             usage = edge_usage[key]
+            angle = np.degrees(np.arctan2(x1 - x0, y1 - y0))
 
             # ---------- straight ----------
             if usage == 1:
@@ -162,7 +152,9 @@ class Visualizer:
                         name=legend_name if show_legend else "",
                     )
                 )
-                _add_marker_arrow(fig, x0, y0, x1, y1, color, size=arrow_size)
+                _add_marker_arrow(
+                    fig, x0, y0, x1, y1, angle, color, size=arrow_size, position=0.5
+                )
 
             # ---------- curved ----------
             else:
@@ -181,6 +173,7 @@ class Visualizer:
                         name=legend_name if show_legend else "",
                     )
                 )
+
                 mid = len(xc) // 2
                 _add_marker_arrow(
                     fig,
@@ -188,8 +181,10 @@ class Visualizer:
                     yc[mid - 1],
                     xc[mid],
                     yc[mid],
+                    angle,
                     color,
                     size=arrow_size,
+                    position=0.5,  # arrow at the middle of these 4 points
                 )
 
         # ---------- main routes ----------
@@ -289,7 +284,7 @@ class Visualizer:
                 textfont=dict(size=18),
                 marker=dict(size=1, color="rgba(0,0,0,0)"),
                 textposition="middle center",
-                name=f"{cust_icon} {cust_label}s",
+                name=f"{cust_icon} {cust_label}",
                 showlegend=True,
             )
         )
@@ -303,8 +298,23 @@ class Visualizer:
             legend=dict(x=1.02, y=1),
         )
 
-        fig.update_yaxes(scaleanchor="x", scaleratio=1)
+        fig.update_xaxes(
+            showgrid=True,
+            gridcolor="#e5e7eb",
+            gridwidth=1,
+            zeroline=True,
+            zerolinecolor="#cbd5e1",
+        )
 
+        fig.update_yaxes(
+            showgrid=True,
+            gridcolor="#e5e7eb",
+            gridwidth=1,
+            zeroline=True,
+            zerolinecolor="#cbd5e1",
+            scaleanchor="x",
+            scaleratio=1,
+        )
         return fig
 
     # ======================= Other plots remain unchanged =======================
