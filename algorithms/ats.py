@@ -36,13 +36,13 @@ class ProblemData:
         self.number_of_drones = 2
         self.truck_speed = 0.5
         self.drone_speed = 1.0
-        self.drone_capacity = 8
+        self.drone_capacust = 8
         self.drone_limit_time = 90
         self.unloading_time = 5
 
         # Data arrays
-        self.city_coords = []
-        self.city_demand = []
+        self.coords = []
+        self.demand = []
         self.release_date = []
 
         # Distance matrices
@@ -68,13 +68,13 @@ class ProblemData:
                 elif key == "drone_speed":
                     self.drone_speed = float(value)
                 elif key == "M_d":
-                    self.drone_capacity = int(value)
+                    self.drone_capacust = int(value)
                 elif key == "L_d":
                     self.drone_limit_time = int(value)
 
-        # Parse city data
-        self.city_coords = []
-        self.city_demand = []
+        # Parse cust data
+        self.coords = []
+        self.demand = []
         self.release_date = []
 
         for line in lines[8:]:  # Skip header lines
@@ -84,11 +84,11 @@ class ProblemData:
                 demand = int(parts[2])
                 release = int(parts[3])
 
-                self.city_coords.append([x, y])
-                self.city_demand.append(demand)
+                self.coords.append([x, y])
+                self.demand.append(demand)
                 self.release_date.append(release)
 
-        self.number_of_cities = len(self.city_coords)
+        self.number_of_cities = len(self.coords)
 
         # Build distance matrices
         self._build_distance_matrices()
@@ -101,8 +101,8 @@ class ProblemData:
 
         for i in range(n):
             for j in range(n):
-                dx = abs(self.city_coords[i][0] - self.city_coords[j][0])
-                dy = abs(self.city_coords[i][1] - self.city_coords[j][1])
+                dx = abs(self.coords[i][0] - self.coords[j][0])
+                dy = abs(self.coords[i][1] - self.coords[j][1])
 
                 # Manhattan distance / truck speed
                 self.manhattan_matrix[i][j] = (dx + dy) / self.truck_speed
@@ -118,8 +118,8 @@ class Solution:
 
     def __init__(self, truck_routes: List, drone_queue: List):
         """
-        truck_routes: List of trucks, each containing list of [city, packages]
-        drone_queue: List of drone trips, each containing [[city, packages_list]]
+        truck_routes: List of trucks, each containing list of [cust, packages]
+        drone_queue: List of drone trips, each containing [[cust, packages_list]]
         """
         self.truck_routes = truck_routes
         self.drone_queue = drone_queue
@@ -156,15 +156,15 @@ class SolutionEvaluator:
 
         # Simulate truck movements
         for truck_idx, route in enumerate(solution.truck_routes):
-            current_city = 0  # Depot
+            current_cust = 0  # Depot
             current_time = 0.0
 
             for node in route[1:]:  # Skip depot
-                city = node[0]
+                cust = node[0]
                 packages = node[1]
 
                 # Travel time
-                travel_time = self.data.manhattan_matrix[current_city][city]
+                travel_time = self.data.manhattan_matrix[current_cust][cust]
 
                 # Consider release dates
                 max_release = 0
@@ -173,10 +173,10 @@ class SolutionEvaluator:
 
                 arrival_time = max(current_time + travel_time, max_release)
                 current_time = arrival_time
-                current_city = city
+                current_cust = cust
 
             # Return to depot
-            current_time += self.data.manhattan_matrix[current_city][0]
+            current_time += self.data.manhattan_matrix[current_cust][0]
             truck_times[truck_idx] = current_time
 
         # Simulate drone operations
@@ -211,19 +211,19 @@ class SolutionEvaluator:
             drone_available_time[drone_idx] = end_time
 
             # Update truck times based on drone delivery points
-            for city in cities:
-                truck_idx = self._find_truck_for_city(solution, city)
+            for cust in cities:
+                truck_idx = self._find_truck_for_cust(solution, cust)
                 if truck_idx >= 0:
                     truck_times[truck_idx] = max(truck_times[truck_idx], end_time)
 
         total_time = max(truck_times + list(drone_available_time))
         return total_time, truck_times
 
-    def _find_truck_for_city(self, solution: Solution, city: int) -> int:
-        """Find which truck serves a city."""
+    def _find_truck_for_cust(self, solution: Solution, cust: int) -> int:
+        """Find which truck serves a cust."""
         for truck_idx, route in enumerate(solution.truck_routes):
             for node in route:
-                if node[0] == city:
+                if node[0] == cust:
                     return truck_idx
         return -1
 
@@ -236,7 +236,7 @@ class InitialSolutionGenerator:
 
     def generate(self) -> Solution:
         """Generate initial solution by release date ordering."""
-        # Create list of (city, release_date)
+        # Create list of (cust, release_date)
         cities = [
             (i, self.data.release_date[i]) for i in range(1, self.data.number_of_cities)
         ]
@@ -245,17 +245,17 @@ class InitialSolutionGenerator:
         # Assign cities to trucks round-robin
         truck_routes = [[[0, []]] for _ in range(self.data.number_of_trucks)]
 
-        for idx, (city, _) in enumerate(cities):
+        for idx, (cust, _) in enumerate(cities):
             truck_idx = idx % self.data.number_of_trucks
-            truck_routes[truck_idx].append([city, []])
+            truck_routes[truck_idx].append([cust, []])
 
         # Initially assign all packages to be picked up at depot
         for truck_idx in range(self.data.number_of_trucks):
             packages_for_truck = []
             for node in truck_routes[truck_idx][1:]:
-                city = node[0]
-                if self.data.release_date[city] == 0:
-                    packages_for_truck.append(city)
+                cust = node[0]
+                if self.data.release_date[cust] == 0:
+                    packages_for_truck.append(cust)
             truck_routes[truck_idx][0][1] = packages_for_truck
 
         # Empty drone queue initially
@@ -279,7 +279,7 @@ class NeighborhoodOperator:
 
 
 class OneOptOperator(NeighborhoodOperator):
-    """Relocate one city to a different position."""
+    """Relocate one cust to a different position."""
 
     def generate_neighbors(
         self, solution: Solution, tabu_list: List, best_fitness: float
@@ -290,7 +290,7 @@ class OneOptOperator(NeighborhoodOperator):
             route_i = solution.truck_routes[truck_i]
 
             for pos_i in range(1, len(route_i)):  # Skip depot
-                city = route_i[pos_i][0]
+                cust = route_i[pos_i][0]
 
                 # Try inserting into other positions
                 for truck_j in range(len(solution.truck_routes)):
@@ -301,7 +301,7 @@ class OneOptOperator(NeighborhoodOperator):
                             continue
 
                         # Check tabu status
-                        if tabu_list[city] > 0:
+                        if tabu_list[cust] > 0:
                             continue
 
                         # Create neighbor
@@ -311,7 +311,7 @@ class OneOptOperator(NeighborhoodOperator):
 
                         # Evaluate
                         fitness, _ = self.evaluator.evaluate(new_sol)
-                        neighbors.append((new_sol, fitness, city))
+                        neighbors.append((new_sol, fitness, cust))
 
         return neighbors[:20]  # Limit neighborhood size
 
@@ -328,7 +328,7 @@ class SwapOperator(NeighborhoodOperator):
             route_i = solution.truck_routes[truck_i]
 
             for pos_i in range(1, len(route_i)):
-                city_i = route_i[pos_i][0]
+                cust_i = route_i[pos_i][0]
 
                 for truck_j in range(len(solution.truck_routes)):
                     route_j = solution.truck_routes[truck_j]
@@ -337,19 +337,19 @@ class SwapOperator(NeighborhoodOperator):
                         if truck_i == truck_j and pos_i >= pos_j:
                             continue
 
-                        city_j = route_j[pos_j][0]
+                        cust_j = route_j[pos_j][0]
 
                         # Check tabu
-                        if tabu_list[city_i] > 0 or tabu_list[city_j] > 0:
+                        if tabu_list[cust_i] > 0 or tabu_list[cust_j] > 0:
                             continue
 
                         # Create neighbor
                         new_sol = solution.copy()
-                        new_sol.truck_routes[truck_i][pos_i][0] = city_j
-                        new_sol.truck_routes[truck_j][pos_j][0] = city_i
+                        new_sol.truck_routes[truck_i][pos_i][0] = cust_j
+                        new_sol.truck_routes[truck_j][pos_j][0] = cust_i
 
                         fitness, _ = self.evaluator.evaluate(new_sol)
-                        neighbors.append((new_sol, fitness, (city_i, city_j)))
+                        neighbors.append((new_sol, fitness, (cust_i, cust_j)))
 
         return neighbors[:20]
 
@@ -420,14 +420,23 @@ class AdaptiveTabuSearch:
         }
 
     def _solution_to_readable(self, solution):
-        """Convert solution to human-readable format."""
-        readable = {"trucks": [], "drones": []}
+        """Convert solution to human-readable format with timeline."""
+        # Calculate timeline from solution
+        timeline_result = self._calculate_timeline(solution)
+
+        readable = {
+            "trucks": [],
+            "drones": [],
+            "timeline": timeline_result["timeline"],
+            "makespan": timeline_result["makespan"],
+            "truck_times": timeline_result["truck_times"],
+        }
 
         # Truck routes
         for truck_idx, route in enumerate(solution.truck_routes):
             truck_info = {
                 "truck_id": truck_idx,
-                "route": [node[0] for node in route],  # Just city IDs
+                "route": [node[0] for node in route],  # Just cust IDs
                 "packages_at_nodes": {
                     node[0]: node[1]
                     for node in route
@@ -440,11 +449,167 @@ class AdaptiveTabuSearch:
         for trip_idx, trip in enumerate(solution.drone_queue):
             trip_info = {
                 "trip_id": trip_idx,
-                "stops": [{"city": node[0], "packages": node[1]} for node in trip],
+                "stops": [{"cust": node[0], "packages": node[1]} for node in trip],
             }
             readable["drones"].append(trip_info)
 
         return readable
+
+    def _calculate_timeline(self, solution: Solution):
+        """
+        Calculate detailed timeline from solution.
+        Returns timeline with truck and drone schedules.
+        """
+        assert self.data is not None, "ProblemData must be initialized"
+        assert self.data.manhattan_matrix is not None, (
+            "manhattan_matrix must be initialized"
+        )
+        assert self.data.euclid_matrix is not None, "euclid_matrix must be initialized"
+
+        timeline = {
+            "trucks": [[] for _ in range(self.data.number_of_trucks)],
+            "drones": [],
+        }
+
+        # Truck timeline
+        truck_times = [0.0] * self.data.number_of_trucks
+
+        for truck_idx, route in enumerate(solution.truck_routes):
+            current_cust = 0
+            current_time = 0.0
+
+            for node_idx, node in enumerate(route):
+                cust = node[0]
+                packages = node[1]
+
+                if node_idx == 0 and cust == 0:  # Depot start
+                    timeline["trucks"][truck_idx].append(
+                        {
+                            "node": 0,
+                            "arrival": None,
+                            "departure": 0.0,
+                            "packages_picked": packages.copy(),
+                        }
+                    )
+                    current_cust = 0
+                    continue
+
+                # Travel time
+                travel_time = self.data.manhattan_matrix[current_cust][cust]
+
+                # Release date constraint
+                max_release = 0
+                if packages:
+                    max_release = max([self.data.release_date[p] for p in packages])
+
+                arrival_time = max(current_time + travel_time, max_release)
+                waiting_time = max(0, max_release - (current_time + travel_time))
+                departure_time = arrival_time  # No service time
+
+                timeline["trucks"][truck_idx].append(
+                    {
+                        "node": cust,
+                        "arrival": arrival_time,
+                        "departure": departure_time,
+                        "waiting_time": waiting_time,
+                        "packages_picked": packages.copy(),
+                    }
+                )
+
+                current_time = departure_time
+                current_cust = cust
+
+            # Return to depot
+            if current_cust != 0:
+                travel_time = self.data.manhattan_matrix[current_cust][0]
+                final_time = current_time + travel_time
+
+                timeline["trucks"][truck_idx].append(
+                    {
+                        "node": "depot",
+                        "cust_id": 0,
+                        "arrival": final_time,
+                        "departure": final_time,
+                        "action": "end",
+                    }
+                )
+
+                truck_times[truck_idx] = final_time
+            else:
+                truck_times[truck_idx] = current_time
+
+        # Drone timeline
+        drone_available = [0.0] * self.data.number_of_drones
+
+        for trip_idx, trip in enumerate(solution.drone_queue):
+            if not trip:
+                continue
+
+            drone_idx = np.argmin(drone_available)
+
+            cities = [t[0] for t in trip]
+            all_packages = []
+            for t in trip:
+                all_packages.extend(t[1])
+
+            # Release date constraint
+            max_release = (
+                max([self.data.release_date[p] for p in all_packages])
+                if all_packages
+                else 0
+            )
+            start_time = max(drone_available[drone_idx], max_release)
+
+            trip_timeline = {
+                "trip_id": trip_idx,
+                "drone_id": drone_idx,
+                "start_time": start_time,
+                "stops": [],
+            }
+
+            current_time = start_time
+            current_cust = 0
+
+            # Fly to each stop
+            for stop_idx, node in enumerate(trip):
+                cust = node[0]
+                packages = node[1]
+
+                # Flight time
+                flight_time = self.data.euclid_matrix[current_cust][cust]
+                arrival = current_time + flight_time
+
+                # Unloading
+                departure = arrival + self.data.unloading_time
+
+                trip_timeline["stops"].append(
+                    {
+                        "cust_id": cust,
+                        "arrival": arrival,
+                        "departure": departure,
+                        "packages_delivered": packages.copy(),
+                    }
+                )
+
+                current_time = departure
+                current_cust = cust
+
+            # Return to depot
+            flight_time = self.data.euclid_matrix[current_cust][0]
+            end_time = current_time + flight_time
+
+            trip_timeline["end_time"] = end_time
+            timeline["drones"].append(trip_timeline)
+
+            drone_available[drone_idx] = end_time
+
+        makespan = max(truck_times + list(drone_available))
+
+        return {
+            "makespan": makespan,
+            "truck_times": truck_times,
+            "timeline": timeline,
+        }
 
     def _calculate_segment_length(self):
         """Calculate iteration length for each segment based on problem size."""
@@ -546,11 +711,11 @@ class AdaptiveTabuSearch:
 
         if isinstance(move, (list, tuple)):
             # Multiple cities (e.g., swap)
-            for city in move:
-                if isinstance(city, int) and 0 <= city < self.data.number_of_cities:
-                    tabu_structures[operator_idx][city] = iteration_count
+            for cust in move:
+                if isinstance(cust, int) and 0 <= cust < self.data.number_of_cities:
+                    tabu_structures[operator_idx][cust] = iteration_count
         else:
-            # Single city (e.g., one-opt)
+            # Single cust (e.g., one-opt)
             if isinstance(move, int) and 0 <= move < self.data.number_of_cities:
                 tabu_structures[operator_idx][move] = iteration_count
 
