@@ -525,7 +525,7 @@ def _render_export_button(problem_type, solution):
             export_data["pareto_front"] = solution.get("pareto_front", [])
 
         st.download_button(
-            label="📥 Export JSON",
+            label="Export JSON",
             data=json.dumps(export_data, indent=2),
             file_name=filename,
             mime="application/json",
@@ -549,7 +549,7 @@ def _render_export_button(problem_type, solution):
         csv_data = df_routes.to_csv(index=False)
 
         st.download_button(
-            label="📥 Export CSV",
+            label="Export CSV",
             data=csv_data,
             file_name=csv_filename,
             mime="text/csv",

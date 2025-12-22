@@ -167,7 +167,7 @@ def _render_schedule_details(solution):
     with col3:
         csv_data = df_schedule.to_csv(index=False)
         st.download_button(
-            label="📥 Export Schedule",
+            label="Export Schedule",
             data=csv_data,
             file_name=f"schedule_{solution.get('algorithm', 'solution')}.csv",
             mime="text/csv",

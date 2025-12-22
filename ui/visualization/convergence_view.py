@@ -197,7 +197,7 @@ def _render_convergence_analysis(solution):
     col1, col2, col3 = st.columns([2, 1, 1])
     with col3:
         st.download_button(
-            label="📥 Export CSV",
+            label="Export CSV",
             data=csv_data,
             file_name=f"convergence_{solution.get('algorithm', 'solution')}.csv",
             mime="text/csv",
