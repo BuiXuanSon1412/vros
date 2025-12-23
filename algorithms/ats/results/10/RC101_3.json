@@ -1,0 +1,245 @@
+{
+  "instance": "RC101_3",
+  "number_of_cities": 10,
+  "ITE": 1,
+  "average_runtime_sec": 3.837071657180786,
+  "best_fitness": 471.54101966249686,
+  "best_solution": [
+    [
+      [
+        {
+          "node": 0,
+          "arrive": 0.0,
+          "depart": 0.0,
+          "packages": [
+            1
+          ]
+        },
+        {
+          "node": 1,
+          "arrive": 100.0,
+          "depart": 105.0,
+          "packages": []
+        },
+        {
+          "node": 4,
+          "arrive": 125.0,
+          "depart": 155.0555127546399,
+          "packages": [
+            4
+          ]
+        },
+        {
+          "node": 7,
+          "arrive": 175.0555127546399,
+          "depart": 263.3553390593274,
+          "packages": [
+            7
+          ]
+        },
+        {
+          "node": 6,
+          "arrive": 269.3553390593274,
+          "depart": 335.3016516106934,
+          "packages": [
+            6
+          ]
+        },
+        {
+          "node": 0,
+          "arrive": 429.3016516106934,
+          "depart": 429.3016516106934,
+          "packages": []
+        },
+        {
+          "node": 0,
+          "arrive": 429.3016516106934,
+          "depart": 429.3016516106934,
+          "packages": []
+        },
+        {
+          "node": 0,
+          "arrive": 429.3016516106934,
+          "depart": 429.3016516106934,
+          "packages": []
+        }
+      ],
+      [
+        {
+          "node": 0,
+          "arrive": 0.0,
+          "depart": 88.0,
+          "packages": [
+            5
+          ]
+        },
+        {
+          "node": 5,
+          "arrive": 198.0,
+          "depart": 203.0,
+          "packages": []
+        },
+        {
+          "node": 3,
+          "arrive": 207.0,
+          "depart": 212.0,
+          "packages": [
+            3
+          ]
+        },
+        {
+          "node": 8,
+          "arrive": 236.0,
+          "depart": 340.05124837953326,
+          "packages": [
+            8
+          ]
+        },
+        {
+          "node": 0,
+          "arrive": 450.05124837953326,
+          "depart": 450.05124837953326,
+          "packages": []
+        },
+        {
+          "node": 0,
+          "arrive": 450.05124837953326,
+          "depart": 450.05124837953326,
+          "packages": []
+        }
+      ],
+      [
+        {
+          "node": 0,
+          "arrive": 0.0,
+          "depart": 90.0,
+          "packages": [
+            2
+          ]
+        },
+        {
+          "node": 2,
+          "arrive": 176.0,
+          "depart": 181.0,
+          "packages": []
+        },
+        {
+          "node": 9,
+          "arrive": 285.0,
+          "depart": 381.54101966249686,
+          "packages": [
+            9,
+            10
+          ]
+        },
+        {
+          "node": 10,
+          "arrive": 391.54101966249686,
+          "depart": 396.54101966249686,
+          "packages": []
+        }
+      ]
+    ],
+    [
+      {
+        "drone_id": "Drone 0",
+        "start": 114,
+        "end": 191.11102550927978,
+        "stops": [
+          {
+            "node": 4,
+            "arrive": 150.0555127546399,
+            "depart": 155.0555127546399,
+            "packages": [
+              4
+            ]
+          }
+        ]
+      },
+      {
+        "drone_id": "Drone 1",
+        "start": 117,
+        "end": 251.35733730830884,
+        "stops": [
+          {
+            "node": 3,
+            "arrive": 156.35733730830884,
+            "depart": 212.0,
+            "packages": [
+              3
+            ]
+          }
+        ]
+      },
+      {
+        "drone_id": "Drone 2",
+        "start": 223,
+        "end": 298.71067811865476,
+        "stops": [
+          {
+            "node": 7,
+            "arrive": 258.3553390593274,
+            "depart": 263.3553390593274,
+            "packages": [
+              7
+            ]
+          }
+        ]
+      },
+      {
+        "drone_id": "Drone 0",
+        "start": 297,
+        "end": 368.6033032213868,
+        "stops": [
+          {
+            "node": 6,
+            "arrive": 330.3016516106934,
+            "depart": 335.3016516106934,
+            "packages": [
+              6
+            ]
+          }
+        ]
+      },
+      {
+        "drone_id": "Drone 1",
+        "start": 296,
+        "end": 379.1024967590665,
+        "stops": [
+          {
+            "node": 8,
+            "arrive": 335.05124837953326,
+            "depart": 340.05124837953326,
+            "packages": [
+              8
+            ]
+          }
+        ]
+      },
+      {
+        "drone_id": "Drone 2",
+        "start": 343,
+        "end": 415.08203932499373,
+        "stops": [
+          {
+            "node": 9,
+            "arrive": 376.54101966249686,
+            "depart": 381.54101966249686,
+            "packages": [
+              9,
+              10
+            ]
+          }
+        ]
+      }
+    ]
+  ],
+  "runs": [
+    {
+      "run_id": 0,
+      "fitness": 471.54101966249686,
+      "runtime_sec": 3.837071657180786,
+      "feasible": true
+    }
+  ]
+}

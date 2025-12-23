@@ -1,0 +1,208 @@
+{
+  "instance": "R101_2.5",
+  "number_of_cities": 10,
+  "ITE": 1,
+  "average_runtime_sec": 3.9157674312591553,
+  "best_fitness": 486.01562118716424,
+  "best_solution": [
+    [
+      [
+        {
+          "node": 0,
+          "arrive": 0.0,
+          "depart": 122.0,
+          "packages": [
+            1,
+            3
+          ]
+        },
+        {
+          "node": 1,
+          "arrive": 162.0,
+          "depart": 253.23154621172782,
+          "packages": [
+            7,
+            10
+          ]
+        },
+        {
+          "node": 3,
+          "arrive": 289.23154621172785,
+          "depart": 294.23154621172785,
+          "packages": []
+        },
+        {
+          "node": 7,
+          "arrive": 374.23154621172785,
+          "depart": 379.23154621172785,
+          "packages": []
+        },
+        {
+          "node": 10,
+          "arrive": 419.23154621172785,
+          "depart": 424.23154621172785,
+          "packages": []
+        },
+        {
+          "node": 0,
+          "arrive": 484.23154621172785,
+          "depart": 484.23154621172785,
+          "packages": []
+        },
+        {
+          "node": 0,
+          "arrive": 484.23154621172785,
+          "depart": 484.23154621172785,
+          "packages": []
+        }
+      ],
+      [
+        {
+          "node": 0,
+          "arrive": 0.0,
+          "depart": 92.0,
+          "packages": [
+            5
+          ]
+        },
+        {
+          "node": 6,
+          "arrive": 122.0,
+          "depart": 327.180339887499,
+          "packages": [
+            6,
+            8
+          ]
+        },
+        {
+          "node": 8,
+          "arrive": 383.180339887499,
+          "depart": 388.180339887499,
+          "packages": []
+        },
+        {
+          "node": 5,
+          "arrive": 424.180339887499,
+          "depart": 429.180339887499,
+          "packages": []
+        },
+        {
+          "node": 0,
+          "arrive": 479.180339887499,
+          "depart": 479.180339887499,
+          "packages": []
+        }
+      ],
+      [
+        {
+          "node": 0,
+          "arrive": 0.0,
+          "depart": 94.0,
+          "packages": [
+            2
+          ]
+        },
+        {
+          "node": 4,
+          "arrive": 164.0,
+          "depart": 169.0,
+          "packages": [
+            4
+          ]
+        },
+        {
+          "node": 2,
+          "arrive": 215.0,
+          "depart": 220.0,
+          "packages": []
+        },
+        {
+          "node": 9,
+          "arrive": 346.0,
+          "depart": 396.01562118716424,
+          "packages": [
+            9
+          ]
+        },
+        {
+          "node": 0,
+          "arrive": 486.01562118716424,
+          "depart": 486.01562118716424,
+          "packages": []
+        }
+      ]
+    ],
+    [
+      {
+        "drone_id": "Drone 0",
+        "start": 119,
+        "end": 194.0,
+        "stops": [
+          {
+            "node": 4,
+            "arrive": 144.0,
+            "depart": 169.0,
+            "packages": [
+              4
+            ]
+          }
+        ]
+      },
+      {
+        "drone_id": "Drone 1",
+        "start": 233,
+        "end": 268.46309242345563,
+        "stops": [
+          {
+            "node": 1,
+            "arrive": 248.23154621172782,
+            "depart": 253.23154621172782,
+            "packages": [
+              7,
+              10
+            ]
+          }
+        ]
+      },
+      {
+        "drone_id": "Drone 2",
+        "start": 311,
+        "end": 338.36067977499795,
+        "stops": [
+          {
+            "node": 6,
+            "arrive": 322.180339887499,
+            "depart": 327.180339887499,
+            "packages": [
+              6,
+              8
+            ]
+          }
+        ]
+      },
+      {
+        "drone_id": "Drone 0",
+        "start": 359,
+        "end": 428.0312423743285,
+        "stops": [
+          {
+            "node": 9,
+            "arrive": 391.01562118716424,
+            "depart": 396.01562118716424,
+            "packages": [
+              9
+            ]
+          }
+        ]
+      }
+    ]
+  ],
+  "runs": [
+    {
+      "run_id": 0,
+      "fitness": 486.01562118716424,
+      "runtime_sec": 3.9157674312591553,
+      "feasible": true
+    }
+  ]
+}
