@@ -57,10 +57,6 @@ def _show_format_info(problem_type):
         st.info(
             "📄 **Expected format for VRP-MRDR:**\n\n"
             "```\n"
-            "XCOORD  YCOORD  DEMAND  RELEASE_DATE\n"
-            "0  0  0  0  (depot)\n"
-            "x1  y1  demand1  release1\n"
-            "...\n"
             "number_truck  N\n"
             "number_drone  M\n"
             "drone_speed  S1\n"
@@ -68,5 +64,9 @@ def _show_format_info(problem_type):
             "M_d  capacity\n"
             "L_d  flight_time\n"
             "Sigma  service_time\n"
+            "XCOORD  YCOORD  DEMAND  RELEASE_DATE\n"
+            "0  0  0  0  (depot)\n"
+            "x1  y1  demand1  release1\n"
+            "...\n"
             "```"
         )

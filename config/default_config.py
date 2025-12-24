@@ -9,14 +9,17 @@ PROBLEM_TYPES = {
 
 # Algorithms per problem - Exact available algorithms
 ALGORITHMS = {
-    1: ["Tabu Search", "Tabu Search Multi-Level"],
-    2: ["Tabu Search", "MOEA/D", "NSGAII", "HNSGAII-TS"],
+    # 1: ["Tabu Search", "Tabu Search Multi-Level"],
+    1: ["Tabu Search Multi-Level"],
+    # 2: ["Tabu Search", "MOEA/D", "NSGAII", "HNSGAII-TS"],
+    2: ["HNSGAII-TS"],
+    # 3: ["Adaptive Tabu Search"],
     3: ["Adaptive Tabu Search"],
 }
 
 # Default selected algorithms
 DEFAULT_ALGORITHMS = {
-    1: ["Tabu Search"],
+    1: ["Multi-Level Tabu Search"],
     2: ["HNSGAII-TS"],
     3: ["Adaptive Tabu Search"],
 }
@@ -27,10 +30,10 @@ PROBLEM1_CONFIG = {
         "depot": {"x": 0.0, "y": 0.0},
         "num_technicians": 2,
         "num_drones": 2,
-        "technician_speed": 35,  # km/h
-        "drone_speed": 60,  # km/h
-        "flight_endurance_limit": 3600,  # seconds
-        "sample_waiting_limit": 60,  # minutes
+        "technician_speed": 0.83,
+        "drone_speed": 0.58,
+        "flight_endurance_limit": 120.0,
+        "sample_waiting_limit": 60.0,
     },
     "algorithm": {
         "max_iteration": 1000,
@@ -47,16 +50,16 @@ PROBLEM2_CONFIG = {
         "depot": {"x": 0.0, "y": 0.0},
         "num_technicians": 2,
         "num_drones": 2,
-        "technician_baseline_speed": 35,  # km/h
+        "technician_baseline_speed": 15.557,
         "congestion_factor_min": 0.4,
         "congestion_factor_max": 0.9,
-        "drone_takeoff_speed": 20,  # km/h
-        "drone_cruise_speed": 60,  # km/h
-        "drone_landing_speed": 20,  # km/h
-        "truck_capacity": 100,  # kg
-        "drone_capacity": 5,  # kg
-        "flight_endurance_limit": 3600,  # seconds
-        "sample_waiting_limit": 60,  # minutes
+        "drone_takeoff_speed": 7.8232,
+        "drone_cruise_speed": 15.6464,
+        "drone_landing_speed": 3.9116,
+        "truck_capacity": 5,
+        "drone_capacity": 2.27,
+        "flight_endurance_limit": 562990,
+        "sample_waiting_limit": 60,
     },
     "algorithm": {
         "crossover_rate": 0.9,
@@ -73,12 +76,12 @@ PROBLEM3_CONFIG = {
         "depot": {"x": 0.0, "y": 0.0},
         "num_trucks": 3,
         "num_drones": 3,
-        "truck_speed": 40,  # km/h
-        "drone_speed": 60,  # km/h
-        "drone_capacity_options": [2, 4, 8],  # kg
+        "truck_speed": 40,
+        "drone_speed": 60,
+        "drone_capacity_options": [2, 4, 8],
         "drone_capacity_default": 4,
-        "flight_endurance_limit": 90,  # minutes
-        "sample_waiting_limit": 60,  # minutes
+        "flight_endurance_limit": 90,
+        "sample_waiting_limit": 60,
     },
     "algorithm": {
         "gamma1": 1.0,  # score factor 1

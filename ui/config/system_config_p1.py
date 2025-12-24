@@ -9,42 +9,44 @@ def render_system_config_p1():
     st.markdown("**Depot**")
     col1, col2 = st.columns(2)
     with col1:
-        depot_x = st.number_input("Coordinate X", value=0.0, key="p1_depot_x")
+        depot_x = st.text_input(
+            "Coordinate X",
+            value=PROBLEM1_CONFIG["system"]["depot"]["x"],
+            key="p1_depot_x",
+            disabled=True,
+        )
     with col2:
-        depot_y = st.number_input("Coordinate Y", value=0.0, key="p1_depot_y")
+        depot_y = st.text_input(
+            "Coordinate Y",
+            value=PROBLEM1_CONFIG["system"]["depot"]["y"],
+            key="p1_depot_y",
+            disabled=True,
+        )
 
     # st.markdown("---")
     st.markdown("**Vehicle**")
 
     col1, col2 = st.columns(2)
     with col1:
-        num_technicians = st.number_input(
+        num_technicians = st.text_input(
             "Number of technicians",
-            min_value=1,
-            max_value=10,
             value=PROBLEM1_CONFIG["system"]["num_technicians"],
             key="p1_num_technicians",
         )
-        technician_speed = st.number_input(
+        technician_speed = st.text_input(
             "Technician speed",
-            min_value=10,
-            max_value=100,
             value=PROBLEM1_CONFIG["system"]["technician_speed"],
             key="p1_technician_speed",
         )
 
     with col2:
-        num_drones = st.number_input(
+        num_drones = st.text_input(
             "Number of drones",
-            min_value=0,
-            max_value=10,
             value=PROBLEM1_CONFIG["system"]["num_drones"],
             key="p1_num_drones",
         )
-        drone_speed = st.number_input(
+        drone_speed = st.text_input(
             "Drone speed",
-            min_value=10,
-            max_value=120,
             value=PROBLEM1_CONFIG["system"]["drone_speed"],
             key="p1_drone_speed",
         )
@@ -54,19 +56,15 @@ def render_system_config_p1():
 
     col1, col2 = st.columns(2)
     with col1:
-        flight_endurance = st.number_input(
+        flight_endurance = st.text_input(
             "Flight endurance limit",
-            min_value=600,
-            max_value=7200,
             value=PROBLEM1_CONFIG["system"]["flight_endurance_limit"],
             key="p1_flight_endurance",
         )
 
     with col2:
-        waiting_limit = st.number_input(
+        waiting_limit = st.text_input(
             "Sample waiting limit",
-            min_value=10,
-            max_value=180,
             value=PROBLEM1_CONFIG["system"]["sample_waiting_limit"],
             key="p1_waiting_limit",
         )

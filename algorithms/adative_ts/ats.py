@@ -623,7 +623,7 @@ def Tabu_search_for_CVRP(CC):
 # CONFIGURATION
 # ===============================
 ITE = 1
-DATA_ROOT = "./data/3"
+DATA_ROOT = "./data"
 RESULT_ROOT = "./results"
 
 
