@@ -151,28 +151,42 @@ class FileParser:
                     continue
 
         file_version = st.session_state.get("file_version_3", 0)
-        vehicle_config["num_trucks"] = st.session_state.get(
-            f"p3_num_trucks_{file_version}", PROBLEM3_CONFIG["system"]["num_trucks"]
+        vehicle_config["num_trucks"] = int(
+            st.session_state.get(
+                f"p3_num_trucks_{file_version}", PROBLEM3_CONFIG["system"]["num_trucks"]
+            )
         )
-        vehicle_config["num_drones"] = st.session_state.get(
-            f"p3_num_drones_{file_version}", PROBLEM3_CONFIG["system"]["num_drones"]
-        )
-
-        vehicle_config["truck_speed"] = st.session_state.get(
-            f"p3_truck_speed_{file_version}", PROBLEM3_CONFIG["system"]["truck_speed"]
-        )
-        vehicle_config["drone_speed"] = st.session_state.get(
-            f"p3_drone_speed_{file_version}", PROBLEM3_CONFIG["system"]["drone_speed"]
+        vehicle_config["num_drones"] = int(
+            st.session_state.get(
+                f"p3_num_drones_{file_version}", PROBLEM3_CONFIG["system"]["num_drones"]
+            )
         )
 
-        vehicle_config["drone_capacity"] = st.session_state.get(
-            f"p3_drone_capacity_{file_version}",
-            PROBLEM3_CONFIG["system"]["drone_capacity"],
+        vehicle_config["truck_speed"] = float(
+            st.session_state.get(
+                f"p3_truck_speed_{file_version}",
+                PROBLEM3_CONFIG["system"]["truck_speed"],
+            )
+        )
+        vehicle_config["drone_speed"] = float(
+            st.session_state.get(
+                f"p3_drone_speed_{file_version}",
+                PROBLEM3_CONFIG["system"]["drone_speed"],
+            )
         )
 
-        vehicle_config["flight_endurance_limmit"] = st.session_state.get(
-            f"p3_flight_endurance_{file_version}",
-            PROBLEM3_CONFIG["system"]["flight_endurance_limmit"],
+        vehicle_config["drone_capacity"] = float(
+            st.session_state.get(
+                f"p3_drone_capacity_{file_version}",
+                PROBLEM3_CONFIG["system"]["drone_capacity"],
+            )
+        )
+
+        vehicle_config["flight_endurance_limit"] = float(
+            st.session_state.get(
+                f"p3_flight_endurance_{file_version}",
+                PROBLEM3_CONFIG["system"]["flight_endurance_limit"],
+            )
         )
 
         # Parse customer data (lines after data_start)
@@ -202,8 +216,8 @@ class FileParser:
                         "id": 0,
                         "x": x,
                         "y": y,
-                        "demand": int(demand),
-                        "release": int(release),
+                        "demand": float(demand),
+                        "release_date": float(release),
                     }
                 else:  # Customer data
                     customers.append(
@@ -211,8 +225,8 @@ class FileParser:
                             "id": customer_id,
                             "x": x,
                             "y": y,
-                            "demand": int(demand),  # Keep as integer
-                            "release_date": int(release),  # Keep as integer
+                            "demand": float(demand),  # Keep as integer
+                            "release_date": float(release),  # Keep as integer
                         }
                     )
                     customer_id += 1

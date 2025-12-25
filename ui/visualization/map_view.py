@@ -13,7 +13,7 @@ def render_map_view(problem_type):
     """Render map view with routes and resupply visualization"""
     customers = st.session_state.get(f"customers_{problem_type}")
     depot = st.session_state.get(f"depot_{problem_type}")
-    solution = st.session_state.get(f"solution_{problem_type}")
+    result = st.session_state.get(f"result_{problem_type}")
     chart_counter = st.session_state.get(f"chart_counter_{problem_type}", 0)
 
     if customers is None or depot is None:
@@ -23,27 +23,33 @@ def render_map_view(problem_type):
     viz = get_visualizer()
 
     # Problem 3: Show resupply visualization option
-    if problem_type == 3 and solution is not None:
-        show_resupply = st.checkbox(
-            "Show drone resupply routes",
-            value=True,
-            key=f"show_resupply_{chart_counter}",
-            help="Display drone resupply flights to trucks",
-        )
-    else:
-        show_resupply = False
-
-    if solution is not None and solution.get("routes"):
-        fig = viz.plot_routes_2d(
+    # if problem_type == 3 and solution is not None:
+    #    show_resupply = st.checkbox(
+    #        "Show drone resupply routes",
+    #        value=True,
+    #        key=f"show_resupply_{chart_counter}",
+    #        help="Display drone resupply flights to trucks",
+    #    )
+    # else:
+    #    show_resupply = False
+    if problem_type == 3 and result:
+        fig = viz.plot_routes_3d(
             customers,
             depot,
-            solution["routes"],
-            title=f"Routes - {solution['algorithm']}",
-            problem_type=problem_type,
-            resupply_operations=solution.get("resupply_operations", [])
-            if show_resupply
-            else [],
+            result["solution"],
+            title=f"Routes - {result['algorithm']}",
         )
+        # if solution is not None and solution.get("routes"):
+        #    fig = viz.plot_routes_2d(
+        #        customers,
+        #        depot,
+        #        solution["routes"],
+        #        title=f"Routes - {solution['algorithm']}",
+        #        problem_type=problem_type,
+        #        resupply_operations=solution.get("resupply_operations", [])
+        #        if show_resupply
+        #        else [],
+        #    )
 
         st.plotly_chart(
             fig,
@@ -52,8 +58,8 @@ def render_map_view(problem_type):
         )
 
         # Show resupply statistics for Problem 3
-        if problem_type == 3 and solution.get("resupply_operations"):
-            _render_resupply_summary(solution)
+        # if problem_type == 3 and solution.get("resupply_operations"):
+        #    _render_resupply_summary(solution)
 
     else:
         # Determine title based on problem type

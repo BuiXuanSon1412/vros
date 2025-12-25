@@ -1,7 +1,7 @@
 import sys
 import random
 import time
-from input import input_time_limit, input_data
+from .input import input_time_limit, input_data
 from distance import init_matrix
 from ga import select_population
 from nsgaii import nsgaii

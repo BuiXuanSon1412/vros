@@ -1,21 +1,19 @@
-import Data
-import Function
-import Neighborhood
+from . import Data
+from . import Function
+from . import Neighborhood
 import time
 import random
-import Neighborhood11
-import Neighborhood10
+from . import Neighborhood11
+from . import Neighborhood10
 import glob
 import os
 import numpy as np
 import math
 import json
 import numpy
-from Data import (
+from .Data import (
     calculate_angle,
-    calculate_standard_deviation,
     euclid_distance,
-    manhattan_distance,
 )
 
 global LOOP
@@ -603,6 +601,8 @@ def Tabu_search_for_CVRP(CC):
         #    print("$$$$$$$$$$$$$$")
         if pi < len(solution_pack):
             current_neighborhood5, _ = Neighborhood.swap_two_array(solution_pack[pi][0])
+            if not current_neighborhood5:
+                continue
             best_sol_in_brnei = current_neighborhood5[0][0]
             best_fitness_in_brnei = current_neighborhood5[0][1][0]
             for i in range(1, len(current_neighborhood5)):
@@ -718,16 +718,18 @@ class ATSSolver:
     def load(self, customers, depot, vehicle_config, algorithm_params):
         Data.city = [[depot["x"], depot["y"]]]
 
-        for customer in customers:
+        print(type(customers))
+        for _, customer in customers.iterrows():
             Data.city.append([customer["x"], customer["y"]])
             Data.city_demand.append(customer["demand"])
             Data.release_date.append(customer["release_date"])
 
         Data.number_of_cities = len(Data.city)
 
-        Data.truck_speed = vehicle_config["truck_speed"]
-        Data.drone_speed = vehicle_config["drone_speed"]
+        Data.truck_speed = float(vehicle_config["truck_speed"])
+        Data.drone_speed = float(vehicle_config["drone_speed"])
 
+        print(f"Drone speed: {type(Data.drone_speed)}")
         Data.manhattan_move_matrix = [
             [0.0] * Data.number_of_cities for _ in range(Data.number_of_cities)
         ]

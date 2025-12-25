@@ -404,6 +404,345 @@ class Visualizer:
         )
         return fig
 
+    def plot_routes_3d(
+        self,
+        customers: pd.DataFrame,
+        depot: Dict,
+        solution_data: List,
+        title: str = "Vehicle Routes with Drone Resupply",
+    ) -> go.Figure:
+        """
+        Plot Problem 3 routes from ATSSolver format
+        solution_data format: [truck_routes, drone_operations, drone_route_details]
+        """
+        if not solution_data or len(solution_data) < 2:
+            return self._create_empty_plot(customers, depot, title)
+
+        truck_routes = solution_data[0]  # List of truck routes
+        drone_operations = solution_data[1]  # List of drone operations
+
+        fig = go.Figure()
+
+        # ==========================================================
+        # PASS 1 — COUNT UNDIRECTED EDGE USAGE
+        # ==========================================================
+        edge_usage = defaultdict(int)
+
+        # Count truck route edges
+        for truck_route in truck_routes:
+            nodes = truck_route.get("packages", [])
+            if not nodes:
+                continue
+
+            path = [0] + [n["node"] for n in nodes] + [0]
+            for i in range(len(path) - 1):
+                a, b = str(path[i]), str(path[i + 1])
+                edge_usage[tuple(sorted((a, b)))] += 1
+
+        # Count drone resupply edges
+        for drone_op in drone_operations:
+            stops = drone_op.get("stops", [])
+            if not stops:
+                continue
+
+            # Build complete drone path: depot -> stop1 -> stop2 -> ... -> depot
+            drone_path = [0]
+            for stop in stops:
+                node = stop["node"]
+                if node != 0:
+                    drone_path.append(node)
+            drone_path.append(0)
+
+            # Count edges in the drone route
+            for i in range(len(drone_path) - 1):
+                a, b = str(drone_path[i]), str(drone_path[i + 1])
+                edge_usage[tuple(sorted((a, b)))] += 1
+
+        # ==========================================================
+        # PASS 2 — DRAW ROUTES
+        # ==========================================================
+        CURVE_OFFSETS = [-0.3, -0.18, -0.1, 0.1, 0.18, 0.3]
+        edge_draw_count = defaultdict(int)
+
+        def draw_edge(
+            id0, x0, y0, id1, x1, y1, color, dash, show_legend, legend_name, arrow_size
+        ):
+            key = tuple(sorted((str(id0), str(id1))))
+            usage = edge_usage[key]
+            angle = np.degrees(np.arctan2(x1 - x0, y1 - y0))
+
+            if usage == 1:
+                fig.add_trace(
+                    go.Scatter(
+                        x=[x0, x1],
+                        y=[y0, y1],
+                        mode="lines",
+                        line=dict(color=color, width=2, dash=dash),
+                        hoverinfo="skip",
+                        showlegend=show_legend,
+                        name=legend_name if show_legend else "",
+                    )
+                )
+                _add_marker_arrow(
+                    fig, x0, y0, x1, y1, angle, color, size=arrow_size, position=0.5
+                )
+            else:
+                k = CURVE_OFFSETS[edge_draw_count[key] % len(CURVE_OFFSETS)]
+                edge_draw_count[key] += 1
+                xc, yc = curved_edge(x0, y0, x1, y1, k=k)
+                fig.add_trace(
+                    go.Scatter(
+                        x=xc,
+                        y=yc,
+                        mode="lines",
+                        line=dict(color=color, width=2, dash=dash),
+                        hoverinfo="skip",
+                        showlegend=show_legend,
+                        name=legend_name if show_legend else "",
+                    )
+                )
+                mid = len(xc) // 2
+                _add_marker_arrow(
+                    fig,
+                    xc[mid - 1],
+                    yc[mid - 1],
+                    xc[mid],
+                    yc[mid],
+                    angle,
+                    color,
+                    size=arrow_size,
+                    position=0.5,
+                )
+
+        # Draw drone resupply routes first (so they appear behind truck routes)
+        for idx, drone_op in enumerate(drone_operations):
+            stops = drone_op.get("stops", [])
+            if not stops:
+                continue
+
+            color = self.colors_drone[idx % len(self.colors_drone)]
+
+            # Build complete drone route: depot -> stop1 -> stop2 -> ... -> depot
+            drone_path = [(0, depot["x"], depot["y"])]
+
+            for stop in stops:
+                node_id = stop["node"]
+                if node_id == 0:
+                    continue
+
+                node_data = customers.loc[customers["id"] == node_id]
+                if node_data.empty:
+                    continue
+
+                node_row = node_data.iloc[0]
+                drone_path.append((node_id, node_row["x"], node_row["y"]))
+
+            # Return to depot
+            drone_path.append((0, depot["x"], depot["y"]))
+
+            # Draw all edges in the drone route
+            for i in range(len(drone_path) - 1):
+                draw_edge(
+                    *drone_path[i],
+                    *drone_path[i + 1],
+                    color=color,
+                    dash="dot",
+                    show_legend=(idx == 0 and i == 0),
+                    legend_name="Drone Resupply" if idx == 0 and i == 0 else "",
+                    arrow_size=10,
+                )
+
+        # Draw truck routes
+        for truck_idx, truck_route in enumerate(truck_routes):
+            nodes = truck_route.get("packages", [])
+            if not nodes:
+                continue
+
+            color = self.colors_truck[truck_idx % len(self.colors_truck)]
+
+            # Build path with coordinates
+            path_coords = [(0, depot["x"], depot["y"])]
+            for node_info in nodes:
+                node_id = node_info["node"]
+                if node_id == 0:
+                    continue
+                node_data = customers.loc[customers["id"] == node_id]
+                if not node_data.empty:
+                    node_row = node_data.iloc[0]
+                    path_coords.append((node_id, node_row["x"], node_row["y"]))
+            path_coords.append((0, depot["x"], depot["y"]))
+
+            # Draw edges
+            for i in range(len(path_coords) - 1):
+                draw_edge(
+                    *path_coords[i],
+                    *path_coords[i + 1],
+                    color=color,
+                    dash="solid",
+                    show_legend=(truck_idx == 0 and i == 0),
+                    legend_name="Truck Route" if truck_idx == 0 else "",
+                    arrow_size=12,
+                )
+
+        # ==========================================================
+        # DEPOT + CUSTOMERS
+        # ==========================================================
+        depot_hover = (
+            f"<b>Depot</b><br>"
+            f"Location: ({depot['x']:.2f}, {depot['y']:.2f})<br>"
+            f"Trucks: {len(truck_routes)}<br>"
+            f"Drones: {len(drone_operations)}"
+        )
+
+        fig.add_trace(
+            go.Scatter(
+                x=[depot["x"]],
+                y=[depot["y"]],
+                mode="markers+text",
+                text=["🏢"],
+                textfont=dict(size=24),
+                marker=dict(size=1, color="rgba(0,0,0,0)"),
+                textposition="middle center",
+                name="🏢 Depot",
+                showlegend=True,
+                hovertemplate="%{customdata}<extra></extra>",
+                customdata=[depot_hover],
+            )
+        )
+
+        # Build customer hover texts
+        hover_texts = []
+        for _, customer in customers.iterrows():
+            cust_id = customer["id"]
+            hover_text = f"<b>Customer {int(cust_id)}</b><br>"
+            hover_text += f"Location: ({customer['x']:.2f}, {customer['y']:.2f})<br>"
+            hover_text += f"Demand: {customer['demand']:.0f} kg<br>"
+
+            if "release_date" in customer:
+                hover_text += f"Release: {customer['release_date']:.0f} min<br>"
+
+            # Check if served by truck (direct service)
+            serving_truck = None
+            for truck_idx, truck_route in enumerate(truck_routes):
+                if any(n["node"] == cust_id for n in truck_route.get("packages", [])):
+                    serving_truck = f"Truck {truck_idx}"
+                    break
+
+            # Check if served by drone resupply
+            serving_drone = None
+            drone_route_info = None
+            for drone_idx, drone_op in enumerate(drone_operations):
+                stops = drone_op.get("stops", [])
+                for stop_idx, stop in enumerate(stops):
+                    if cust_id in stop.get("packages", []) or stop["node"] == cust_id:
+                        serving_drone = f"Drone {drone_idx}"
+                        # Get the full drone route sequence
+                        route_sequence = [s["node"] for s in stops]
+                        drone_route_info = {
+                            "position": stop_idx + 1,
+                            "total_stops": len(stops),
+                            "route": route_sequence,
+                            "packages": stop.get("packages", []),
+                        }
+                        break
+                if serving_drone:
+                    break
+
+            if serving_truck:
+                hover_text += f"<b>Served by:</b> {serving_truck}<br>"
+
+            if serving_drone and drone_route_info:
+                hover_text += f"<b>Resupply by:</b> {serving_drone}<br>"
+                hover_text += f"  Stop {drone_route_info['position']}/{drone_route_info['total_stops']}<br>"
+
+                # Show drone route
+                route_str = " → ".join([f"C{n}" for n in drone_route_info["route"]])
+                hover_text += f"  Drone Route: Depot → {route_str} → Depot<br>"
+
+                # Show packages delivered at this stop
+                if drone_route_info["packages"]:
+                    pkg_str = ", ".join([f"C{p}" for p in drone_route_info["packages"]])
+                    hover_text += f"  Packages: {pkg_str}"
+
+            hover_texts.append(hover_text)
+
+        fig.add_trace(
+            go.Scatter(
+                x=customers["x"],
+                y=customers["y"],
+                mode="markers+text",
+                text=["📦"] * len(customers),
+                textfont=dict(size=18),
+                marker=dict(size=1, color="rgba(0,0,0,0)"),
+                textposition="middle center",
+                name="📦 Customer",
+                showlegend=True,
+                hovertemplate="%{customdata}<extra></extra>",
+                customdata=hover_texts,
+            )
+        )
+
+        fig.update_layout(
+            title=dict(text=title, x=0.5),
+            template="plotly_white",
+            height=600,
+            hovermode="closest",
+            margin=dict(l=60, r=120, t=60, b=60),
+            legend=dict(x=1.02, y=1),
+        )
+
+        fig.update_xaxes(
+            showgrid=True, gridcolor="#e5e7eb", zeroline=True, zerolinecolor="#cbd5e1"
+        )
+        fig.update_yaxes(
+            showgrid=True,
+            gridcolor="#e5e7eb",
+            zeroline=True,
+            zerolinecolor="#cbd5e1",
+            scaleanchor="x",
+            scaleratio=1,
+        )
+
+        return fig
+
+    def _create_empty_plot(
+        self, customers: pd.DataFrame, depot: Dict, title: str
+    ) -> go.Figure:
+        """Create empty plot with just customers and depot"""
+        fig = go.Figure()
+
+        fig.add_trace(
+            go.Scatter(
+                x=[depot["x"]],
+                y=[depot["y"]],
+                mode="markers+text",
+                text=["🏢"],
+                textfont=dict(size=24),
+                marker=dict(size=1, color="rgba(0,0,0,0)"),
+                name="Depot",
+            )
+        )
+
+        fig.add_trace(
+            go.Scatter(
+                x=customers["x"],
+                y=customers["y"],
+                mode="markers+text",
+                text=["📦"] * len(customers),
+                textfont=dict(size=18),
+                marker=dict(size=1, color="rgba(0,0,0,0)"),
+                name="Customer",
+            )
+        )
+
+        fig.update_layout(
+            title=title,
+            template="plotly_white",
+            height=600,
+        )
+
+        return fig
+
     # ======================= Other plots remain unchanged =======================
     def plot_gantt_chart(
         self, schedule: List[Dict], title: str = "Schedule Timeline"

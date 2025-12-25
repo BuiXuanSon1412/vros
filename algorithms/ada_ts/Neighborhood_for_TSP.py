@@ -1,6 +1,6 @@
 import copy
-import Data
-import Function
+from . import Data
+from . import Function
 import random
 
 DIFFERENTIAL_RATE_RELEASE_TIME = 1.2
