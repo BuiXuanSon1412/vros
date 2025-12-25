@@ -1,4 +1,4 @@
-# ui/handlers/upload_handler.py - FIXED: Use version tracker to force widget refresh
+# ui/handlers/upload_handler.py - FIXED: Use version tracker for all problems
 
 import streamlit as st
 from utils.file_parser import FileParser

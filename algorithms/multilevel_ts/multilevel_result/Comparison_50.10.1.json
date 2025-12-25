@@ -1,0 +1,16 @@
+{
+    "dataset": "50.10.1.txt",
+    "parameters": {
+        "drones": 0,
+        "techs": 6,
+        "max_iter": 500
+    },
+    "tabu_search": {
+        "score": 28.590341566739784,
+        "time": 17.53
+    },
+    "multi_level": {
+        "score": 29.091847085937445,
+        "time": 50.34019327163696
+    }
+}

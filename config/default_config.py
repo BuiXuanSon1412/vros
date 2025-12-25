@@ -30,17 +30,17 @@ PROBLEM1_CONFIG = {
         "depot": {"x": 0.0, "y": 0.0},
         "num_technicians": 2,
         "num_drones": 2,
-        "technician_speed": 0.83,
-        "drone_speed": 0.58,
+        "technician_speed": 0.58,
+        "drone_speed": 0.85,
         "flight_endurance_limit": 120.0,
         "sample_waiting_limit": 60.0,
     },
     "algorithm": {
-        "max_iteration": 1000,
-        "max_iteration_no_improve": 100,
+        "max_iteration": 500,
+        "max_iteration_no_improve": 200,
         "alpha1": 1.0,  # penalty for flight endurance violation
         "alpha2": 1.0,  # penalty for waiting time violation
-        "beta": 1.5,  # penalty factor
+        "beta": 0.5,  # penalty factor
     },
 }
 
@@ -56,16 +56,16 @@ PROBLEM2_CONFIG = {
         "drone_takeoff_speed": 7.8232,
         "drone_cruise_speed": 15.6464,
         "drone_landing_speed": 3.9116,
-        "truck_capacity": 5,
+        # "truck_capacity": 5,
         "drone_capacity": 2.27,
         "flight_endurance_limit": 562990,
-        "sample_waiting_limit": 60,
+        # "sample_waiting_limit": 60,
     },
     "algorithm": {
         "crossover_rate": 0.9,
         "mutation_rate": 0.05,
-        "num_generations": 200,
-        "population_size": 100,
+        "num_generations": 2000,
+        "population_size": 200,
         "tabu_search_iterations": 50,
     },
 }
@@ -78,18 +78,19 @@ PROBLEM3_CONFIG = {
         "num_drones": 3,
         "truck_speed": 40,
         "drone_speed": 60,
-        "drone_capacity_options": [2, 4, 8],
-        "drone_capacity_default": 4,
+        # "drone_capacity_options": [2, 4, 8],
+        # "drone_capacity_default": 4,
+        "drone_capacity": 8,
         "flight_endurance_limit": 90,
-        "sample_waiting_limit": 60,
+        # "sample_waiting_limit": 60,
     },
     "algorithm": {
-        "gamma1": 1.0,  # score factor 1
-        "gamma2": 1.0,  # score factor 2
-        "gamma3": 1.0,  # score factor 3
-        "gamma4": 1.0,  # score factor 4
-        "eta": 100,  # variable maximum iteration
-        "loop": 1000,  # fixed maximum iteration
+        "gamma1": 0.5,  # score factor 1
+        "gamma2": 0.3,  # score factor 2
+        "gamma3": 0.1,  # score factor 3
+        "gamma4": 0.3,  # score factor 4
+        "eta": 2,  # variable maximum iteration
+        "loop": 100,  # fixed maximum iteration
         "seg": 5,  # number of segments
     },
     "release_factors": [0.5, 1.0, 1.5, 2.0, 2.5, 3.0],

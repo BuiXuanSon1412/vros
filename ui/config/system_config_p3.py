@@ -122,7 +122,7 @@ def render_system_config_p3():
             f"✓ Vehicle configuration loaded: {num_trucks_value} trucks, {num_drones_value} drones"
         )
 
-    st.markdown("**Drone Capacity & Constraints**")
+    st.markdown("**Drone Constraints**")
 
     col1, col2 = st.columns(2)
 
@@ -139,20 +139,27 @@ def render_system_config_p3():
             )
         else:
             # When no file, show selectbox
-            drone_capacity_value = PROBLEM3_CONFIG["system"]["drone_capacity_default"]
-            try:
-                default_index = PROBLEM3_CONFIG["system"][
-                    "drone_capacity_options"
-                ].index(drone_capacity_value)
-            except ValueError:
-                default_index = 0
 
-            drone_capacity = st.selectbox(
+            drone_capacity = st.text_input(
                 "Drone capacity",
-                options=PROBLEM3_CONFIG["system"]["drone_capacity_options"],
-                index=default_index,
+                value=PROBLEM3_CONFIG["system"]["drone_capacity"],
+                # disabled=True,
                 key=f"p3_drone_capacity_{file_version}",  # Dynamic key
             )
+            # drone_capacity_value = PROBLEM3_CONFIG["system"]["drone_capacity_default"]
+            # try:
+            #    default_index = PROBLEM3_CONFIG["system"][
+            #        "drone_capacity_options"
+            #    ].index(drone_capacity_value)
+            # except ValueError:
+            #    default_index = 0
+
+            # drone_capacity = st.selectbox(
+            #    "Drone capacity",
+            #    options=PROBLEM3_CONFIG["system"]["drone_capacity_options"],
+            #    index=default_index,
+            #    key=f"p3_drone_capacity_{file_version}",  # Dynamic key
+            # )
 
         # Flight endurance
         if file_loaded and file_vehicle_config and "L_d" in file_vehicle_config:
@@ -167,28 +174,29 @@ def render_system_config_p3():
             key=f"p3_flight_endurance_{file_version}",  # Dynamic key
         )
 
-    with col2:
-        # Waiting limit (Note: This might not be in file, using Sigma or default)
-        if file_loaded and file_vehicle_config and "Sigma" in file_vehicle_config:
-            waiting_limit_value = int(file_vehicle_config["Sigma"])
-        else:
-            waiting_limit_value = PROBLEM3_CONFIG["system"]["sample_waiting_limit"]
+    # with col2:
+    #    # Waiting limit (Note: This might not be in file, using Sigma or default)
+    #    if file_loaded and file_vehicle_config and "Sigma" in file_vehicle_config:
+    #        waiting_limit_value = int(file_vehicle_config["Sigma"])
+    #    else:
+    #        waiting_limit_value = PROBLEM3_CONFIG["system"]["sample_waiting_limit"]
 
-        waiting_limit = st.text_input(
-            "Sample waiting limit",
-            value=waiting_limit_value,
-            # disabled=file_loaded,
-            key=f"p3_waiting_limit_{file_version}",  # Dynamic key
-        )
+    #    waiting_limit = st.text_input(
+    #        "Sample waiting limit",
+    #        value=waiting_limit_value,
+    #        # disabled=file_loaded,
+    #        key=f"p3_waiting_limit_{file_version}",  # Dynamic key
+    #    )
 
-    if file_loaded and file_vehicle_config:
+    if file_loaded and file_vehicle_config and "M_d" in file_vehicle_config:
+        drone_capacity_value = int(file_vehicle_config["M_d"])
         capacity_display = (
             drone_capacity
             if isinstance(drone_capacity, (int, float))
             else drone_capacity_value
         )
         st.caption(
-            f"✓ Constraints loaded: Capacity={capacity_display}, Flight={flight_endurance_value} min"
+            f"✓ Constraints loaded: Capacity={capacity_display}, Flight={flight_endurance_value}"
         )
 
     return {
@@ -199,5 +207,5 @@ def render_system_config_p3():
         "drone_speed": drone_speed,
         "drone_capacity": drone_capacity,
         "flight_endurance_limit": flight_endurance,
-        "sample_waiting_limit": waiting_limit,
+        # "sample_waiting_limit": waiting_limit,
     }

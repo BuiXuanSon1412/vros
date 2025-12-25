@@ -1,10 +1,13 @@
 from dataclasses import dataclass
 from typing import Optional
 
+
 @dataclass
 class Config:
     # --- Tabu Search Parameters ---
-    tabuMaxIter: int = 100
+    # tabuMaxIter: int = 100
+    tabuMaxIter: int = 500
+
     tabuNumRunPerDataSet: int = 5
     tabuNotImproveIter: int = 200
     tabuAlpha1: float = 1.0
@@ -23,7 +26,7 @@ class Config:
     # --- Multi-Level Parameters ---
     num_level: int = 3
     percent_match: float = 0.2
-    percent_select: float = 0.1 # Giữ từ bản Python cũ nếu cần
+    percent_select: float = 0.1  # Giữ từ bản Python cũ nếu cần
 
     # --- Vehicle & Constraints Parameters ---
     droneVelocity: float = 0.83
@@ -32,7 +35,7 @@ class Config:
     numTech: int = 1
     droneLimitationFlightTime: float = 120.0
     sampleLimitationWaitingTime: float = 60.0
-    
+
     # --- Operational Parameters ---
     overwrite: bool = True
     run_type: int = 1
@@ -42,10 +45,11 @@ class Config:
     NumRunPerDataSet: int = 5
 
     # --- File Paths & Data Info ---
-    ws: str = "D:/Research/MultiLevel/DASTS2_VERSION9_C"
-    TaburesultFolder: str = "D:/Research/MultiLevel/DASTS2_VERSION9_C/tabu_result"
-    MultiLevelresultFolder: str = "D:/Research/MultiLevel/DASTS2_VERSION9_C/multilevel_result"
-    dataPath: str = "/data"
+    ws: str = ""
+    TaburesultFolder: str = "./tabu_result"
+    MultiLevelresultFolder: str = "./multilevel_result"
+    dataPath: str = "./data"
     dataName: str = "6.5.1.txt"
     multiData: bool = True
     dataType: str = "6"
+

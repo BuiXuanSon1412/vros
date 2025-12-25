@@ -30,38 +30,26 @@ def render_algorithm_config_p3():
     st.markdown("**Score Factors**")
     col1, col2 = st.columns(2)
     with col1:
-        gamma1 = st.number_input(
+        gamma1 = st.text_input(
             "Score factor 1 (γ₁)",
-            min_value=0.0,
-            max_value=5.0,
             value=PROBLEM3_CONFIG["algorithm"]["gamma1"],
-            step=0.1,
             key="p3_gamma1",
         )
-        gamma2 = st.number_input(
+        gamma2 = st.text_input(
             "Score factor 2 (γ₂)",
-            min_value=0.0,
-            max_value=5.0,
             value=PROBLEM3_CONFIG["algorithm"]["gamma2"],
-            step=0.1,
             key="p3_gamma2",
         )
 
     with col2:
-        gamma3 = st.number_input(
+        gamma3 = st.text_input(
             "Score factor 3 (γ₃)",
-            min_value=0.0,
-            max_value=5.0,
             value=PROBLEM3_CONFIG["algorithm"]["gamma3"],
-            step=0.1,
             key="p3_gamma3",
         )
-        gamma4 = st.number_input(
+        gamma4 = st.text_input(
             "Score factor 4 (γ₄)",
-            min_value=0.0,
-            max_value=5.0,
             value=PROBLEM3_CONFIG["algorithm"]["gamma4"],
-            step=0.1,
             key="p3_gamma4",
         )
 
@@ -69,32 +57,23 @@ def render_algorithm_config_p3():
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        eta = st.number_input(
-            "Variable max iteration (η)",
-            min_value=10,
-            max_value=500,
+        eta = st.text_input(
+            "Max non-improved iteration factor (η)",
             value=PROBLEM3_CONFIG["algorithm"]["eta"],
-            step=10,
             key="p3_eta",
         )
 
     with col2:
-        loop = st.number_input(
+        loop = st.text_input(
             "Fixed max iteration (LOOP)",
-            min_value=100,
-            max_value=5000,
             value=PROBLEM3_CONFIG["algorithm"]["loop"],
-            step=100,
             key="p3_loop",
         )
 
     with col3:
-        seg = st.number_input(
+        seg = st.text_input(
             "Number of segments (SEG)",
-            min_value=1,
-            max_value=20,
             value=PROBLEM3_CONFIG["algorithm"]["seg"],
-            step=1,
             key="p3_seg",
         )
 

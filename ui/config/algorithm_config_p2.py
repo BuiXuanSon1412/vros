@@ -30,49 +30,35 @@ def render_algorithm_config_p2():
     st.markdown("**Genetic Algorithm Parameters**")
     col1, col2 = st.columns(2)
     with col1:
-        crossover_rate = st.number_input(
+        crossover_rate = st.text_input(
             "Crossover rate",
-            min_value=0.0,
-            max_value=1.0,
             value=PROBLEM2_CONFIG["algorithm"]["crossover_rate"],
-            step=0.05,
             key="p2_crossover_rate",
         )
-        num_generations = st.number_input(
+        num_generations = st.text_input(
             "Number of generations",
-            min_value=50,
-            max_value=1000,
             value=PROBLEM2_CONFIG["algorithm"]["num_generations"],
-            step=10,
             key="p2_num_generations",
         )
 
     with col2:
-        mutation_rate = st.number_input(
+        mutation_rate = st.text_input(
             "Mutation rate",
-            min_value=0.0,
-            max_value=1.0,
             value=PROBLEM2_CONFIG["algorithm"]["mutation_rate"],
-            step=0.01,
             key="p2_mutation_rate",
         )
-        population_size = st.number_input(
+        population_size = st.text_input(
             "Population size",
-            min_value=20,
-            max_value=500,
             value=PROBLEM2_CONFIG["algorithm"]["population_size"],
-            step=10,
             key="p2_population_size",
         )
 
     st.markdown("**Tabu Search Parameters**")
 
-    tabu_iterations = st.number_input(
+    # [10, 20, 30, 40, 50]
+    tabu_iterations = st.text_input(
         "Number of iterations",
-        min_value=10,
-        max_value=200,
         value=PROBLEM2_CONFIG["algorithm"]["tabu_search_iterations"],
-        step=10,
         key="p2_tabu_iterations",
     )
 
