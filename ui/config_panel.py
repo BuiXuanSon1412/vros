@@ -56,7 +56,8 @@ def render_config_panel(problem_type):
             button_text,
             type="primary",
             key=f"run_{problem_type}",
-            width="stretch",
+            # width="stretch",
+            use_container_width=True,
             disabled=not selected_algos,
         )
 
