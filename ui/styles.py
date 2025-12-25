@@ -245,53 +245,6 @@ div[data-testid="stExpander"] > div:last-child {
     color: #475569;
 }
 
-/* Text Input */
-/*
-.stTextInput label {
-    font-size: 0.95rem;
-    margin-bottom: 0.2rem;
-    font-weight: 600;
-    color: #334155;
-}
-
-.stTextInput {
-    margin-bottom: 0.2rem;
-}
-
-.stTextInput > div > div > input {
-    border: 1px solid #e2e8f0;
-    border-radius: 3px;
-    padding: 0rem 0.6rem;
-    font-size: 0.875rem;
-    background-color: #ffffff;
-    transition: border-color 0.2s ease;
-}
-
-.stTextInput > div > div > input:hover {
-    border-color: #cbd5e1;
-}
-
-.stTextInput > div > div > input:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    background-color: #ffffff;
-}
-
-
-.stTextInput button {
-    border-radius: 3px;
-    background-color: #f8fafc;
-    border: 1px solid #e2e8f0;
-    color: #64748b;
-    transition: all 0.2s ease;
-}
-
-.stTextInput button:hover {
-    background-color: #f1f5f9;
-    border-color: #cbd5e1;
-    color: #475569;
-}
-*/
 
 
 /* Metric cards - minimalist - COMPACT */

@@ -127,7 +127,12 @@ class FileParser:
         XCOORD  YCOORD  DEMAND  RELEASE_DATE
         40  50  0   0  (depot)
         x1  y1  demand1  release1
-        ...
+        ...drone_capacity = st.text_input(
+                "Drone capacity",
+                value=drone_capacity_value,
+                # disabled=True,
+                key=f"p3_drone_capacity_{file_version}",  # Dynamic key
+            )
         """
         lines = file_content.strip().split("\n")
 
