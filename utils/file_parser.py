@@ -3,13 +3,16 @@
 import pandas as pd
 import numpy as np
 from typing import Dict, Tuple
+import streamlit as st
+
+from config.default_config import PROBLEM2_CONFIG, PROBLEM3_CONFIG
 
 
 class FileParser:
     """Parse different file formats for each problem type"""
 
     @staticmethod
-    def parse_problem1_file(file_content: str) -> Tuple[pd.DataFrame, Dict, np.ndarray]:
+    def parse_problem1_file(file_content: str) -> Tuple[pd.DataFrame, Dict]:
         """
         Parse Problem 1 file format (6.5.1.txt)
         Format:
@@ -33,10 +36,6 @@ class FileParser:
                     "x": float(parts[0]),
                     "y": float(parts[1]),
                     "demand": float(parts[2]),
-                    "service_time": 10,  # Default value
-                    "priority": 1,  # Default value
-                    "time_window_start": 0,
-                    "time_window_end": 480,
                 }
             )
 
@@ -46,14 +45,13 @@ class FileParser:
         depot = {"id": 0, "x": 0.0, "y": 0.0, "name": "Depot"}
 
         # Calculate distance matrix
-        distance_matrix = FileParser._calculate_distance_matrix(customers_df, depot)
 
-        return customers_df, depot, distance_matrix
+        return customers_df, depot
 
     @staticmethod
     def parse_problem2_file(
         file_content: str,
-    ) -> Tuple[pd.DataFrame, Dict, np.ndarray, Dict]:
+    ) -> Tuple[pd.DataFrame, Dict, Dict]:
         """
         Parse Problem 2 file format (10.10.1.txt)
         Format:
@@ -86,10 +84,6 @@ class FileParser:
                     "only_staff": int(parts[3]),
                     "service_time_truck": int(parts[4]),
                     "service_time_drone": int(parts[5]),
-                    "service_time": int(parts[4]),  # Default to truck
-                    "priority": 1,
-                    "time_window_start": 0,
-                    "time_window_end": 480,
                 }
             )
 
@@ -98,9 +92,6 @@ class FileParser:
         # Create depot at origin
         depot = {"id": 0, "x": 0.0, "y": 0.0, "name": "Depot"}
 
-        # Calculate distance matrix
-        distance_matrix = FileParser._calculate_distance_matrix(customers_df, depot)
-
         # Vehicle config
         vehicle_config = {
             "num_staff": num_staff,
@@ -108,12 +99,12 @@ class FileParser:
             "drone_flight_time": drone_flight_time,
         }
 
-        return customers_df, depot, distance_matrix, vehicle_config
+        return customers_df, depot, vehicle_config
 
     @staticmethod
     def parse_problem3_file(
         file_content: str,
-    ) -> Tuple[pd.DataFrame, Dict, np.ndarray, Dict]:
+    ) -> Tuple[pd.DataFrame, Dict, Dict]:
         """
         Parse Problem 3 file format (10.1.txt)
         Format:
@@ -159,6 +150,31 @@ class FileParser:
                 except ValueError:
                     continue
 
+        file_version = st.session_state.get("file_version_3", 0)
+        vehicle_config["num_trucks"] = st.session_state.get(
+            f"p3_num_trucks_{file_version}", PROBLEM3_CONFIG["system"]["num_trucks"]
+        )
+        vehicle_config["num_drones"] = st.session_state.get(
+            f"p3_num_drones_{file_version}", PROBLEM3_CONFIG["system"]["num_drones"]
+        )
+
+        vehicle_config["truck_speed"] = st.session_state.get(
+            f"p3_truck_speed_{file_version}", PROBLEM3_CONFIG["system"]["truck_speed"]
+        )
+        vehicle_config["drone_speed"] = st.session_state.get(
+            f"p3_drone_speed_{file_version}", PROBLEM3_CONFIG["system"]["drone_speed"]
+        )
+
+        vehicle_config["drone_capacity"] = st.session_state.get(
+            f"p3_drone_capacity_{file_version}",
+            PROBLEM3_CONFIG["system"]["drone_capacity"],
+        )
+
+        vehicle_config["flight_endurance_limmit"] = st.session_state.get(
+            f"p3_flight_endurance_{file_version}",
+            PROBLEM3_CONFIG["system"]["flight_endurance_limmit"],
+        )
+
         # Parse customer data (lines after data_start)
         customers = []
         depot = None
@@ -186,7 +202,8 @@ class FileParser:
                         "id": 0,
                         "x": x,
                         "y": y,
-                        "name": "Depot",
+                        "demand": int(demand),
+                        "release": int(release),
                     }
                 else:  # Customer data
                     customers.append(
@@ -196,10 +213,6 @@ class FileParser:
                             "y": y,
                             "demand": int(demand),  # Keep as integer
                             "release_date": int(release),  # Keep as integer
-                            "service_time": vehicle_config.get("Sigma", 5),
-                            "priority": 1,
-                            "time_window_start": 0,
-                            "time_window_end": 480,
                         }
                     )
                     customer_id += 1
@@ -211,33 +224,8 @@ class FileParser:
             raise ValueError("No customer data found in file")
 
         if depot is None:
-            depot = {"id": 0, "x": 0.0, "y": 0.0, "name": "Depot"}
+            depot = {"id": 0, "x": 0.0, "y": 0.0, "demand": 0, "release_date": 0}
 
         customers_df = pd.DataFrame(customers)
 
-        # Calculate distance matrix
-        distance_matrix = FileParser._calculate_distance_matrix(customers_df, depot)
-
-        return customers_df, depot, distance_matrix, vehicle_config
-
-    @staticmethod
-    def _calculate_distance_matrix(
-        customers_df: pd.DataFrame, depot: Dict
-    ) -> np.ndarray:
-        """Calculate Euclidean distance matrix"""
-        # Add depot at the beginning
-        all_locations = pd.concat(
-            [pd.DataFrame([depot]), customers_df[["x", "y"]]], ignore_index=True
-        )
-
-        n = len(all_locations)
-        distance_matrix = np.zeros((n, n))
-
-        for i in range(n):
-            for j in range(n):
-                if i != j:
-                    dx = all_locations.iloc[i]["x"] - all_locations.iloc[j]["x"]
-                    dy = all_locations.iloc[i]["y"] - all_locations.iloc[j]["y"]
-                    distance_matrix[i][j] = np.sqrt(dx**2 + dy**2)
-
-        return distance_matrix
+        return customers_df, depot, vehicle_config

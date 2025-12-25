@@ -51,33 +51,30 @@ def handle_file_upload(problem_type, uploaded_file):
 def _parse_file(file_parser, problem_type, file_content):
     """Parse file based on problem type"""
     if problem_type == 1:
-        customers_df, depot, distance_matrix = file_parser.parse_problem1_file(
+        customers_df, depot = file_parser.parse_problem1_file(
             file_content
         )
         return {
             "customers": customers_df,
             "depot": depot,
-            "distance_matrix": distance_matrix,
             "vehicle_config": None,
         }
     elif problem_type == 2:
-        customers_df, depot, distance_matrix, vehicle_config = (
+        customers_df, depot, vehicle_config = (
             file_parser.parse_problem2_file(file_content)
         )
         return {
             "customers": customers_df,
             "depot": depot,
-            "distance_matrix": distance_matrix,
             "vehicle_config": vehicle_config,
         }
     else:  # problem_type == 3
-        customers_df, depot, distance_matrix, vehicle_config = (
+        customers_df, depot, vehicle_config = (
             file_parser.parse_problem3_file(file_content)
         )
         return {
             "customers": customers_df,
             "depot": depot,
-            "distance_matrix": distance_matrix,
             "vehicle_config": vehicle_config,
         }
 

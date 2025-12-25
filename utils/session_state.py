@@ -14,7 +14,6 @@ def _initialize_problem_state(problem_id):
     state_keys = {
         f"customers_{problem_id}": None,
         f"depot_{problem_id}": None,
-        f"distance_matrix_{problem_id}": None,
         f"solution_{problem_id}": None,
         f"results_{problem_id}": {},
         f"chart_counter_{problem_id}": 0,
@@ -33,7 +32,6 @@ def get_problem_state(problem_id):
     return {
         "customers": st.session_state.get(f"customers_{problem_id}"),
         "depot": st.session_state.get(f"depot_{problem_id}"),
-        "distance_matrix": st.session_state.get(f"distance_matrix_{problem_id}"),
         "solution": st.session_state.get(f"solution_{problem_id}"),
         "results": st.session_state.get(f"results_{problem_id}", {}),
         "file_vehicle_config": st.session_state.get(

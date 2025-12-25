@@ -1,8 +1,8 @@
 # ui/handlers/run_handler.py - UPDATED for Multiple Algorithm Support
 
 import streamlit as st
-from utils.solver import DummySolver
 import time
+from utils.solver import Solver
 
 
 def handle_run_button_multi(
@@ -13,9 +13,6 @@ def handle_run_button_multi(
     if not _validate_data_exists(problem_type):
         st.error("Please upload data first!")
         return
-
-    # Convert system_config to vehicle_config format
-    vehicle_config = _convert_to_vehicle_config(problem_type, system_config)
 
     # Progress tracking
     total_algorithms = len(selected_algorithms)
@@ -30,7 +27,7 @@ def handle_run_button_multi(
 
         with st.spinner(f"Running {algorithm}..."):
             solution = _run_algorithm(
-                problem_type, algorithm, vehicle_config, algorithm_params
+                problem_type, algorithm, system_config, algorithm_params
             )
 
             # Store results
@@ -64,54 +61,13 @@ def _validate_data_exists(problem_type):
     )
 
 
-def _convert_to_vehicle_config(problem_type, system_config):
-    """Convert problem-specific system config to vehicle_config format"""
-    if problem_type in [1, 2]:
-        # Problem 1 & 2: technicians and drones
-        return {
-            "truck": {
-                "count": system_config.get("num_technicians", 2),
-                "speed": system_config.get("technician_speed")
-                or system_config.get("technician_baseline_speed", 35),
-                "capacity": system_config.get("truck_capacity", 100),
-                "cost_per_km": 5000,
-            },
-            "drone": {
-                "count": system_config.get("num_drones", 2),
-                "speed": system_config.get("drone_cruise_speed")
-                or system_config.get("drone_speed", 60),
-                "capacity": system_config.get("drone_capacity", 5),
-                "cost_per_km": 2000,
-                "energy_limit": system_config.get("flight_endurance_limit", 3600)
-                / 60,  # convert to minutes
-            },
-        }
-    else:  # Problem 3
-        return {
-            "truck": {
-                "count": system_config.get("num_trucks", 3),
-                "speed": system_config.get("truck_speed", 40),
-                "capacity": 100,
-                "cost_per_km": 5000,
-            },
-            "drone": {
-                "count": system_config.get("num_drones", 3),
-                "speed": system_config.get("drone_speed", 60),
-                "capacity": system_config.get("drone_capacity", 4),
-                "cost_per_km": 2000,
-                "energy_limit": system_config.get("flight_endurance_limit", 90),
-            },
-        }
-
-
 def _run_algorithm(problem_type, selected_algorithm, vehicle_config, algorithm_params):
     """Execute the selected algorithm"""
-    solver = DummySolver(problem_type, selected_algorithm)
+    solver = Solver(problem_type, selected_algorithm)
 
     solution = solver.solve(
         st.session_state[f"customers_{problem_type}"],
         st.session_state[f"depot_{problem_type}"],
-        st.session_state[f"distance_matrix_{problem_type}"],
         vehicle_config,
         algorithm_params,
     )

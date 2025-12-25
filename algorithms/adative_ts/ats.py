@@ -10,7 +10,13 @@ import os
 import numpy as np
 import math
 import json
-
+import numpy
+from Data import (
+    calculate_angle,
+    calculate_standard_deviation,
+    euclid_distance,
+    manhattan_distance,
+)
 
 global LOOP
 global tabu_tenure
@@ -689,6 +695,69 @@ def run_experiment(number_of_cities: int):
             json.dump(output, f, indent=2)
 
         print(f"[DONE] Saved result → {output_path}")
+
+
+class ATSSolver:
+    def __init__(self, problem_type, algorithm_name):
+        self.problem_type = problem_type
+        self.algorithm_name = algorithm_name
+
+    def load(self, customers, depot, vehicle_config, algorithm_params):
+        Data.city = [[depot["x"], depot["y"]]]
+
+        for customer in customers:
+            Data.city.append([customer["x"], customer["y"]])
+            Data.city_demand.append(customer["demand"])
+            Data.release_date.append(customer["release_date"])
+
+        Data.number_of_cities = len(Data.city)
+
+        Data.truck_speed = vehicle_config["truck_speed"]
+        Data.drone_speed = vehicle_config["drone_speed"]
+
+        Data.manhattan_move_matrix = [
+            [0.0] * Data.number_of_cities for _ in range(Data.number_of_cities)
+        ]
+        Data.euclid_flight_matrix = [
+            [0.0] * Data.number_of_cities for _ in range(Data.number_of_cities)
+        ]
+
+        Data.value_tan_of_city = [0.0] * Data.number_of_cities
+
+        for i in range(Data.number_of_cities):
+            for j in range(Data.number_of_cities):
+                Data.euclid_flight_matrix[i][j] = (
+                    euclid_distance(Data.city[i], Data.city[j]) / Data.drone_speed
+                )
+        Data.euclid_flight_matrix = numpy.array(Data.euclid_flight_matrix)
+        for i in range(Data.number_of_cities):
+            for j in range(Data.number_of_cities):
+                Data.manhattan_move_matrix[i][j] = (
+                    Data.manhattan_distance(Data.city[i], Data.city[j])
+                    / Data.truck_speed
+                )
+        Data.manhattan_move_matrix = numpy.array(Data.manhattan_move_matrix)
+        for i in range(1, number_of_cities):
+            Data.value_tan_of_city[i] = calculate_angle(Data.city[0], Data.city[i])
+
+    def solve(self, customers, depot, vehicle_config, algorithm_params):
+        self.load(customers, depot, vehicle_config, algorithm_params)
+
+        start_time = time.time()
+
+        best_fitness, best_solution = Tabu_search_for_CVRP(1)
+
+        runtime = time.time() - start_time
+
+        feasible = Function.Check_if_feasible(best_solution)
+
+        result = {
+            "fitness": best_fitness,
+            "runtime_sec": runtime,
+            "feasible": feasible,
+        }
+
+        return result
 
 
 # ===============================
