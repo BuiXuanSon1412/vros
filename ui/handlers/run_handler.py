@@ -26,12 +26,12 @@ def handle_run_button_multi(
         )
 
         with st.spinner(f"Running {algorithm}..."):
-            solution = _run_algorithm(
+            result = _run_algorithm(
                 problem_type, algorithm, system_config, algorithm_params
             )
 
             # Store results
-            _store_results(problem_type, algorithm, solution)
+            _store_results(problem_type, algorithm, result)
 
             # Small delay for UI update
             time.sleep(0.3)
@@ -57,7 +57,6 @@ def _validate_data_exists(problem_type):
     return (
         st.session_state.get(f"customers_{problem_type}") is not None
         and st.session_state.get(f"depot_{problem_type}") is not None
-        and st.session_state.get(f"distance_matrix_{problem_type}") is not None
     )
 
 
@@ -75,16 +74,16 @@ def _run_algorithm(problem_type, selected_algorithm, vehicle_config, algorithm_p
     return solution
 
 
-def _store_results(problem_type, selected_algorithm, solution):
+def _store_results(problem_type, selected_algorithm, result):
     """Store solution in session state"""
     # Store as current solution (for single view)
-    st.session_state[f"solution_{problem_type}"] = solution
+    st.session_state[f"result_{problem_type}"] = result
 
     # Store in results dictionary (for comparison)
     if f"results_{problem_type}" not in st.session_state:
         st.session_state[f"results_{problem_type}"] = {}
 
-    st.session_state[f"results_{problem_type}"][selected_algorithm] = solution
+    st.session_state[f"results_{problem_type}"][selected_algorithm] = result
 
     # Increment chart counter to force refresh
     st.session_state[f"chart_counter_{problem_type}"] += 1
