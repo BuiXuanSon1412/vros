@@ -1,10 +1,10 @@
 import copy
-import Data
-import Function
+from . import Data
+from . import Function
 import random
-import Neighborhood11
-import Neighborhood10
-import Neighborhood_drone
+from . import Neighborhood11
+from . import Neighborhood10
+from . import Neighborhood_drone
 
 epsilon = (-1) * 0.00001
 DIFFERENTIAL_RATE_RELEASE_TIME = Data.DIFFERENTIAL_RATE_RELEASE_TIME

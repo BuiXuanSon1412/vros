@@ -1,5 +1,5 @@
 # utils/solver.py (refactored)
-from algorithms.hnsgaii_ts.main import HNSGAIITSSolver
+# from algorithms.hnsgaii_ts.main import HNSGAIITSSolver
 from algorithms.ada_ts.ats import ATSSolver
 
 
@@ -9,7 +9,7 @@ class AlgorithmFactory:
     ALGORITHM_MAP = {
         1: {},
         2: {
-            "HNSGAII-TS": HNSGAIITSSolver,
+            #            "HNSGAII-TS": HNSGAIITSSolver,
         },
         3: {
             "Adaptive Tabu Search": ATSSolver,
@@ -24,7 +24,7 @@ class AlgorithmFactory:
             raise ValueError(
                 f"Algorithm {algorithm_name} not found for Problem {problem_type}"
             )
-        return algo_class()
+        return algo_class(problem_type, algorithm_name)
 
 
 class Solver:

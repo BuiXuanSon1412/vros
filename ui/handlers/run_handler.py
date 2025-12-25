@@ -64,14 +64,14 @@ def _run_algorithm(problem_type, selected_algorithm, vehicle_config, algorithm_p
     """Execute the selected algorithm"""
     solver = Solver(problem_type, selected_algorithm)
 
-    solution = solver.solve(
+    result = solver.solve(
         st.session_state[f"customers_{problem_type}"],
         st.session_state[f"depot_{problem_type}"],
         vehicle_config,
         algorithm_params,
     )
 
-    return solution
+    return result
 
 
 def _store_results(problem_type, selected_algorithm, result):

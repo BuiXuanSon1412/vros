@@ -1,8 +1,7 @@
-import random
 import copy
-import Data
-import Function
-import Neighborhood
+from . import Data
+from . import Function
+from . import Neighborhood
 
 alpha = 0.6
 

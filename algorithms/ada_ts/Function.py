@@ -1,13 +1,11 @@
 import copy
 import math
 import random
-import numpy
 import queue
-import time
-import Data
-import Neighborhood
-import Neighborhood_for_TSP
-import Neighborhood_drone
+from . import Data
+from . import Neighborhood
+from . import Neighborhood_for_TSP
+from . import Neighborhood_drone
 import os
 
 
@@ -261,6 +259,8 @@ def initial_solution3():
         #       crd.append(r_d[i][0])
         r_d.pop(0)
     for i in range(Data.number_of_trucks + 1, Data.number_of_cities):
+        if r_d is not None:
+            break
         index = -1
         min = 10000000
         next_customer_add = r_d[0]
@@ -2055,6 +2055,8 @@ def schedule(solution):
 
                 # Update truck's next leg
                 next_pt = truck_current_point[truck_idx] + 1
+                if next_pt >= len(truck_position[truck_idx]):
+                    break
                 dist_to_next = Data.manhattan_move_matrix[target_node][
                     truck_position[truck_idx][next_pt]
                 ]

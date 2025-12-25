@@ -2,7 +2,6 @@
 
 import streamlit as st
 from utils.visualizer import Visualizer
-from utils.solver import AlgorithmRunner
 import pandas as pd
 
 
@@ -29,16 +28,16 @@ def render_comparison_view(problem_type):
     st.markdown("**Algorithm Comparison**")
 
     # Comparison table
-    _render_comparison_table(problem_type, results)
+    # _render_comparison_table(problem_type, results)
 
     # Comparison charts
-    _render_comparison_charts(problem_type, results, chart_counter)
+    # _render_comparison_charts(problem_type, results, chart_counter)
 
     # Best algorithm recommendation
     # _render_best_algorithm_recommendation(results)
 
     # Detailed comparison
-    _render_detailed_comparison(results)
+    # _render_detailed_comparison(results)
 
 
 def _render_single_algorithm_summary(problem_type, results):
@@ -62,6 +61,7 @@ def _render_single_algorithm_summary(problem_type, results):
     st.info("💡 Run other algorithms to enable comparison features")
 
 
+'''
 def _render_comparison_table(problem_type, results):
     """Render comparison summary table with ranking"""
     runner = AlgorithmRunner(problem_type)
@@ -117,8 +117,9 @@ def _render_comparison_table(problem_type, results):
             mime="text/csv",
             width="stretch",
         )
+'''
 
-
+'''
 def _render_comparison_charts(problem_type, results, chart_counter):
     """Render comparison bar charts"""
     viz = get_visualizer()
@@ -337,3 +338,4 @@ def _render_convergence_statistics_comparison(results):
     if stats_data:
         df_stats = pd.DataFrame(stats_data)
         st.dataframe(df_stats, width="stretch", hide_index=True)
+'''
