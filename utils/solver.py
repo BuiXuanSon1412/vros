@@ -1,8 +1,6 @@
 # utils/solver.py (refactored)
-import algorithms.adative_ts.ats as adaptive_ts
 from algorithms.hnsgaii_ts.main import HNSGAIITSSolver
-import algorithms.multilevel_ts as multilevel_ts
-from algorithms.adative_ts.ats import ATSSolver
+from algorithms.ada_ts.ats import ATSSolver
 
 
 class AlgorithmFactory:

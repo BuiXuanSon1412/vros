@@ -9,12 +9,11 @@ Utility modules for the system
 """
 
 from .visualizer import Visualizer
-from .solver import DummySolver, AlgorithmRunner
+from .solver import Solver
 from .file_parser import FileParser
 
 __all__ = [
     "Visualizer",
-    "DummySolver",
-    "AlgorithmRunner",
+    "Solver",
     "FileParser",
 ]

@@ -1919,7 +1919,14 @@ def schedule(solution):
     while True:
         # Step A: Move trucks through nodes that don't require drone delivery
         for i in range(Data.number_of_trucks):
-            while base_path[i][truck_current_point[i]][1] == []:
+            # Check if truck has reached depot (avoid processing after completion)
+            if truck_current_point[i] == 0:
+                continue
+
+            while (
+                truck_current_point[i] < len(base_path[i])
+                and base_path[i][truck_current_point[i]][1] == []
+            ):
                 curr_node = truck_position[i][truck_current_point[i]]
 
                 if curr_node == 0:  # Final arrival at depot
@@ -1931,6 +1938,7 @@ def schedule(solution):
                             "packages": [],
                         }
                     )
+                    truck_current_point[i] = 0  # Mark as completed
                     break
 
                 # Normal truck stop (arrival, unloading, departure)
@@ -1963,7 +1971,9 @@ def schedule(solution):
                 if truck_position[i][next_idx] != 0:
                     truck_current_point[i] = next_idx
                 else:
-                    truck_current_point[i] = 0
+                    # Next node is depot, but don't increment yet
+                    # Let it be processed in the next iteration
+                    truck_current_point[i] = next_idx
                     break
 
         # Step B: Check if all trucks have finished their routes
@@ -2004,7 +2014,6 @@ def schedule(solution):
                 truck_arrival = truck_time[truck_idx]
 
                 # Synchronized departure (after both arrive and unloading is finished)
-                # Logic: max(drone_arrive + unload, truck_arrive + unload)
                 finish_time = max(
                     drone_curr_time + Data.unloading_time,
                     truck_arrival + Data.unloading_time,
@@ -2050,9 +2059,13 @@ def schedule(solution):
                     truck_position[truck_idx][next_pt]
                 ]
                 truck_time[truck_idx] = finish_time + dist_to_next
-                truck_current_point[truck_idx] = (
-                    next_pt if truck_position[truck_idx][next_pt] != 0 else 0
-                )
+
+                # Update position
+                if truck_position[truck_idx][next_pt] != 0:
+                    truck_current_point[truck_idx] = next_pt
+                else:
+                    # Don't set to 0 yet, set to the index pointing to depot
+                    truck_current_point[truck_idx] = next_pt
 
                 last_drone_node = target_node
                 drone_curr_time = finish_time  # Drone waits for unloading to finish

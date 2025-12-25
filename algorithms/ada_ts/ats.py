@@ -47,6 +47,8 @@ TIME_LIMIT = 14000
 SEGMENT = int(os.getenv("SEGMENT", 12))
 ite = int(os.getenv("ITERATION", 1))
 
+progress_log = []
+
 
 def roulette_wheel_selection(population, fitness_scores):
     total_fitness = sum(fitness_scores)
@@ -381,6 +383,15 @@ def Tabu_search(
                                 min_nei[j] = cfnode
                                 index[j] = k
                                 min_sum[j] = current_neighborhood[j][1][k][1][2]
+                progress_log.append(
+                    {
+                        "iteration": T,
+                        "sub_iteration": i,
+                        "fitness": best_fitness,
+                        "time": time.time(),
+                    }
+                )
+
             index_best_nei = 0
             best_fit_in_cur_loop = min_nei[0]
 
@@ -680,6 +691,8 @@ def run_experiment(number_of_cities: int):
                 best_overall_fitness = best_fitness
                 best_overall_solution = best_solution
 
+        print(best_overall_solution)
+
         output = {
             "instance": filename,
             "number_of_cities": number_of_cities,
@@ -747,14 +760,17 @@ class ATSSolver:
 
         best_fitness, best_solution = Tabu_search_for_CVRP(1)
 
+        print(best_solution)
         runtime = time.time() - start_time
 
         feasible = Function.Check_if_feasible(best_solution)
 
         result = {
             "fitness": best_fitness,
+            "solution": best_solution,
             "runtime_sec": runtime,
             "feasible": feasible,
+            "progress": progress_log,
         }
 
         return result

@@ -1,4 +1,4 @@
-# ui/handlers/upload_handler.py - FIXED: Use version tracker for all problems
+# ui/handlers/upload_handler.py - FIXED: Use version tracker to force widget refresh
 
 import streamlit as st
 from utils.file_parser import FileParser
@@ -51,17 +51,15 @@ def handle_file_upload(problem_type, uploaded_file):
 def _parse_file(file_parser, problem_type, file_content):
     """Parse file based on problem type"""
     if problem_type == 1:
-        customers_df, depot = file_parser.parse_problem1_file(
-            file_content
-        )
+        customers_df, depot = file_parser.parse_problem1_file(file_content)
         return {
             "customers": customers_df,
             "depot": depot,
             "vehicle_config": None,
         }
     elif problem_type == 2:
-        customers_df, depot, vehicle_config = (
-            file_parser.parse_problem2_file(file_content)
+        customers_df, depot, vehicle_config = file_parser.parse_problem2_file(
+            file_content
         )
         return {
             "customers": customers_df,
@@ -69,8 +67,8 @@ def _parse_file(file_parser, problem_type, file_content):
             "vehicle_config": vehicle_config,
         }
     else:  # problem_type == 3
-        customers_df, depot, vehicle_config = (
-            file_parser.parse_problem3_file(file_content)
+        customers_df, depot, vehicle_config = file_parser.parse_problem3_file(
+            file_content
         )
         return {
             "customers": customers_df,
@@ -83,7 +81,6 @@ def _store_parsed_data(problem_type, parsed_data, file_id):
     """Store parsed data in session state"""
     st.session_state[f"customers_{problem_type}"] = parsed_data["customers"]
     st.session_state[f"depot_{problem_type}"] = parsed_data["depot"]
-    st.session_state[f"distance_matrix_{problem_type}"] = parsed_data["distance_matrix"]
     st.session_state[f"file_vehicle_config_{problem_type}"] = parsed_data[
         "vehicle_config"
     ]
