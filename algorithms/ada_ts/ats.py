@@ -767,7 +767,7 @@ class ATSSolver:
 
         result = {
             "fitness": best_fitness,
-            "solution": best_solution,
+            "solution": Function.schedule(best_solution),
             "runtime_sec": runtime,
             "feasible": feasible,
             "progress": progress_log,
