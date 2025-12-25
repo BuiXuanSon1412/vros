@@ -1,6 +1,6 @@
-from route_check import feasible_drone_route
-from fitness import calculate_truck_time
-import parameters as params
+from algorithms.hnsgaii_ts.route_check import feasible_drone_route
+from algorithms.hnsgaii_ts.fitness import calculate_truck_time
+from . import parameters as params
 
 
 def fix_route(drone_route: list) -> list:

@@ -1,10 +1,10 @@
 import random
 from typing import List
-import parameters as params
-from fitness import calculate_fitness, TRUCK_HOUR
-from route_check import feasible_drone_route
-from structs import Individual, NodeDistance, DistanceRanking
-from repair import repair_route
+from . import parameters as params
+from algorithms.hnsgaii_ts.fitness import calculate_fitness, TRUCK_HOUR
+from algorithms.hnsgaii_ts.route_check import feasible_drone_route
+from algorithms.hnsgaii_ts.structs import Individual, NodeDistance, DistanceRanking
+from algorithms.hnsgaii_ts.repair import repair_route
 # --- CÁC HÀM TIỆN ÍCH CƠ BẢN ---
 
 

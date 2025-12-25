@@ -4,14 +4,14 @@ from typing import List, Tuple
 
 import parameters as params
 
-from structs import MoveRecord, Individual, TabuRecord
-from localsearch_utils import track_result
-from route_check import check_route
-from fitness import calculate_fitness
-from localsearch_utils import split_tracks
-from pareto_update import update_pareto, in_pareto
-from nsgaii_utils import fast_non_dominated_sort
-from output import output
+from algorithms.hnsgaii_ts.structs import MoveRecord, Individual, TabuRecord
+from algorithms.hnsgaii_ts.localsearch_utils import track_result
+from algorithms.hnsgaii_ts.route_check import check_route
+from algorithms.hnsgaii_ts.fitness import calculate_fitness
+from algorithms.hnsgaii_ts.localsearch_utils import split_tracks
+from algorithms.hnsgaii_ts.pareto_update import update_pareto, in_pareto
+from algorithms.hnsgaii_ts.nsgaii_utils import fast_non_dominated_sort
+from algorithms.hnsgaii_ts.output import output
 
 
 def in_tabu_list(tabulist: List[MoveRecord], move: MoveRecord, move_type: int) -> bool:

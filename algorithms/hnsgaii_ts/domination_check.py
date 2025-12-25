@@ -1,4 +1,4 @@
-from structs import Individual
+from algorithms.hnsgaii_ts.structs import Individual
 
 
 def check_domination(dominator: Individual, dominated: Individual) -> bool:

@@ -1,7 +1,7 @@
 from typing import List, Tuple
 
 # This imports everything (params.V_MAX_TRUCK, M, NUM_CUS, etc.) directly into the namespace
-import parameters as params
+from . import parameters as params
 
 TRUCK_HOUR = [0.7, 0.4, 0.6, 0.7, 0.8, 0.9, 1.0, 0.7, 0.6, 0.5, 0.7, 0.8]
 

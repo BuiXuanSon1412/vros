@@ -1,11 +1,11 @@
 import sys
 import random
 import time
-from .input import input_time_limit, input_data
-from distance import init_matrix
-from ga import select_population
-from nsgaii import nsgaii
-import parameters as params
+from algorithms.hnsgaii_ts.input import input_time_limit, input_data
+from algorithms.hnsgaii_ts.distance import init_matrix
+from algorithms.hnsgaii_ts.ga import select_population
+from algorithms.hnsgaii_ts.nsgaii import nsgaii
+from . import parameters as params
 
 
 class HNSGAIITSSolver:

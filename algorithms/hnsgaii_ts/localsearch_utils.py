@@ -1,6 +1,6 @@
-import parameters as params
-from fitness import calculate_truck_time, calculate_drone_time
-from route_check import feasible_drone_route
+from . import parameters as params
+from algorithms.hnsgaii_ts.fitness import calculate_truck_time, calculate_drone_time
+from algorithms.hnsgaii_ts.route_check import feasible_drone_route
 
 
 def split_tracks(copy_tour: list):

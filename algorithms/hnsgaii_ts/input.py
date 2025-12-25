@@ -1,8 +1,8 @@
 import math
 import os
 
-import parameters as params
-from structs import Customer
+from . import parameters as params
+from algorithms.hnsgaii_ts.structs import Customer
 
 
 def check_customer(idx: int) -> bool:

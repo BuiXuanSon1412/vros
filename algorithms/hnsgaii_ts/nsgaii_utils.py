@@ -1,7 +1,7 @@
 from typing import List
-import parameters as params
-from structs import Individual
-from domination_check import check_domination
+from . import parameters as params
+from algorithms.hnsgaii_ts.structs import Individual
+from algorithms.hnsgaii_ts.domination_check import check_domination
 
 
 def fast_non_dominated_sort(population: List[Individual]) -> List[List[int]]:

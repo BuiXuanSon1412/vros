@@ -1,4 +1,4 @@
-import parameters as params
+from . import parameters as params
 
 
 def calculate_hash(route: list) -> int:

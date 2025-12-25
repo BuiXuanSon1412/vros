@@ -1,18 +1,25 @@
 import time
 import random
 from typing import List
-from structs import Individual
-from hash import calculate_hash
-from crossover import crossover, crossover_selection
-from ga import tournament_selection
-from nsgaii_utils import select_new_population, fast_non_dominated_sort
-from domination_check import check_domination
-from repair import repair_route, repair_position
-from output import output
-from pareto_update import in_pareto, update_pareto, dominated_in_pareto
-from fitness import calculate_fitness
-from tabu_search import tabu_search
-import parameters as params
+from algorithms.hnsgaii_ts.structs import Individual
+from algorithms.hnsgaii_ts.hash import calculate_hash
+from algorithms.hnsgaii_ts.crossover import crossover, crossover_selection
+from algorithms.hnsgaii_ts.ga import tournament_selection
+from algorithms.hnsgaii_ts.nsgaii_utils import (
+    select_new_population,
+    fast_non_dominated_sort,
+)
+from algorithms.hnsgaii_ts.domination_check import check_domination
+from algorithms.hnsgaii_ts.repair import repair_route, repair_position
+from algorithms.hnsgaii_ts.output import output
+from algorithms.hnsgaii_ts.pareto_update import (
+    in_pareto,
+    update_pareto,
+    dominated_in_pareto,
+)
+from algorithms.hnsgaii_ts.fitness import calculate_fitness
+from algorithms.hnsgaii_ts.tabu_search import tabu_search
+from . import parameters as params
 
 
 def nsgaii(defaultpop: List[Individual]) -> List[Individual]:

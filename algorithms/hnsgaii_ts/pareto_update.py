@@ -1,4 +1,4 @@
-from domination_check import check_domination
+from algorithms.hnsgaii_ts.domination_check import check_domination
 
 
 def dominated_in_pareto(indi, pareto_list):

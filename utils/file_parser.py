@@ -1,5 +1,6 @@
 # utils/file_parser.py
 
+from numpy.__config__ import CONFIG
 import pandas as pd
 import numpy as np
 from typing import Dict, Tuple
@@ -92,13 +93,15 @@ class FileParser:
         # Create depot at origin
         depot = {"id": 0, "x": 0.0, "y": 0.0, "name": "Depot"}
 
+        file_version = st.session_state.get("file_version_2", 0)
         # Vehicle config
         vehicle_config = {
-            "num_staff": num_staff,
-            "num_drone": num_drone,
-            "drone_flight_time": drone_flight_time,
+            "num_staffs": st.session_state.get(f"p2_num_technicians_{file_version}", PROBLEM2_CONFIG["system"]["num_technicians"]),
+            "num_drones": num_drone,
+            "flight_endurance_limit": drone_flight_time,
         }
 
+        vehicle_config["technician_baseline_speed"] = 
         return customers_df, depot, vehicle_config
 
     @staticmethod

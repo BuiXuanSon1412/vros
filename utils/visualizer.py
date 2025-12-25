@@ -430,11 +430,7 @@ class Visualizer:
 
         # Count truck route edges
         for truck_route in truck_routes:
-            nodes = truck_route.get("packages", [])
-            if not nodes:
-                continue
-
-            path = [0] + [n["node"] for n in nodes] + [0]
+            path = [0] + [e["node"] for e in truck_route] + [0]
             for i in range(len(path) - 1):
                 a, b = str(path[i]), str(path[i + 1])
                 edge_usage[tuple(sorted((a, b)))] += 1

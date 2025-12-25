@@ -1,9 +1,13 @@
-from localsearch_utils import split_tracks, track_result, compute_linear
-from fitness import calculate_fitness
-from route_check import feasible_route
-from pareto_update import in_pareto, update_pareto
-import parameters as params
-from structs import Individual
+from algorithms.hnsgaii_ts.localsearch_utils import (
+    split_tracks,
+    track_result,
+    compute_linear,
+)
+from algorithms.hnsgaii_ts.fitness import calculate_fitness
+from algorithms.hnsgaii_ts.route_check import feasible_route
+from algorithms.hnsgaii_ts.pareto_update import in_pareto, update_pareto
+from . import parameters as params
+from algorithms.hnsgaii_ts.structs import Individual
 
 
 def check1(i, k, i_track, k_track, temp_route, ban_val):

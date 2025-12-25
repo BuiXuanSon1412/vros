@@ -3,7 +3,7 @@ import math
 # Assuming params.customers is a list of Customer objects from the previous step
 # params.customers: List[Customer] = []
 # M: List[List[float]] = []
-import parameters as params
+from . import parameters as params
 
 
 def calculate_distance(i: int, j: int) -> float:

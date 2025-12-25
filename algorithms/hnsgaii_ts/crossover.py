@@ -1,8 +1,9 @@
 import random
 from typing import List
-from structs import Individual
-import parameters
-from repair import repair_position, repair_route
+
+from algorithms.hnsgaii_ts.structs import Individual
+from . import parameters as params
+from algorithms.hnsgaii_ts.repair import repair_position, repair_route
 
 
 def crossover_selection() -> int:
@@ -11,7 +12,7 @@ def crossover_selection() -> int:
     cumulative_probability = 0.0
 
     # Iterate through current proportions
-    for i, prop in enumerate(parameters.crossover_proportion):
+    for i, prop in enumerate(params.crossover_proportion):
         cumulative_probability += prop
         if r <= cumulative_probability:
             return i
@@ -162,7 +163,7 @@ def update_crossover_proportion(nRe, nPe):
 
     for i in range(3):
         if Re[i] == 0 and Pe[i] == 0:
-            remain -= parameters.crossover_proportion[i]
+            remain -= params.crossover_proportion[i]
             stra[i] = 0.0
         else:
             stra[i] = float(Re[i]) / float(Pe[i] + Re[i])
@@ -171,4 +172,4 @@ def update_crossover_proportion(nRe, nPe):
     if sum_stra > 0:
         for i in range(3):
             if Re[i] > 0 or Pe[i] > 0:
-                parameters.crossover_proportion[i] = (stra[i] * remain) / sum_stra
+                params.crossover_proportion[i] = (stra[i] * remain) / sum_stra

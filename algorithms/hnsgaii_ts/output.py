@@ -1,6 +1,6 @@
 import json
 import os
-import parameters as params
+from . import parameters as params
 
 
 def output_graph_data(obj1: float, obj2: float, gen: int):
