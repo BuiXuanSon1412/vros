@@ -96,12 +96,14 @@ class FileParser:
         file_version = st.session_state.get("file_version_2", 0)
         # Vehicle config
         vehicle_config = {
-            "num_staffs": st.session_state.get(f"p2_num_technicians_{file_version}", PROBLEM2_CONFIG["system"]["num_technicians"]),
+            "num_staffs": st.session_state.get(
+                f"p2_num_technicians_{file_version}",
+                PROBLEM2_CONFIG["system"]["num_technicians"],
+            ),
             "num_drones": num_drone,
             "flight_endurance_limit": drone_flight_time,
         }
 
-        vehicle_config["technician_baseline_speed"] = 
         return customers_df, depot, vehicle_config
 
     @staticmethod
