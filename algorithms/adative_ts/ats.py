@@ -624,7 +624,7 @@ def Tabu_search_for_CVRP(CC):
 # ===============================
 ITE = 1
 DATA_ROOT = "./data"
-RESULT_ROOT = "./results"
+RESULT_ROOT = "./result"
 
 
 # ===============================

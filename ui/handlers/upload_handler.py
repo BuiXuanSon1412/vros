@@ -1,4 +1,4 @@
-# ui/handlers/upload_handler.py - File Upload Handler
+# ui/handlers/upload_handler.py - FIXED: Use version tracker to force widget refresh
 
 import streamlit as st
 from utils.file_parser import FileParser
@@ -10,7 +10,7 @@ def get_file_parser():
 
 
 def handle_file_upload(problem_type, uploaded_file):
-    """Handle file upload"""
+    """Handle file upload and trigger UI refresh"""
     # Check if this is a new file (avoid reprocessing)
     file_id = f"{uploaded_file.name}_{uploaded_file.size}"
 
@@ -18,7 +18,7 @@ def handle_file_upload(problem_type, uploaded_file):
         # File already processed
         if st.session_state.get(f"file_processed_{problem_type}", False):
             customers_df = st.session_state[f"customers_{problem_type}"]
-            st.success(f"File loaded: {len(customers_df)} customers")
+            st.success(f"✓ File loaded: {len(customers_df)} customers")
         return
 
     # Parse new file
@@ -32,12 +32,19 @@ def handle_file_upload(problem_type, uploaded_file):
         # Store parsed data
         _store_parsed_data(problem_type, parsed_data, file_id)
 
+        # Increment file version to force widget keys to change
+        current_version = st.session_state.get(f"file_version_{problem_type}", 0)
+        st.session_state[f"file_version_{problem_type}"] = current_version + 1
+
         st.success(
-            f"File uploaded successfully! {len(parsed_data['customers'])} customers loaded."
+            f"✓ File uploaded successfully! {len(parsed_data['customers'])} customers loaded."
         )
 
+        # Force Streamlit to rerun so System Config tab reflects new data
+        st.rerun()
+
     except Exception as e:
-        st.error(f"Error parsing file: {str(e)}")
+        st.error(f"❌ Error parsing file: {str(e)}")
         st.info("Please check that your file matches the expected format.")
 
 
